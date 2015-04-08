@@ -1047,8 +1047,6 @@ ictregBayes.fit <- function(Y, treat, X, J, constrained,
     n.par <- n.par + 1
   }
   
-  save(probit, probit, file = "~/downloads/tmptmp.RData")
-
   if (probit) {
     
     ## no need for deltaCounter
