@@ -1,0 +1,215 @@
+\name{ictregBayesHier} 
+\alias{ictregBayesHier}
+\title{Item Count Technique} 
+\description{ 
+Function to conduct multilevel, multivariate regression analyses of survey data with the item count technique, also known as the list experiment and the unmatched count technique.
+} 
+\usage{
+ictregBayesHier(formula, data = parent.frame(), 
+	 	group.level.2, group.level.3, group.level.4, 
+		formula.level.2, formula.level.3, formula.level.4, 
+		treat = "treat", J, fit.start = "lm", 
+		n.draws = 10000, burnin = 5000, thin = 0, 
+		delta.start.level.1, delta.mu0.level.1, delta.A0.level.1, 
+		delta.start.level.2, delta.mu0.level.2, delta.A0.level.2, 
+		delta.start.level.3, delta.mu0.level.3, delta.A0.level.3, 
+		delta.start.level.4, delta.mu0.level.4, delta.A0.level.4, 
+		sigma.start.level.1, sigma.df.level.1, sigma.scale.level.1, 
+		sigma.start.level.2, sigma.df.level.2, sigma.scale.level.2, 
+		sigma.start.level.3, sigma.df.level.3, sigma.scale.level.3, 
+		sigma.start.level.4, sigma.df.level.4, sigma.scale.level.4, 
+		delta.tune, alpha.tune, 
+		verbose = TRUE, ...)
+} 
+
+\arguments{ 
+\item{formula}{An object of class "formula": a symbolic description of the model to be fitted.} 
+\item{data}{A data frame containing the variables in the model}
+\item{group.level.2}{Name of second level group variable from the data frame indicating which group each individual belongs to as a string}
+\item{group.level.3}{Name of third level group variable from the data frame indicating which group each individual belongs to as a string}
+\item{group.level.4}{Name of fourth level group variable from the data frame indicating which group each individual belongs to as a string}
+\item{formula.level.2}{An object of class "formula" for the second level of the hierarchical model}
+\item{formula.level.3}{An object of class "formula" for the third level of the hierarchical model}
+\item{formula.level.4}{An object of class "formula" for the fourth level of the hierarchical model}
+\item{treat}{Name of treatment indicator as a string. For single sensitive item models, this refers to a binary indicator, and for multiple sensitive item models it refers to a multi-valued variable with zero representing the control condition. This can be an integer (with 0 for the control group) or a factor (with "control" for the control group).}
+\item{J}{Number of non-sensitive (control) survey items. This will be set automatically to the maximum value of the outcome variable in the treatment group if no input is sent by the user.}
+\item{fit.start}{Fit method for starting values. The options are \code{lm}, \code{glm}, \code{nls}, and \code{ml}, which use OLS, logistic regression, non-linear least squares, and maximum likelihood estimation to generate starting values, respectively. The default is \code{lm}.}
+\item{n.draws}{Number of MCMC iterations after the burnin.}
+\item{burnin}{The number of initial MCMC iterations that are discarded.}
+\item{thin}{The interval of thinning, in which every other (\code{thin} = 1) or more iterations are discarded in the output object}
+\item{delta.start.level.1}{Optional starting values for the sensitive item fit. This should be a vector with the length of the number of covariates for the single sensitive item design, and either a vector or a list with a vector of starting values for each of the sensitive items. The default runs an \code{ictreg} fit with the method set by the \code{fit.start} option.}
+\item{delta.mu0.level.1}{Optional vector of prior means for the sensitive item fit parameters, a vector of length the number of covariates.}
+\item{delta.A0.level.1}{Optional matrix of prior precisions for the sensitive item fit parameters, a matrix of dimension the number of covariates.}
+\item{delta.start.level.2}{Optional starting values for the sensitive item fit for the second level of the hierarchical model. This should be a vector with the length of the number of covariates for the single sensitive item design, and either a vector or a list with a vector of starting values for each of the sensitive items. The default runs an \code{ictreg} fit with the method set by the \code{fit.start} option.}
+\item{delta.mu0.level.2}{Optional vector of prior means for the sensitive item fit parameters for the second level of the hierarchical model, a vector of length the number of covariates.}
+\item{delta.A0.level.2}{Optional matrix of prior precisions for the sensitive item fit parameters for the second level of the hierarchical model, a matrix of dimension the number of covariates.}
+\item{sigma.start.level.1}{Optional list of length the number of sensitive items with the starting values for the sigma parameters.}
+\item{sigma.scale.level.1}{Optional prior scale parameter.}
+\item{sigma.df.level.1}{Optional prior degrees of freedom parameter.}
+\item{sigma.start.level.2}{Optional list of length the number of sensitive items with the starting values for the sigma parameters for the second level of the hierarchical model.}
+\item{sigma.scale.level.2}{Optional prior scale parameter for the second level of the hierarchical model.}
+\item{sigma.df.level.2}{Optional prior degrees of freedom parameter for the second level of the hierarchical model.}
+\item{sigma.start.level.3}{Optional list of length the number of sensitive items with the starting values for the sigma parameters for the third level of the hierarchical model.}
+\item{sigma.scale.level.3}{Optional prior scale parameter for the third level of the hierarchical model.}
+\item{sigma.df.level.3}{Optional prior degrees of freedom parameter for the third level of the hierarchical model.}
+\item{sigma.start.level.4}{Optional list of length the number of sensitive items with the starting values for the sigma parameters for the fourth level of the hierarchical model.}
+\item{sigma.scale.level.4}{Optional prior scale parameter for the fourth level of the hierarchical model.}
+\item{sigma.df.level.4}{Optional prior degrees of freedom parameter for the fourth level of the hierarchical model.}
+\item{delta.start.level.3}{Optional starting values for the sensitive item fit for the third level of the hierarchical model. This should be a vector with the length of the number of covariates for the single sensitive item design, and either a vector or a list with a vector of starting values for each of the sensitive items. The default runs an \code{ictreg} fit with the method set by the \code{fit.start} option.}
+\item{delta.mu0.level.3}{Optional vector of prior means for the sensitive item fit parameters for the third level of the hierarchical model, a vector of length the number of covariates.}
+\item{delta.A0.level.3}{Optional matrix of prior precisions for the sensitive item fit parameters for the third level of the hierarchical model, a matrix of dimension the number of covariates.}
+\item{delta.start.level.4}{Optional starting values for the sensitive item fit for the fourth level of the hierarchical model. This should be a vector with the length of the number of covariates for the single sensitive item design, and either a vector or a list with a vector of starting values for each of the sensitive items. The default runs an \code{ictreg} fit with the method set by the \code{fit.start} option.}
+\item{delta.mu0.level.4}{Optional vector of prior means for the sensitive item fit parameters for the fourth level of the hierarchical model, a vector of length the number of covariates.}
+\item{delta.A0.level.4}{Optional matrix of prior precisions for the sensitive item fit parameters for the fourth level of the hierarchical model, a matrix of dimension the number of covariates.}
+\item{delta.tune}{A required vector of tuning parameters for the Metropolis algorithm for the sensitive item fit. This must be set and refined by the user until the acceptance ratios are approximately .4 (reported in the output).}
+\item{alpha.tune}{An optional vector of tuning parameters for the Metropolis algorithm for the random effects.}
+\item{verbose}{A logical value indicating whether model diagnostics are printed out during fitting.}
+\item{...}{further arguments to be passed to NLS regression commands.}
+}
+
+\details{This function allows the user to perform regression analysis on data from the item count technique, also known as the list experiment and the unmatched count technique using a Bayesian MCMC algorithm.
+
+Unlike the maximum likelihood and least squares estimators in the \code{ictreg} function, the Metropolis algorithm for the Bayesian MCMC estimators in this function must be tuned to work correctly. The \code{delta.tune} and \code{psi.tune} are required, and the values, one for each estimated parameter, will need to be manipulated. The output of the \code{ictregBayes} function, and of the \code{summary} function run on an \code{ictregBayes} object display the acceptance ratios from the Metropolis algorithm. If these values are far from 0.4, the tuning parameters should be changed until the ratios approach 0.4.
+
+For the single sensitive item design, the model can constrain all control parameters to be equal (\code{constrained = "full"}), or just the intercept (\code{constrained = "intercept"}) or all the control fit parameters can be allowed to vary across the potential sensitive item values (\code{constrained = "none"}).
+
+For the multiple sensitive item design, the model can include the estimated number of affirmative responses to the control items as a covariate in the sensitive item model fit (\code{constrained} set to \code{TRUE}) or exclude it (\code{FALSE}).
+
+Convergence is at times difficult to achieve, so we recommend running multiple chains from overdispersed starting values by, for example, running an MLE or linear model using the ictreg() function, and then generating a set of overdispersed starting values using those estimates and their estimated variance-covariance matrix. An example is provided below for each of the possible designs. Running \code{summary()} after such a procedure will output the Gelman-Rubin convergence statistics in addition to the estimates. If the G-R statistics are all below 1.1, the model is said to have converged.
+
+}
+
+\value{\code{ictregBayes} returns an object of class "ictregBayes".  The function \code{summary} is used to obtain a table of the results, using the \code{coda} package. Two attributes are also included, the data ("x"), the call ("call"), which can be extracted using the command, e.g., attr(ictregBayes.object, "x").
+
+\item{mcmc}{an object of class "mcmc" that can be analyzed using the \code{coda} package.}
+\item{x}{the design matrix}
+\item{multi}{a logical value indicating whether the data included multiple sensitive items.}
+\item{constrained}{a logical or character value indicating whether the control group parameters are constrained to be equal in the single sensitive item design, and whether the non-sensitive item count is included as a predictor in the sensitive item fits for the multiple sensitive item design.}
+\item{delta.start}{Optional starting values for the sensitive item fit. This should be a vector with the length of the number of covariates. The default runs an \code{ictreg} fit with the method set by the \code{fit.start} option.}
+\item{psi.start}{Optional starting values for the control items fit. This should be a vector of length the number of covariates. The default runs an \code{ictreg} fit with the method set by the \code{fit.start} option.}
+\item{delta.mu0}{Optional vector of prior means for the sensitive item fit parameters, a vector of length the number of covariates.}
+\item{psi.mu0}{Optional vector of prior means for the control item fit parameters, a vector of length the number of covariates.}
+\item{delta.A0}{Optional matrix of prior precisions for the sensitive item fit parameters, a matrix of dimension the number of covariates.}
+\item{psi.A0}{Optional matrix of prior precisions for the control items fit parameters, a matrix of dimension the number of covariates.}
+\item{delta.tune}{A required vector of tuning parameters for the Metropolis algorithm for the sensitive item fit. This must be set and refined by the user until the acceptance ratios are approximately .4 (reported in the output).}
+\item{psi.tune}{A required vector of tuning parameters for the Metropolis algorithm for the control item fit. This must be set and refined by the user until the acceptance ratios are approximately .4 (reported in the output).}
+\item{J}{Number of non-sensitive (control) survey items set by the user or detected.}
+\item{treat.labels}{a vector of the names used by the \code{treat} vector for the sensitive item or items. This is the names from the \code{treat} indicator if it is a factor, or the number of the item if it is numeric.} 
+\item{control.label}{a vector of the names used by the \code{treat} vector for the control items. This is the names from the \code{treat} indicator if it is a factor, or the number of the item if it is numeric.}
+\item{call}{the matched call}
+
+If the data includes multiple sensitive items, the following object is also included:
+\item{treat.values}{a vector of the values used in the \code{treat} vector for the sensitive items, either character or numeric depending on the class of \code{treat}. Does not include the value for the control status}
+}
+
+\references{
+Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of List Experiments." 
+  Political Analysis, Vol. 20, No 1 (Winter). available at 
+  \url{http://imai.princeton.edu/research/listP.html}
+
+Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item
+  Count Technique.''  Journal of the American Statistical Association, 
+  Vol. 106, No. 494 (June), pp. 407-416. available at
+  \url{http://imai.princeton.edu/research/list.html}}
+
+\author{Graeme Blair, Princeton University,
+\email{gblair@princeton.edu} and Kosuke Imai, Princeton University,
+\email{kimai@princeton.edu} 
+}
+
+\examples{
+
+data(race)
+
+\dontrun{
+
+## Multiple chain MCMC list experiment regression
+## starts with overdispersed MLE starting values
+
+## Multiple item two level hierarchical model - varying intercepts
+
+mle.estimates.multi <- ictreg(y ~ male + college, data = multi,
+  constrained = TRUE)
+
+draws <- mvrnorm(n = 3, mu = coef(mle.estimates.multi), 
+  Sigma = vcov(mle.estimates.multi) * 9)
+
+bayesDraws.1 <- ictregBayesHier(y ~ male + college,
+                        formula.level.2 = ~ 1, 
+                        delta.start.level.1 = list(draws[1, 8:9], draws[1, 2:3], draws[1, 5:6]),
+                        data = multi, treat = "treat",
+                        delta.tune = list(rep(0.005, 2), rep(0.05, 2), rep(0.05, 2)),
+                        alpha.tune = rep(0.001, length(unique(multi$state))),
+                        J = 3, group.level.2 = "state",
+                        n.draws = 100000, burnin = 50000, thin = 100)
+
+bayesDraws.2 <- ictregBayesHier(y ~ male + college,
+                        formula.level.2 = ~ 1, 
+                        delta.start.level.1 = list(draws[2, 8:9], draws[2, 2:3], draws[2, 5:6]),
+                        data = multi, treat = "treat",
+                        delta.tune = list(rep(0.005, 2), rep(0.05, 2), rep(0.05, 2)),
+                        alpha.tune = rep(0.001, length(unique(multi$state))),
+                        J = 3, group.level.2 = "state",
+                        n.draws = 100000, burnin = 50000, thin = 100)
+
+bayesDraws.3 <- ictregBayesHier(y ~ male + college,
+                        formula.level.2 = ~ 1, 
+                        delta.start.level.1 = list(draws[3, 8:9], draws[3, 2:3], draws[3, 5:6]),
+                        data = multi, treat = "treat",
+                        delta.tune = list(rep(0.005, 2), rep(0.05, 2), rep(0.05, 2)),
+                        alpha.tune = rep(0.001, length(unique(multi$state))),
+                        J = 3, group.level.2 = "state",
+                        n.draws = 100000, burnin = 50000, thin = 100)
+
+bayesHierTwoLevel <- as.list(bayesDraws.1, bayesDraws.2, bayesDraws.3)
+
+summary(bayesHierTwoLevel)
+
+## Multiple item two level hierarchical model - including covariates
+
+mle.estimates.multi <- ictreg(y ~ male + college, data = multi,
+  constrained = TRUE)
+
+draws <- mvrnorm(n = 3, mu = coef(mle.estimates.multi), 
+  Sigma = vcov(mle.estimates.multi) * 9)
+
+bayesDraws.1 <- ictregBayesHier(y ~ male + college,
+                        formula.level.2 = ~ age, 
+                        delta.start.level.1 = list(draws[1, 8:9], draws[1, 2:3], draws[1, 5:6]),
+                        data = multi, treat = "treat",
+                        delta.tune = list(rep(0.005, 2), rep(0.05, 2), rep(0.05, 2)),
+                        alpha.tune = rep(0.001, length(unique(multi$state))),
+                        J = 3, group.level.2 = "state",
+                        n.draws = 100000, burnin = 50000, thin = 100)
+
+bayesDraws.2 <- ictregBayesHier(y ~ male + college,
+                        formula.level.2 = ~ age, 
+                        delta.start.level.1 = list(draws[2, 8:9], draws[2, 2:3], draws[2, 5:6]),
+                        data = multi, treat = "treat",
+                        delta.tune = list(rep(0.005, 2), rep(0.05, 2), rep(0.05, 2)),
+                        alpha.tune = rep(0.001, length(unique(multi$state))),
+                        J = 3, group.level.2 = "state",
+                        n.draws = 100000, burnin = 50000, thin = 100)
+
+bayesDraws.3 <- ictregBayesHier(y ~ male + college,
+                        formula.level.2 = ~ age, 
+                        delta.start.level.1 = list(draws[3, 8:9], draws[3, 2:3], draws[3, 5:6]),
+                        data = multi, treat = "treat",
+                        delta.tune = list(rep(0.005, 2), rep(0.05, 2), rep(0.05, 2)),
+                        alpha.tune = rep(0.001, length(unique(multi$state))),
+                        J = 3, group.level.2 = "state",
+                        n.draws = 100000, burnin = 50000, thin = 100)
+
+bayesHierTwoLevel <- as.list(bayesDraws.1, bayesDraws.2, bayesDraws.3)
+
+summary(bayesHierTwoLevel)
+
+}
+}
+ 
+\seealso{
+\code{\link{predict.ictreg}} for fitted values
+}
+
+\keyword{models}
+\keyword{regression}

@@ -1,0 +1,55 @@
+\name{mexico}
+\docType{data}
+\alias{mexico}
+\title{The 2012 Mexico Elections Panel Study}
+\description{
+This dataset is a subset of the 2012 Mexico Elections Panel Study and contains a list experiment
+question. It reads as follows:
+\verb{ I am going to read you a list of four activities that appear on this
+	card and I want you to tell me how many of these activities you have 
+	done in recent weeks.  Please don''t tell me which ones, just HOW
+	MANY. The four activities are... (SHOW CARD AND READ)
+	a. See television news that mentions a candidate
+	b. Attend a campaign event
+	c. Exchange your vote for a gift, favor, or access to a service
+	d. Talk about politics with other people}
+	
+where item c. is presented only to the treatment group, and the control list only contains the other three items.
+}
+
+\usage{data(mexico)}
+
+\format{A data frame containing the following variables for 1004 observations.
+  \tabular{llll}{
+	y \tab numeric \tab the number of items that make respondents angry \tab 0 - 4 \cr
+  
+	mex.t \tab numeric \tab treatment status \tab 0-1 \cr
+	mex.male \tab numeric \tab whether or not a respondent is male\tab 0-1 \cr
+	mex.age \tab numeric \tab age of a respondent \cr
+	mex.education \tab numeric \tab respondent's level of education \tab 0-9 \cr
+	mex.y.all \tab numeric \tab the number of activities that respondent did \tab 0 - 4 \cr
+	mex.vote \tab numeric \tab respondent's self-reported turnout \tab 0-1 \cr
+	mex.age2 \tab numeric \tab age of a respondent, squared \cr
+	mex.interest \tab numeric \tab how interested respondent is in politics \tab 1-4 \cr
+	mex.married \tab numeric \tab indicator for whether respondent is married \tab 0-1 \cr
+	mex.pidpanw2 \tab numeric \tab indicator for whether respondent identifies with PAN party \tab 0-1 \cr
+	mex.pidprdw2 \tab numeric \tab indicator for whether respondent identifies with PRD party \tab 0-1 \cr
+	mex.pidpriw2 \tab numeric \tab indicator for whether respondent identifies with PRI party \tab 0-1 \cr
+	mex.votecard \tab numeric \tab respondent's enumerator-verified turnout \tab 0-1 \cr
+	mex.urban \tab numeric \tab indicator for whether respondent lives in urban area \tab 0-1 \cr
+	mex.cleanelections \tab numeric \tab indicator for whether respondent thinks elections were clean \tab 0-1 \cr
+	mex.cleanelectionsmiss \tab numeric \tab indicator for whether cleanelections variable was missing \tab 0-1 \cr
+	mex.metro \tab numeric \tab indicator for whether respondent lives in Mexico City metro area \tab 0-1 \cr
+	mex.centralregion \tab numeric \tab indicator for whether respondent lives in Mexico's central region \tab 0-1 \cr	
+	mex.northregion \tab numeric \tab indicator for whether respondent lives in Mexico's north region  \tab 0-1 \cr
+	mex.wealth \tab numeric \tab scale for respondent's wealth, based on household asset indicators \cr
+	mex.epnapprove \tab numeric \tab respondent's approval rating of Enrique Pena-Nieto \tab 1-11 \cr
+	mex.havepropoganda \tab numeric \tab indicator for whether respondent has propaganda outside their home \tab 0-1 \cr
+	mex.concurrent \tab numeric \tab indicator for whether respondent lives in state with concurrent elections \tab 0-1 \cr
+	mex.loyal \tab numeric \tab indicator for whether respondent strongly identifies with the PAN, PRI, or PRD party \tab 0-1 \cr
+	mex.direct \tab numeric \tab indicator for whether respondent directly reports an attempt to buy their vote \tab 0-1 
+	}
+}
+
+\source{The full data set is available at the Mexico Panel Study website (\url{http://web.mit.edu/clawson/www/polisci/research/mexico06/})}
+\keyword{datasets}

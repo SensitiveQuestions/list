@@ -1,0 +1,17 @@
+citHeader("To cite list in publications use:")
+
+citEntry(entry = "misc",
+  title        = "{list}: Statistical Methods for the Item Count Technique and List Experiment",
+  author       = personList(as.person("Graeme Blair"),
+                   as.person("Kosuke Imai")),
+  howpublished = "Available at The Comprehensive R Archive Network (CRAN)",
+  year         = "2010",
+  url          = "http://CRAN.R-project.org/package=list",
+
+  textVersion  =
+  paste("Graeme Blair and Kosuke Imai (2010).",
+        "list: Statistical Methods for the Item Count Technique and List Experiment.",
+        "available at The Comprehensive R Archive Network (CRAN).",
+        "URL http://CRAN.R-project.org/package=list.")
+)
+

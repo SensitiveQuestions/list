@@ -1,0 +1,84 @@
+\name{predict.ictregBayesHier} 
+\alias{predict.ictregBayesHier}
+\title{Predict Method for the Item Count Technique with Bayesian Hierarchical Regression} 
+\description{ 
+Function to calculate predictions and uncertainties of predictions from estimates from hierarchical multivariate regression analysis of survey data with the item count technique.
+} 
+\usage{
+
+  \method{predict}{ictregBayesHier}(object, newdata, se.fit = FALSE, 
+ interval = c("none","confidence"), level = .95, sensitive.item, ...) 
+
+} 
+
+\arguments{ 
+\item{object}{Object of class inheriting from "ictregBayes" or "ictregBayesMulti"}
+\item{newdata}{An optional data frame containing data that will be used to make predictions from. If omitted, the data used to fit the regression are used.}
+\item{se.fit}{A switch indicating if standard errors are required.}
+\item{interval}{Type of interval calculation.}
+\item{level}{Significance level for confidence intervals.}
+\item{sensitive.item}{For the multiple sensitive item design, the integer indicating which sensitive item coefficients will be used for prediction.}
+\item{...}{further arguments to be passed to or from other methods.}
+}
+
+\details{\code{predict.ictregBayesHier} produces predicted values, obtained by evaluating the regression function in the frame newdata (which defaults to \code{model.frame(object)}. If the logical \code{se.fit} is \code{TRUE}, standard errors of the predictions are calculated. Setting \code{interval} specifies computation of confidence intervals at the specified level or no intervals.
+
+The mean prediction across all observations in the dataset is calculated, and if the \code{se.fit} option is set to \code{TRUE} a standard error for this mean estimate will be provided. The \code{interval} option will output confidence intervals instead of only the point estimate if set to \code{TRUE}.
+
+In the multiple sensitive item design, prediction can only be based on the coefficients from one of the sensitive item fits. The \code{sensitive.item} option allows you to specify which is used, using integers from 1 to the number of sensitive items.
+
+}
+
+
+\value{\code{predict.ictreg} produces a vector of predictions or a matrix of predictions and bounds with column names fit, lwr, and upr if interval is set. If se.fit is TRUE, a list with the following components is returned:
+
+\item{fit}{vector or matrix as above}
+\item{se.fit}{standard error of prediction}
+}
+
+\seealso{\code{\link{ictreg}} for model fitting}
+
+
+\references{
+Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of List Experiments." 
+  Political Analysis, Vol. 20, No 1 (Winter). available at 
+  \url{http://imai.princeton.edu/research/listP.html}
+
+Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item
+  Count Technique.''  Journal of the American Statistical Association, 
+  Vol. 106, No. 494 (June), pp. 407-416. available at
+  \url{http://imai.princeton.edu/research/list.html}}
+
+  \author{Graeme Blair, Princeton University,
+\email{gblair@princeton.edu} and Kosuke Imai, Princeton University,
+\email{kimai@princeton.edu} 
+}
+
+\examples{
+data(race)
+
+\dontrun{
+
+mle.estimates.multi <- ictreg(y ~ male + college, data = multi,
+  constrained = TRUE)
+
+draws <- mvrnorm(n = 3, mu = coef(mle.estimates.multi), 
+  Sigma = vcov(mle.estimates.multi) * 9)
+
+bayes.fit <- ictregBayesHier(y ~ male + college,
+                        formula.level.2 = ~ 1, 
+                        delta.start.level.1 = list(draws[1, 8:9], draws[1, 2:3], draws[1, 5:6]),
+                        data = multi, treat = "treat",
+                        delta.tune = list(rep(0.005, 2), rep(0.05, 2), rep(0.05, 2)),
+                        alpha.tune = rep(0.001, length(unique(multi$state))),
+                        J = 3, group.level.2 = "state",
+                        n.draws = 100, burnin = 10, thin = 1)
+
+bayes.predict <- predict(bayes.fit, interval = "confidence", se.fit = TRUE)
+
+}
+
+}
+ 
+\keyword{models}
+\keyword{regression}

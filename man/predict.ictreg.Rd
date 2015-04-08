@@ -1,0 +1,169 @@
+\name{predict.ictreg} 
+\alias{predict.ictreg} 
+\title{Predict Method for Item Count Technique} 
+\description{ 
+Function to calculate predictions and uncertainties of predictions from estimates from multivariate regression analysis of survey data with the item count technique.
+} 
+\usage{
+
+  \method{predict}{ictreg}(object, newdata, newdata.diff, direct.glm, se.fit = FALSE, 
+ interval = c("none","confidence"), level = .95, avg = FALSE, sensitive.item, ...) 
+
+} 
+
+\arguments{ 
+\item{object}{Object of class inheriting from "ictreg"}
+\item{newdata}{An optional data frame containing data that will be used to make predictions from. If omitted, the data used to fit the regression are used.}
+\item{newdata.diff}{An optional data frame used to compare predictions with predictions from the data in the provided newdata data frame.}
+\item{direct.glm}{A glm object from a logistic binomial regression predicting responses to a direct survey item regarding the sensitive item. The predictions from the ictreg object are compared to the predictions based on this glm object.}
+\item{se.fit}{A switch indicating if standard errors are required.}
+\item{interval}{Type of interval calculation.}
+\item{level}{Significance level for confidence intervals.}
+\item{avg}{A switch indicating if the mean prediction and associated statistics across all obserations in the dataframe will be returned instead of predictions for each observation.}
+\item{sensitive.item}{For multiple sensitive item design list experiments, specify which sensitive item fits to use for predictions. Default is the first sensitive item.}
+\item{...}{further arguments to be passed to or from other methods.}
+}
+
+\details{\code{predict.ictreg} produces predicted values, obtained by evaluating the regression function in the frame newdata (which defaults to \code{model.frame(object)}. If the logical \code{se.fit} is \code{TRUE}, standard errors of the predictions are calculated. Setting \code{interval} specifies computation of confidence intervals at the specified level or no intervals.
+
+If \code{avg} is set to \code{TRUE}, the mean prediction across all observations in the dataset will be calculated, and if the \code{se.fit} option is set to \code{TRUE} a standard error for this mean estimate will be provided. The \code{interval} option will output confidence intervals instead of only the point estimate if set to \code{TRUE}.
+
+Two additional types of mean prediction are also available. The first, if a \code{newdata.diff} data frame is provided by the user, calculates the mean predicted values across two datasets, as well as the mean difference in predicted value. Standard errors and confidence intervals can also be added. For difference prediction, \code{avg} must be set to \code{TRUE}.
+
+The second type of prediction, triggered if a \code{direct.glm} object is provided by the user, calculates the mean difference in prediction between predictions based on an \code{ictreg} fit and a \code{glm} fit from a direct survey item on the sensitive question. This is defined as the revealed social desirability bias in Blair and Imai (2010). 
+
+}
+
+
+\value{\code{predict.ictreg} produces a vector of predictions or a matrix of predictions and bounds with column names fit, lwr, and upr if interval is set. If se.fit is TRUE, a list with the following components is returned:
+
+\item{fit}{vector or matrix as above}
+\item{se.fit}{standard error of prediction}
+}
+
+\seealso{\code{\link{ictreg}} for model fitting}
+
+
+\references{
+Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of List Experiments." 
+  Political Analysis, Vol. 20, No 1 (Winter). available at 
+  \url{http://imai.princeton.edu/research/listP.html}
+
+Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item
+  Count Technique.''  Journal of the American Statistical Association, 
+  Vol. 106, No. 494 (June), pp. 407-416. available at
+  \url{http://imai.princeton.edu/research/list.html}}
+
+  \author{Graeme Blair, Princeton University,
+\email{gblair@princeton.edu} and Kosuke Imai, Princeton University,
+\email{kimai@princeton.edu} 
+}
+
+\examples{
+data(race)
+
+race.south <- race.nonsouth <- race
+
+race.south[, "south"] <- 1
+race.nonsouth[, "south"] <- 0
+
+\dontrun{
+
+# Fit EM algorithm ML model with constraint with no covariates
+
+ml.results.south.nocov <- ictreg(y ~ 1, 
+   data = race[race$south == 1, ], method = "ml", treat = "treat", 
+   J = 3, overdispersed = FALSE, constrained = TRUE)
+ml.results.nonsouth.nocov <- ictreg(y ~ 1, 
+   data = race[race$south == 0, ], method = "ml", treat = "treat", 
+   J = 3, overdispersed = FALSE, constrained = TRUE)
+
+# Calculate average predictions for respondents in the South 
+# and the the North of the US for the MLE no covariates 
+# model, replicating the estimates presented in Figure 1, 
+# Imai (2010)
+
+avg.pred.south.nocov <- predict(ml.results.south.nocov,
+   newdata = as.data.frame(matrix(1, 1, 1)), se.fit = TRUE, 
+   avg = TRUE)
+avg.pred.nonsouth.nocov <- predict(ml.results.nonsouth.nocov,
+   newdata = as.data.frame(matrix(1, 1, 1)), se.fit = TRUE, 
+   avg = TRUE)
+
+# Fit linear regression
+
+lm.results <- ictreg(y ~ south + age + male + college, 
+   data = race, treat = "treat", J=3, method = "lm")
+
+# Calculate average predictions for respondents in the 
+# South and the the North of the US for the lm model, 
+# replicating the estimates presented in Figure 1, Imai (2010)
+
+avg.pred.south.lm <- predict(lm.results, newdata = race.south, 
+   se.fit = TRUE, avg = TRUE)
+
+avg.pred.nonsouth.lm <- predict(lm.results, newdata = race.nonsouth, 
+   se.fit = TRUE, avg = TRUE)
+
+# Fit two-step non-linear least squares regression
+
+nls.results <- ictreg(y ~ south + age + male + college, 
+   data = race, treat = "treat", J=3, method = "nls")
+
+# Calculate average predictions for respondents in the South 
+# and the the North of the US for the NLS model, replicating
+# the estimates presented in Figure 1, Imai (2010)
+
+avg.pred.nls <- predict(nls.results, newdata = race.south, 
+   newdata.diff = race.nonsouth, se.fit = TRUE, avg = TRUE)
+
+# Fit EM algorithm ML model with constraint
+
+ml.constrained.results <- ictreg(y ~ south + age + male + college, 
+   data = race, treat = "treat", J=3, method = "ml", 
+   overdispersed = FALSE, constrained = TRUE)
+
+# Calculate average predictions for respondents in the South 
+# and the the North of the US for the MLE model, replicating the 
+# estimates presented in Figure 1, Imai (2010)
+
+avg.pred.diff.mle <- predict(ml.constrained.results, 
+   newdata = race.south, newdata.diff = race.nonsouth,
+   se.fit = TRUE, avg = TRUE)
+
+# Calculate average predictions from the item count technique
+# regression and from a direct sensitive item modeled with
+# a logit.
+
+# Estimate logit for direct sensitive question
+
+data(mis)
+
+mis.list <- subset(mis, list.data == 1)
+
+mis.sens <- subset(mis, sens.data == 1)
+
+# Fit EM algorithm ML model
+
+fit.list <- ictreg(y ~ age + college + male + south,
+   J = 4, data = mis.list, method = "ml")
+
+# Fit logistic regression with directly-asked sensitive question
+
+fit.sens <- glm(sensitive ~ age + college + male + south, 
+   data = mis.sens, family = binomial("logit"))
+
+# Predict difference between response to sensitive item
+# under the direct and indirect questions (the list experiment).
+# This is an estimate of the revealed social desirability bias
+# of respondents. See Blair and Imai (2010).
+
+avg.pred.social.desirability <- predict(fit.list, 
+   direct.glm = fit.sens, se.fit = TRUE)
+
+}
+
+}
+ 
+\keyword{models}
+\keyword{regression}

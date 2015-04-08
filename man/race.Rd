@@ -1,0 +1,35 @@
+\name{race}
+\docType{data}
+\alias{race}
+\title{The 1991 National Race and Politics Survey}
+\description{
+  This dataset is a subset of the 1991 National Race and Politics Survey and contains 
+  the item count technique or the list experiment.  The main question reads as follows:
+\verb{ Now I'm going to read you four things that sometimes make people 
+      angry or upset.  After I read all (three/four), just tell me HOW MANY of 
+      them upset you.  (I don't want to know which ones, just how many.)
+      (1) "the federal government increasing the tax on gasoline;"
+      (2) "professional athletes getting million-dollar-plus salaries;" 
+      (3) "large corporations polluting the environment;"
+      (4) "a black family moving next door to you."}
+
+where the last item is presented only with the treatment group and the control list only contains the first three items.
+
+}
+
+\usage{data(race)}
+
+\format{A data frame containing the following 6 variables for 1213 observations.
+  
+  \tabular{llll}{
+    y \tab numeric \tab the number of items that make respondents angry \tab 0 - 4 \cr
+    south \tab numeric \tab whether or not a respondents live in a southern state \tab 0 - 1 \cr
+    male \tab numeric \tab whether or not a respondent is male \tab 0 - 1 \cr
+    college \tab numeric \tab whether or not a respondent attended some college \tab 0 - 1 \cr
+    age \tab numeric \tab age of a respondent divided by 10 \cr
+    treat \tab numeric \tab treatment status \tab 0 - 1 
+  }
+}
+
+\source{The full data set is available at SDA (Survey Documentation and Analysis; \url{http://sda.berkeley.edu/D3/Natlrace/Doc/nrac.htm})}
+\keyword{datasets}

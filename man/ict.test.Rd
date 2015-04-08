@@ -1,0 +1,59 @@
+\name{ict.test} 
+\alias{ict.test} 
+\title{Item Count Technique} 
+\description{ 
+Function to conduct a statistical test with the null hypothesis that there is no "design effect" in a list experiment, a failure of the experiment.
+} 
+\usage{
+ict.test(y, treat, J = NA, alpha = 0.05, n.draws = 250000, gms = TRUE, 
+         pi.table = TRUE)
+} 
+
+\arguments{ 
+\item{y}{A numerical vector containing the response data for a list experiment.} 
+\item{treat}{A numerical vector containing the binary treatment status for a list experiment.}
+\item{J}{Number of non-sensitive (control) survey items.}
+\item{alpha}{Confidence level for the statistical test.}
+\item{n.draws}{Number of Monte Carlo draws.}
+\item{gms}{A logical value indicating whether the generalized moment selection procedure should be used.}
+\item{pi.table}{A logical value indicating whether a table of estimated proportions of respondent types with standard errors is displayed.}
+}
+
+\details{This function allows the user to perform a statistical test on data from a list experiment or item count technique with the null hypothesis of no design effect. A design effect occurs when an individual's response to the non-sensitive items changes depending upon the respondent's treatment status.
+ }
+
+\value{\code{ict.test} returns a numerical scalar with the Bonferroni-corrected minimum p-value of the statistical test.}
+
+\references{
+Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of List Experiments." 
+  Political Analysis, Vol. 20, No 1 (Winter). available at 
+  \url{http://imai.princeton.edu/research/listP.html}
+}
+
+\author{Graeme Blair, Princeton University,
+\email{gblair@princeton.edu} and Kosuke Imai, Princeton University,
+\email{kimai@princeton.edu} 
+}
+
+\examples{
+
+data(affirm)
+data(race)
+
+# Conduct test with null hypothesis that there is no design effect
+# Replicates results on Blair and Imai (2010) pg. 30
+
+test.value.affirm <- ict.test(affirm$y, affirm$treat, J = 3, gms = TRUE)
+print(test.value.affirm)
+
+test.value.race <- ict.test(race$y, race$treat, J = 3, gms = TRUE)
+print(test.value.race)
+
+}
+ 
+\seealso{
+\code{\link{ictreg}} for list experiment regression based on the assumption of no design effect
+}
+
+\keyword{models}
+\keyword{regression}

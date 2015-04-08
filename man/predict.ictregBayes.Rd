@@ -1,0 +1,78 @@
+\name{predict.ictregBayes} 
+\alias{predict.ictregBayes}
+\title{Predict Method for the Item Count Technique with Bayesian MCMC} 
+\description{ 
+Function to calculate predictions and uncertainties of predictions from estimates from multivariate regression analysis of survey data with the item count technique.
+} 
+\usage{
+
+  \method{predict}{ictregBayes}(object, newdata, newdata.diff, direct.glm, se.fit = FALSE, 
+ interval = c("none","confidence"), level = .95, sensitive.item, ...) 
+
+} 
+
+\arguments{ 
+\item{object}{Object of class inheriting from "ictregBayes" or "ictregBayesMulti"}
+\item{newdata}{An optional data frame containing data that will be used to make predictions from. If omitted, the data used to fit the regression are used.}
+\item{newdata.diff}{An optional data frame used to compare predictions with predictions from the data in the provided newdata data frame.}
+\item{direct.glm}{A glm object from a logistic binomial regression predicting responses to a direct survey item regarding the sensitive item. The predictions from the ictreg object are compared to the predictions based on this glm object.}
+\item{se.fit}{A switch indicating if standard errors are required.}
+\item{interval}{Type of interval calculation.}
+\item{level}{Significance level for confidence intervals.}
+\item{sensitive.item}{For the multiple sensitive item design, the integer indicating which sensitive item coefficients will be used for prediction.}
+\item{...}{further arguments to be passed to or from other methods.}
+}
+
+\details{\code{predict.ictregBayes} produces predicted values, obtained by evaluating the regression function in the frame newdata (which defaults to \code{model.frame(object)}. If the logical \code{se.fit} is \code{TRUE}, standard errors of the predictions are calculated. Setting \code{interval} specifies computation of confidence intervals at the specified level or no intervals.
+
+The mean prediction across all observations in the dataset is calculated, and if the \code{se.fit} option is set to \code{TRUE} a standard error for this mean estimate will be provided. The \code{interval} option will output confidence intervals instead of only the point estimate if set to \code{TRUE}.
+
+Two additional types of mean prediction are also available. The first, if a \code{newdata.diff} data frame is provided by the user, calculates the mean predicted values across two datasets, as well as the mean difference in predicted value. Standard errors and confidence intervals can also be added. For difference prediction, \code{avg} must be set to \code{TRUE}.
+
+The second type of prediction, triggered if a \code{direct.glm} object is provided by the user, calculates the mean difference in prediction between predictions based on an \code{ictreg} fit and a \code{glm} fit from a direct survey item on the sensitive question. This is defined as the revealed social desirability bias in Blair and Imai (2010).
+
+In the multiple sensitive item design, prediction can only be based on the coefficients from one of the sensitive item fits. The \code{sensitive.item} option allows you to specify which is used, using integers from 1 to the number of sensitive items.
+
+}
+
+
+\value{\code{predict.ictreg} produces a vector of predictions or a matrix of predictions and bounds with column names fit, lwr, and upr if interval is set. If se.fit is TRUE, a list with the following components is returned:
+
+\item{fit}{vector or matrix as above}
+\item{se.fit}{standard error of prediction}
+}
+
+\seealso{\code{\link{ictreg}} for model fitting}
+
+
+\references{
+Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of List Experiments." 
+  Political Analysis, Vol. 20, No 1 (Winter). available at 
+  \url{http://imai.princeton.edu/research/listP.html}
+
+Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item
+  Count Technique.''  Journal of the American Statistical Association, 
+  Vol. 106, No. 494 (June), pp. 407-416. available at
+  \url{http://imai.princeton.edu/research/list.html}}
+
+  \author{Graeme Blair, Princeton University,
+\email{gblair@princeton.edu} and Kosuke Imai, Princeton University,
+\email{kimai@princeton.edu} 
+}
+
+\examples{
+data(race)
+
+\dontrun{
+
+bayes.fit <- ictregBayes(y ~ age + college + male + south, data = multi, 
+  treat = "treat", delta.tune = diag(.002, 5), psi.tune = diag(.00025, 5))
+
+bayes.predict <- predict(bayes.fit, interval = "confidence", se.fit = TRUE)
+
+}
+
+}
+ 
+\keyword{models}
+\keyword{regression}
