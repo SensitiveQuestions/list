@@ -353,7 +353,8 @@ test_that("plot.predict works for ictreg", {
                                newdata = race.south, newdata.diff = race.nonsouth,
                                se.fit = TRUE, avg = TRUE)
   
-  warning("could not do diff mle plot")
+  ##warning("could not do diff mle plot")
+  
   ##plot(avg.pred.diff.mle)
   
   # Social desirability bias plots
