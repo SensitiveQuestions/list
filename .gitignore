@@ -12,7 +12,8 @@
 vignettes/*.html
 vignettes/*.pdf
 .Rproj.user
-.Rproj
+
+*.Rproj
 
 # compiled files 
 src/*.o
