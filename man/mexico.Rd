@@ -51,5 +51,5 @@ where item c. is presented only to the treatment group, and the control list onl
 	}
 }
 
-\source{The full data set is available at the Mexico Panel Study website (\url{http://web.mit.edu/clawson/www/polisci/research/mexico06/})}
+\source{The full data set is available at the Mexico Panel Study website (\url{http://mexicopanelstudy.mit.edu/})}
 \keyword{datasets}

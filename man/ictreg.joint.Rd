@@ -52,8 +52,7 @@ at \url{http://imai.princeton.edu/research/files/listExp.pdf}
 
 
 \examples{
-
-
+\dontrun{
 data(mexico)
 loyal <- mexico[mexico$mex.loyal == 1,]
 notloyal <- mexico[mexico$mex.loyal == 0,]
@@ -68,8 +67,6 @@ loyalreg <- ictreg.joint(formula = mex.y.all ~ mex.male + mex.age + mex.age2 + m
                          treat = "mex.t", outcome = "mex.votecard", J = 3, constrained = TRUE,
                          outcome.reg = "logistic", maxIter = 1000)
 summary(loyalreg)
-
-\dontrun{
 
 ## Linear outcome regression
 ## (effect of vote-selling on candidate approval)
