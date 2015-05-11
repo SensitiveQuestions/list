@@ -9,6 +9,8 @@ library(MASS)
 
 test_that("ictregBayesHier works", {
   
+  skip_on_cran()
+  
   ## Multiple chain MCMC list experiment regression
   ## starts with overdispersed MLE starting values
   
@@ -93,6 +95,8 @@ test_that("ictregBayesHier works", {
 })
 
 test_that("predict for ictregBayesHier works", {
+  
+  skip_on_cran()
     
   mle.estimates.multi <- ictreg(y ~ male + college, data = multi,
                                 constrained = TRUE)

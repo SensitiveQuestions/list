@@ -13,19 +13,6 @@ race$weight.uniform <- runif(nrow(race))
 affirm$weight.1 <- 1
 affirm$weight.uniform <- runif(nrow(affirm))
 
-not_equal <- function(expected, label = NULL, ...) {
-  
-  function(actual) {
-    same <- compare(expected, actual, ...)
-    
-    expectation(
-      same$equal == FALSE,
-      paste0("not equal to ", label, "\n", same$message),
-      paste0("equals ", label)
-    )
-  }
-}
-
 test_that("diff in means works", {
   
   # Calculate list experiment difference in means
@@ -44,8 +31,8 @@ test_that("diff in means works", {
   
   diff.in.means.results.wU <- ictreg(y ~ 1, data = race, treat = "treat", J=3, method = "lm", weights = "weight.uniform")
   
-  expect_that(coef(diff.in.means.results), not_equal(coef(diff.in.means.results.wU)))
-  expect_that(vcov(diff.in.means.results), not_equal(vcov(diff.in.means.results.wU)))
+  expect_that(coef(diff.in.means.results), not(equals(coef(diff.in.means.results.wU))))
+  expect_that(vcov(diff.in.means.results), not(equals(vcov(diff.in.means.results.wU))))
   
 })
 
@@ -78,8 +65,8 @@ test_that("lm works", {
   lm.results.wU <- ictreg(y ~ south + age + male + college, data = race, 
                           treat = "treat", J=3, method = "lm", weights = "weight.uniform")
   
-  expect_that(coef(lm.results), not_equal(coef(lm.results.wU)))
-  expect_that(vcov(lm.results), not_equal(vcov(lm.results.wU)))
+  expect_that(coef(lm.results), not(equals(coef(lm.results.wU))))
+  expect_that(vcov(lm.results), not(equals(vcov(lm.results.wU))))
   
 })
 
@@ -112,8 +99,8 @@ test_that("nls works", {
   nls.results.wU <- ictreg(y ~ south + age + male + college, data = race, 
                            treat = "treat", J=3, method = "nls", weights = "weight.uniform")
   
-  expect_that(coef(nls.results), not_equal(coef(nls.results.wU)))
-  expect_that(vcov(nls.results), not_equal(vcov(nls.results.wU)))
+  expect_that(coef(nls.results), not(equals(coef(nls.results.wU))))
+  expect_that(vcov(nls.results), not(equals(vcov(nls.results.wU))))
   
 })
 
@@ -151,8 +138,8 @@ test_that("ml constrained works", {
                                       treat = "treat", J=3, method = "ml", 
                                       overdispersed = FALSE, constrained = TRUE, weights = "weight.uniform")
   
-  expect_that(coef(ml.constrained.results), not_equal(coef(ml.constrained.results.wU)))
-  expect_that(vcov(ml.constrained.results), not_equal(vcov(ml.constrained.results.wU)))
+  expect_that(coef(ml.constrained.results), not(equals(coef(ml.constrained.results.wU))))
+  expect_that(vcov(ml.constrained.results), not(equals(vcov(ml.constrained.results.wU))))
   
 })
 
@@ -194,8 +181,8 @@ test_that("ml unconstrained works", {
                                         treat = "treat", J=3, method = "ml", 
                                         overdispersed = FALSE, constrained = FALSE, weights = "weight.uniform")
   
-  expect_that(coef(ml.unconstrained.results), not_equal(coef(ml.unconstrained.results.wU)))
-  expect_that(vcov(ml.unconstrained.results), not_equal(vcov(ml.unconstrained.results.wU)))
+  expect_that(coef(ml.unconstrained.results), not(equals(coef(ml.unconstrained.results.wU))))
+  expect_that(vcov(ml.unconstrained.results), not(equals(vcov(ml.unconstrained.results.wU))))
   
 })
 
@@ -318,6 +305,8 @@ test_that("ceiling and floor model works", {
 
 test_that("plot.predict works for ictreg", {
   
+  skip_on_cran()
+  
   race.south <- race.nonsouth <- race
   race.south[, "south"] <- 1
   race.nonsouth[, "south"] <- 0
@@ -391,6 +380,8 @@ test_that("plot.predict works for ictreg", {
 })
 
 test_that("summary with boundary proportions for ictreg", {
+  
+  skip_on_cran()
   
   ceiling.results <- ictreg(y ~ age + college + male + south, treat = "treat", 
                             J = 3, data = affirm, method = "ml", fit.start = "nls",
