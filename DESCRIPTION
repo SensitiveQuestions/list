@@ -10,7 +10,8 @@ Depends: R (>= 3.1.1), utils, sandwich (>= 2.2-10)
 Imports: VGAM (>= 0.9-0), magic (>= 1.5-4), gamlss.dist (>= 4.2-0),
         MASS (>= 7.3-26), quadprog (>= 1.5-4), corpcor (>= 1.6.5), 
         mvtnorm (>= 0.9-9994), coda (>= 0.16-1)
-Suggests: testthat (>= 0.9.1)
+Suggests: testthat (>= 0.9.1), knitr (>= 1.10.5)
+VignetteBuilder: knitr
 Description: list is a publicly available R package that allows
         researchers to conduct multivariate statistical analyses of
         survey data with list experiments. In addition, the package
@@ -21,14 +22,15 @@ Description: list is a publicly available R package that allows
         randomized response method. The package implements the methods
         developed by Imai (2011), Blair and Imai (2012), Blair,
         Imai, and Lyall (2013), and Imai, Park, and Greene (2014). 
-	      This includes a Bayesian MCMC implementation of regression 
-	      for the standard and multiple sensitive item list experiment 
-	      designs and a random effects setup, a Bayesian MCMC hierarchical 
-	      regression model with up to three hierarchical groups, the 
-	      combined list experiment and endorsement experiment regression 
-	      model, and a joint model of the list experiment that enables
-	      the analysis of the list experiment as a predictor in 
-	      outcome regression models.
+	This includes a Bayesian MCMC implementation of regression 
+	for the standard and multiple sensitive item list experiment 
+	designs and a random effects setup, a Bayesian MCMC hierarchical 
+	regression model with up to three hierarchical groups, the 
+	combined list experiment and endorsement experiment regression 
+	model, and a joint model of the list experiment that enables
+	the analysis of the list experiment as a predictor in 
+	outcome regression models.
 LazyLoad: yes
 LazyData: yes
 License: GPL (>= 2)
+

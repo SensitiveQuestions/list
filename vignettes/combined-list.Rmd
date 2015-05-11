@@ -1,0 +1,235 @@
+---
+title: "Combining List Experiments with Direct Questions using `combined.listDirect()`"
+author: "Alexander Coppock"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Combined Lists}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+This vignette will provide a brief introduction to the combined list estimator described in Aronow, Coppock, Crawford, and Green (2015): Combining List Experiment and Direct Question Estimates of Sensitive Behavior Prevalence. In addition to the mechanics of the `combined.list()` function, you will learn how to interpret the results of the two placebo tests that can serve as checks on the validity of the list experimental assumptions.
+
+If you want to use the combined estimator, you must tweak your standard list experimental design. All subjects must be asked the direct question in addition to being randomly assigned to either treatment or control lists. It is recommended that the order in which subjects are asked the two questions (direct and list) be randomized.
+
+# Setup
+
+List experiments are designed to estimate the prevalence of some sensitive attitude or behavior. Typically, direct questioning would lead to an underestimate of prevalence because some subjects who do hold the attitude or engage in the behavior would withhold.
+
+For example, suppose we have 1500 subjects, 1000 of whom engage, but 500 of whom would withhold if asked directly.
+
+```{r}
+# Set a seed for reproducibility
+set.seed(123) 
+
+# Define subject types.
+
+# Truthfully respond "Yes" to direct question
+N.trueadmitter <- 500
+
+# Falsely respond "No" to direct question
+N.withholder <- 500
+
+# Truthfully respond "No" to direct question
+N.innocent <- 500
+
+type <- rep(c("TA", "WH", "IN"), times=c(N.trueadmitter, N.withholder, N.innocent))
+```
+
+# Direct Question
+Now suppose we were to ask the direct question, "Do you engage?"
+
+```{r}
+D <- ifelse(type=="TA", 1, 0)
+direct.est <- mean(D)
+direct.est
+```
+
+The true proportion of engagers is 1000/1500 = 0.67.  However, the direct question is badly biased by social desirability: our direct question prevalence estimate is `r round(direct.est, 2)`.
+
+# Conventional List Experiment
+A conventional list experiment addresses social desirability by asking a control group how many of `J` (non-sensitive) behaviors they engage in and a treatment group how many of `J + 1` behaviors they engage in, where the additional behavior is the sensitive one.  The (possibly covariate-adjusted) difference-in-means renders a prevalence estimate that is free from social desiriability bias. This estimate relies on two additional assumptions: No Liars and No Design Effects.  No Liars requires that treatment subjects respond truthfully to the list question and No Design Effects requires that the presence of the sensitive item does not change treated subjects' responses to the non-sensitive items.
+
+```{r}
+N <- length(type)
+# Generate list response potential outcomes
+
+# Control potential outcome
+Y0 <- sample(1:4, N, replace=TRUE)
+
+# Treated potential outcome is 1 higher for true admitters and withholders
+Y1 <- Y0 + ifelse(type %in% c("TA", "WH"), 1, 0)
+
+# Conduct random assignment
+Z <- rbinom(N, 1, 0.5)
+
+# Reveal list responses
+Y <- Z*Y1 + (1-Z)*Y0
+
+list.est <- mean(Y[Z==1]) - mean(Y[Z==0])
+list.se <- sqrt((var(Y[Z==1])/sum(Z) + var(Y[Z==0])/sum(1-Z)))
+list.est
+list.se
+```
+
+The list experiment comes closer to the truth: our estimate is now `r round(list.est, 2)`. The standard error is somewhat large, at `r round(list.se, 2)`. A principal difficulty with using list experiments is that estimates can be quite imprecise.
+
+# Combined List Experiment
+
+The purpose of the combined estimator is to increase precision by combining direct questioning with list experimentation. The combined estimate is a weighted average of the direct question estimate and the list experiment estimate among those who answer "No" to the direct question. Under two additional assumptions (Treatment Independence and Monotonicity), the combined estimator yields more precise estimates than the conventional estimator.  Treatment independence requires that the treatment not have any effect on the direct question response. Monotonicity requires that no subjects "falsely confess" to the direct question.
+
+Estimation is straightforward:
+
+```{r}
+library(list) # this will need to change when incorporated
+# Wrap up all data in a dataframe
+df <- data.frame(Y, Z, D)
+out.1 <- combined.listDirect(formula = Y ~ Z, data = df, treat = "Z", direct = "D")
+out.1
+```
+
+If we compare the standard errors of the two methods, we can see that the combined estimator is more precise than the conventional estimator.  
+
+# Placebo Tests
+
+The `combined.list()` function automatically conducts two placebo tests that can check the assumptions underlying the list experimental design.
+
+## Placebo Test I
+
+This test checks to see if the list experiment estimate among those who answer "Yes" to the direct question is significantly different from 1. Rejecting the hypothesis that this estimate is equal to one, indicates that one or more of four list experiment assumptions might be wrong: No Liars, No Design Effects, Treatment Ignorability, or Monotonicity.  
+
+## Placebo Test II
+
+This test checks to see if the direct question is affected by the treatment. If Treatment Independnce is satisfied, the (possibly covariate-adjusted) difference-in-means should not be significantly different from 0.
+
+It's easy to see the results of both tests using `summary.comblist()`. Because we generated the data above respecting the list experiment assumptions, we know that we should pass both tests.
+
+```{r}
+summary(out.1)
+```
+
+The high p-values for both tests suggest that we cannot reject either null hypothesis. The assumptions underlying both the conventional and combined list experiment estimators have not been demonstrated to be false.
+
+## Violations of assumptions
+
+Let's show cases where the tests indicate that there are problems.  First, let's consider the case where some subjects are "design affected", i.e., they lower their response to the non-sensitive items when the sensitive item is also on the list.
+
+```{r}
+# Define three subject types as before plus one new type
+
+N.trueadmitter <- 400
+N.withholder <- 500
+N.innocent <- 500
+
+# Truthfully responds "Yes" to direct question
+# but decreases response to the non-sensitive items 
+# in the presence of the sensitive item
+N.designaffected <- 100
+
+type <- rep(c("TA", "WH", "IN", "DA"), 
+            times=c(N.trueadmitter, N.withholder, N.innocent, N.designaffected))
+N <- length(type)
+
+D <- ifelse(type%in%c("TA","DA"), 1, 0)
+
+# Control potential outcome
+Y0 <- sample(1:4, N, replace=TRUE)
+
+# Treated potential outcome is 1 higher for true admitters and withholders
+# Note that it is NOT higher for those who are "design affected"
+Y1 <- Y0 + ifelse(type %in% c("TA", "WH"), 1, 0)
+
+Z <- rbinom(N, 1, 0.5)
+Y <- Z*Y1 + (1-Z)*Y0
+df <- data.frame(Y, Z, D)
+
+out.2 <- combined.listDirect(formula = Y ~ Z, data = df, treat = "Z", direct = "D")
+
+# Extract Placebo Test I results 
+unlist(out.2$placebo.I)
+```
+
+The low p-value suggests that we should reject the hypothesis that the list experimental estimate is equal to one among those who answer "Yes" to the direct question. We could reject this hypothesis if any of the four assumptions above were violated in some way.  If the null is rejected, the list experiment estimates - both conventional and combined - are possibly biased.
+
+----
+Next let's consider a case where the treatment does affect the direct question response, violating the Treatment Ignorability assumption.
+
+```{r}
+# Define three subject types as before plus one new type
+
+N.trueadmitter <- 400
+N.withholder <- 500
+N.innocent <- 500
+
+# Truthfully answers "Yes" when in control
+# But falsely answers "No" when in treatment
+N.affectedbytreatment <- 100
+
+type <- rep(c("TA", "WH", "IN", "ABT"), 
+            times=c(N.trueadmitter, N.withholder, N.innocent, N.affectedbytreatment))
+N <- length(type)
+
+# Direct Question Potential outcomes
+D0 <- ifelse(type%in%c("TA","ABT"), 1, 0)
+D1 <- ifelse(type%in%c("TA"), 1, 0)
+
+# List Experiment potential outcomes
+Y0 <- sample(1:4, N, replace=TRUE)
+Y1 <- Y0 + ifelse(type %in% c("TA", "WH"), 1, 0)
+
+# Reveal outcomes according to random assignment
+Z <- rbinom(N, 1, 0.5)
+Y <- Z*Y1 + (1-Z)*Y0
+D <- Z*D1 + (1-Z)*D0
+
+df <- data.frame(Y, Z, D)
+
+out.3 <- combined.listDirect(formula = Y ~ Z, data = df, treat = "Z", direct = "D")
+
+# Extract Placebo Test II results 
+unlist(out.3$placebo.II)
+```
+
+Again, the low p-value suggests that the null hypothesis that the average effect of the treatment on the direct response is zero is false. When this null is rejected, the combined estimator may yield biased results.
+
+# Covariate Adjustment
+
+Another way to increase the precision of list experiments is to include pre-treatment covariates that are predictive of the list experiment outcome.  The combined estimator can accomodate the inclusion of pre-treatment covariates quite easily.
+
+```{r}
+# Define subject types.
+N.trueadmitter <- 500
+N.withholder <- 500
+N.innocent <- 500
+
+type <- rep(c("TA", "WH", "IN"), times=c(N.trueadmitter, N.withholder, N.innocent))
+N <- length(type)
+
+# Generate a predictive pre-treatment covariate "X")
+X <- rnorm(N, sd = 2)
+
+# Control potential outcome is related to "X"
+Y0 <- as.numeric(cut(X + runif(N), breaks = 4))
+Y1 <- Y0 + ifelse(type %in% c("TA", "WH"), 1, 0)
+
+Z <- rbinom(N, 1, 0.5)
+D <- ifelse(type=="TA", 1, 0)
+Y <- Z*Y1 + (1-Z)*Y0
+
+df <- data.frame(Y, Z, D, X)
+
+# Conduct estimation without covariate adjustment
+out.4 <- combined.listDirect(formula = Y ~ Z, data = df, treat = "Z", direct = "D")
+out.4
+
+# Conduct estimation with covariate adjustment
+# Just add the covariate on the right-hand side of the formula
+out.5 <- combined.listDirect(formula = Y ~ Z + X, data = df, treat = "Z", direct = "D")
+out.5
+```
+
+A comparison of the standard errors with and without covariate adjustment confirms that the covariate-adjusted estimator is more precise.  When you include covariates, the placebo tests become more powerful as well.
+
+
+

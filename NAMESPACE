@@ -6,6 +6,7 @@ export(ict.test)
 export(ictregBayesHier)
 export(comp.listEndorse)
 export(ictreg.joint, predict.ictreg.joint)
+export(combined.listDirect)
 
 importFrom(VGAM, betabinomial, vglm)
 importFrom(gamlss.dist, dBB)
@@ -67,3 +68,8 @@ S3method(predict, ictregBayesHier.list)
 S3method(print, ictregBayesHier.list)
 S3method(summary, ictregBayesHier.list)
 S3method(print, summary.ictregBayesHier.list)
+
+S3method(print, comblist)
+S3method(summary, comblist)
+S3method(print, summary.comblist)
+
