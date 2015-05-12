@@ -1,4 +1,4 @@
-context("Tests regression code (rrreg)")
+context("Tests regression code (ictreg)")
 rm(list=ls())
 
 set.seed(1)

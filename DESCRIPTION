@@ -1,6 +1,6 @@
 Package: list
 Version: 8.0
-Date: 2015-4-1
+Date: 2015-5-12
 Title: Statistical Methods for the Item Count Technique and 
         List Experiment
 Author: Graeme Blair [aut, cre], Kosuke Imai [aut, cre], Bethany Park [ctb],
@@ -12,7 +12,7 @@ Imports: VGAM (>= 0.9-0), magic (>= 1.5-4), gamlss.dist (>= 4.2-0),
         mvtnorm (>= 0.9-9994), coda (>= 0.16-1)
 Suggests: testthat (>= 0.9.1), knitr (>= 1.10.5)
 VignetteBuilder: knitr
-Description: This package allows researchers to conduct multivariate 
+Description: Allows researchers to conduct multivariate 
 	statistical analyses of survey data with list experiments. In 
 	addition, the package implements the statistical test that is 
 	designed to detect certain failures of list experiments. This 
