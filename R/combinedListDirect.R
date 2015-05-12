@@ -7,51 +7,24 @@
 #' @param direct a character string giving the name of the direct response variable. Defaults to "direct". The direct response variable itself must only contain the values 0 and 1, where 1 refers to subjects who answered "Yes" to the direct question.
 #' @return a list containing conventional, direct, and combined prevalence estimates with associated standard errors as well as the results of two placebo tests.
 #' @examples
-#' # Define subject types.
-#'
-#' # Truthfully respond "Yes" to direct question
-#' N.trueadmitter <- 500
-#'
-#' # Falsely respond "No" to direct question
-#' N.withholder <- 500
-#'
-#' # Truthfully respond "No" to direct question
-#' N.innocent <- 500
-#'
-#' type <- rep(c("TA", "WH", "IN"), times=c(N.trueadmitter, N.withholder, N.innocent))
-#' N <- length(type)
-#'
-#' # Generate a predictive pre-treatment covariate "X")
-#' X <- rnorm(N, sd = 2)
-#'
-#' # Generate list response potential outcomes
-#'
-#' # Control potential outcome is related to "X"
-#' Y0 <- as.numeric(cut(X + runif(N), breaks = 4))
-#'
-#' # Treated potential outcome is 1 higher for true admitters and withholders
-#' Y1 <- Y0 + ifelse(type %in% c("TA", "WH"), 1, 0)
-#'
-#' # Conduct random assignment
-#' Z <- rbinom(N, 1, 0.5)
-#'
-#' # Reveal direct question responses
-#' D <- ifelse(type=="TA", 1, 0)
-#'
-#' # Reveal list responses
-#' Y <- Z*Y1 + (1-Z)*Y0
-#'
-#' # Wrap into dataframe
-#' df <- data.frame(Y, Z, D, X)
-#'
+#' # Load data from Aronow, Coppock, Crawford, and Green (2015)
+#' data("combinedListExps")
+#' 
+#' # complete case analysis
+#' combinedListExps <- na.omit(combinedListExps)
 #' # Conduct estimation without covariate adjustment
-#' out.1 <- combined.listDirect(formula = Y ~ Z, data = df, treat = "Z", direct = "D")
+#' out.1 <- combinedListDirect(list1N ~ list1treat, 
+#'                             data = subset(combinedListExps, directsfirst==1), 
+#'                             treat = "list1treat", direct = "direct1")
 #' summary(out.1)
 #'
 #' # Conduct estimation with covariate adjustment
-#' out.2 <- combined.listDirect(formula = Y ~ Z + X, data = df, treat = "Z", direct = "D")
+#' out.2 <- combinedListDirect(list1N ~ list1treat + gender + 
+#'                             ideology + education + race, 
+#'                             data = subset(combinedListExps, directsfirst==1), 
+#'                             treat = "list1treat", direct = "direct1")
 #' summary(out.2)
-combined.listDirect <- function(formula, data = parent.frame(), treat="treat", direct="direct", ...){
+combinedListDirect <- function(formula, data = parent.frame(), treat="treat", direct="direct"){
 
   comblist.call <- match.call()
 
@@ -236,4 +209,16 @@ print.summary.comblist <- function(x, ...){
   print(pIItb)
 }
 
+#' Five List Experiments with Direct Questions
+#'
+#' A dataset containing the five list experiments in 
+#' Aronow, Coppock, Crawford, and Green (2015)
+#'
+#'
+#' @docType data
+#' @keywords datasets
+#' @name combinedListExps
+#' @usage data(combinedListExps)
+#' @format A data frame with 1023 observations and 23 variables
+NULL
 

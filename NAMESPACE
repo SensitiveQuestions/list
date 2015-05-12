@@ -6,7 +6,7 @@ export(ict.test)
 export(ictregBayesHier)
 export(comp.listEndorse)
 export(ictreg.joint, predict.ictreg.joint)
-export(combined.listDirect)
+export(combinedListDirect)
 
 importFrom(VGAM, betabinomial, vglm)
 importFrom(gamlss.dist, dBB)

@@ -1,5 +1,5 @@
 ---
-title: "Combining List Experiments with Direct Questions using `combined.listDirect()`"
+title: "Combining List Experiments with Direct Questions using `combinedListDirect()`"
 author: "Alexander Coppock"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -9,7 +9,7 @@ vignette: >
   \usepackage[utf8]{inputenc}
 ---
 
-This vignette will provide a brief introduction to the combined list estimator described in Aronow, Coppock, Crawford, and Green (2015): Combining List Experiment and Direct Question Estimates of Sensitive Behavior Prevalence. In addition to the mechanics of the `combined.list()` function, you will learn how to interpret the results of the two placebo tests that can serve as checks on the validity of the list experimental assumptions.
+This vignette will provide a brief introduction to the combined list estimator described in Aronow, Coppock, Crawford, and Green (2015): Combining List Experiment and Direct Question Estimates of Sensitive Behavior Prevalence. In addition to the mechanics of the `combinedListDirect()` function, you will learn how to interpret the results of the two placebo tests that can serve as checks on the validity of the list experimental assumptions.
 
 If you want to use the combined estimator, you must tweak your standard list experimental design. All subjects must be asked the direct question in addition to being randomly assigned to either treatment or control lists. It is recommended that the order in which subjects are asked the two questions (direct and list) be randomized.
 
@@ -82,10 +82,10 @@ The purpose of the combined estimator is to increase precision by combining dire
 Estimation is straightforward:
 
 ```{r}
-library(list) # this will need to change when incorporated
+library(list)
 # Wrap up all data in a dataframe
 df <- data.frame(Y, Z, D)
-out.1 <- combined.listDirect(formula = Y ~ Z, data = df, treat = "Z", direct = "D")
+out.1 <- combinedListDirect(formula = Y ~ Z, data = df, treat = "Z", direct = "D")
 out.1
 ```
 
@@ -93,7 +93,7 @@ If we compare the standard errors of the two methods, we can see that the combin
 
 # Placebo Tests
 
-The `combined.list()` function automatically conducts two placebo tests that can check the assumptions underlying the list experimental design.
+The `combinedListDirect()` function automatically conducts two placebo tests that can check the assumptions underlying the list experimental design.
 
 ## Placebo Test I
 
@@ -144,7 +144,7 @@ Z <- rbinom(N, 1, 0.5)
 Y <- Z*Y1 + (1-Z)*Y0
 df <- data.frame(Y, Z, D)
 
-out.2 <- combined.listDirect(formula = Y ~ Z, data = df, treat = "Z", direct = "D")
+out.2 <- combinedListDirect(formula = Y ~ Z, data = df, treat = "Z", direct = "D")
 
 # Extract Placebo Test I results 
 unlist(out.2$placebo.I)
@@ -185,7 +185,7 @@ D <- Z*D1 + (1-Z)*D0
 
 df <- data.frame(Y, Z, D)
 
-out.3 <- combined.listDirect(formula = Y ~ Z, data = df, treat = "Z", direct = "D")
+out.3 <- combinedListDirect(formula = Y ~ Z, data = df, treat = "Z", direct = "D")
 
 # Extract Placebo Test II results 
 unlist(out.3$placebo.II)
@@ -220,12 +220,12 @@ Y <- Z*Y1 + (1-Z)*Y0
 df <- data.frame(Y, Z, D, X)
 
 # Conduct estimation without covariate adjustment
-out.4 <- combined.listDirect(formula = Y ~ Z, data = df, treat = "Z", direct = "D")
+out.4 <- combinedListDirect(formula = Y ~ Z, data = df, treat = "Z", direct = "D")
 out.4
 
 # Conduct estimation with covariate adjustment
 # Just add the covariate on the right-hand side of the formula
-out.5 <- combined.listDirect(formula = Y ~ Z + X, data = df, treat = "Z", direct = "D")
+out.5 <- combinedListDirect(formula = Y ~ Z + X, data = df, treat = "Z", direct = "D")
 out.5
 ```
 

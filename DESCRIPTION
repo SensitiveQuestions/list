@@ -4,7 +4,7 @@ Date: 2015-4-1
 Title: Statistical Methods for the Item Count Technique and 
         List Experiment
 Author: Graeme Blair [aut, cre], Kosuke Imai [aut, cre], Bethany Park [ctb],
-        Peter Aronow [ctb], Alexander Coppock [ctb], Donald Green [ctb]
+        Alexander Coppock [ctb]
 Maintainer: Graeme Blair <graeme.blair@columbia.edu>
 Depends: R (>= 3.1.1), utils, sandwich (>= 2.2-10)
 Imports: VGAM (>= 0.9-0), magic (>= 1.5-4), gamlss.dist (>= 4.2-0),
@@ -20,15 +20,17 @@ Description: This package allows researchers to conduct multivariate
 	the unmatched count technique and is an alternative to the commonly 
 	used randomized response method. The package implements the methods
         developed by Imai (2011), Blair and Imai (2012), Blair,
-        Imai, and Lyall (2013), and Imai, Park, and Greene (2014). 
+        Imai, and Lyall (2013), Imai, Park, and Greene (2014), 
+        and Aronow, Coppock, Crawford, and Green (2015). 
 	This includes a Bayesian MCMC implementation of regression 
 	for the standard and multiple sensitive item list experiment 
 	designs and a random effects setup, a Bayesian MCMC hierarchical 
 	regression model with up to three hierarchical groups, the 
 	combined list experiment and endorsement experiment regression 
-	model, and a joint model of the list experiment that enables
+	model, a joint model of the list experiment that enables
 	the analysis of the list experiment as a predictor in 
-	outcome regression models.
+	outcome regression models, and a method for combining list 
+	experiments with direct questioning.
 LazyLoad: yes
 LazyData: yes
 License: GPL (>= 2)
