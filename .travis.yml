@@ -2,9 +2,6 @@ language: r
 
 sudo: required
 
-r_packages:
-  - VGAM, magic, gamlss.dist, MASS, quadprog, corpcor, mvtnorm, coda, knitr
-
 r_github_packages:
   - hadley/testthat
 
