@@ -5,6 +5,8 @@ set.seed(1)
 
 library(MASS)
 
+data(multi)
+
 test_that("ictregBayes works", {
   
   skip_on_cran()

@@ -4,6 +4,7 @@ rm(list=ls())
 set.seed(1)
 
 data(race)
+data(multi)
 
 library(MASS)
 
