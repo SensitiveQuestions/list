@@ -1,6 +1,6 @@
 Package: list
 Version: 8.0
-Date: 2015-5-12
+Date: 2015-5-19
 Title: Statistical Methods for the Item Count Technique and 
         List Experiment
 Author: Graeme Blair [aut, cre], Kosuke Imai [aut, cre], Bethany Park [ctb],
@@ -13,9 +13,7 @@ Imports: VGAM (>= 0.9-0), magic (>= 1.5-4), gamlss.dist (>= 4.2-0),
 Suggests: testthat (>= 0.9.1), knitr (>= 1.10.5)
 VignetteBuilder: knitr
 Description: Allows researchers to conduct multivariate 
-	statistical analyses of survey data with list experiments. In 
-	addition, the package implements the statistical test that is 
-	designed to detect certain failures of list experiments. This 
+	statistical analyses of survey data with list experiments. This 
 	survey methodology is also known as the item count technique or 
 	the unmatched count technique and is an alternative to the commonly 
 	used randomized response method. The package implements the methods
@@ -30,7 +28,10 @@ Description: Allows researchers to conduct multivariate
 	model, a joint model of the list experiment that enables
 	the analysis of the list experiment as a predictor in 
 	outcome regression models, and a method for combining list 
-	experiments with direct questioning.
+	experiments with direct questions. In addition, the package 
+	implements the statistical test that is designed to detect 
+	certain failures of list experiments, and a placebo test 
+	for the list experiment using data from direct questions.
 LazyLoad: yes
 LazyData: yes
 License: GPL (>= 2)

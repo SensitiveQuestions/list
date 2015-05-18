@@ -9,14 +9,10 @@ version      date  description
 4.0      05/04/11  Bayesian MCMC standard design estimator added; output improved; bug fixes
 4.1      05/22/11  Bayesian MCMC multiple sensitive design estimator added
 4.2      11/01/11  Minor update with several bug fixes
-5.0      01/03/12  Bayesian four-level hierarchical models and two-level
-	varying-intercept and varying slope models added; Bayesian ceiling
-	and floor effects added; many bug fixes
+5.0      01/03/12  Bayesian four-level hierarchical models and two-level varying-intercept and varying slope models added; Bayesian ceiling and floor effects added; many bug fixes
 5.1      03/23/12  Bug fixes
-6.0      04/23/12  A major update incorporating the methods proposed by
-	Blair, Imai, and Lyall (2013)
-6.1      02/27/14  Weights from the E-M algorithm are included as an
-	output, representing the posterior predicted probability of answering "yes".
-7.0      8/26/14  List experiments as a predictor in outcome regressions
-	method proposed in Imai, Park, and Greene (2014) incorporated
-7.1	   11/28/14  Bug fixes
+6.0      04/23/12  A major update incorporating the methods proposed by Blair, Imai, and Lyall (2013)
+6.1      02/27/14  Weights from the E-M algorithm are included as an output, representing the posterior predicted probability of answering "yes".
+7.0      8/26/14  List experiments as a predictor in outcome regressions method proposed in Imai, Park, and Greene (2014) incorporated
+7.1	 11/28/14  Bug fixes
+8.0	 05/19/15  Added statistical model to combine responses to a list experiment and a direct question on the same subject proposed in Aronow, Coppock, Crawford, and 	Green (2015), and also added weighted regression for many standard list experiment models including linear, NLS, and several maximum likelihood models. Several bug fixes.
