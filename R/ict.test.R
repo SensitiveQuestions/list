@@ -325,6 +325,8 @@ ict.test <- function(y, treat, J = NA, alpha = 0.05, n.draws = 250000, gms = TRU
   } ## end treatment value loop
 
   names(bonferroni) <- paste("Sensitive Item", treatment.values)
+  
+  bonferroni <- pmin(bonferroni, 1)
 
   if (pi.table == FALSE)
     return.object <- list(p = bonferroni)
