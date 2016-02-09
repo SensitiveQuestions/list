@@ -90,9 +90,9 @@ plot(c(avg.pred.south.mle, avg.pred.nonsouth.mle), labels = c("South", "Non-Sout
 
 avg.pred.diff.mle <- predict(ml.constrained.results, 
    newdata = race.south, newdata.diff = race.nonsouth,
-   se.fit = TRUE, avg = TRUE)
+   se.fit = TRUE, avg = TRUE, interval="confidence")
 
-plot(avg.pred.diff.mle)
+plot(avg.pred.diff.mle, labels = c("South", "Non-South", "Difference"))
 
 # Social desirability bias plots
 
