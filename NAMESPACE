@@ -74,3 +74,14 @@ S3method(print, comblist)
 S3method(summary, comblist)
 S3method(print, summary.comblist)
 
+importFrom("graphics", "abline", "axis", "lines", "plot")
+importFrom("stats", ".getXlevels", "aggregate", "as.formula",
+             "binomial", "coef", "complete.cases", "contrasts<-", "cov",
+             "dbinom", "dcauchy", "dnorm", "dt", "gaussian", "glm",
+             "glm.control", "is.empty.model", "lm", "lm.fit",
+             "model.extract", "model.frame", "model.matrix",
+             "model.matrix.default", "model.offset", "model.response",
+             "model.weights", "na.omit", "nls", "nls.control", "offset",
+             "optim", "pchisq", "pnorm", "predict", "qnorm", "qt",
+             "quantile", "relevel", "residuals", "sd", "t.test", "terms",
+             "terms.formula", "var", "vcov")
