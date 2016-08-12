@@ -8,7 +8,8 @@ Function to conduct multivariate regression analyses of survey data with the ite
 } 
 \usage{
 ictreg(formula, data = parent.frame(), treat = "treat", J, method = "ml", 
-       weights, overdispersed = FALSE, constrained = TRUE, floor = FALSE, 
+       weights, h = NULL, group = NULL, matrixMethod = "efficient",
+       overdispersed = FALSE, constrained = TRUE, floor = FALSE, 
        ceiling = FALSE, ceiling.fit = "glm", floor.fit = "glm", 
        ceiling.formula = ~ 1, floor.formula = ~ 1, fit.start = "lm", 
        fit.nonsensitive = "nls", multi.condition = "none", 
@@ -20,8 +21,11 @@ ictreg(formula, data = parent.frame(), treat = "treat", J, method = "ml",
 \item{data}{A data frame containing the variables in the model}
 \item{treat}{Name of treatment indicator as a string. For single sensitive item models, this refers to a binary indicator, and for multiple sensitive item models it refers to a multi-valued variable with zero representing the control condition. This can be an integer (with 0 for the control group) or a factor (with "control" for the control group).}
 \item{J}{Number of non-sensitive (control) survey items.}
-\item{method}{ Method for regression, either \code{ml} for the Maximum Likelihood (ML) estimation with the Expectation-Maximization algorithm; \code{lm} for linear model estimation; or \code{nls} for the Non-linear Least Squares (NLS) estimation with the two-step procedure.}
+\item{method}{Method for regression, either \code{ml} for the Maximum Likelihood (ML) estimation with the Expectation-Maximization algorithm; \code{lm} for linear model estimation; or \code{nls} for the Non-linear Least Squares (NLS) estimation with the two-step procedure.}
 \item{weights}{Name of the weights variable as a string, if weighted regression is desired. Not implemented for the ceiling/floor models, multiple sensitive item design, or for the modified design.}
+\item{h}{Auxiliary data functionality. Optional named numeric vector with length equal to number of groups. Names correspond to group labels and values correspond to auxiliary moments.}
+\item{group}{Auxiliary data functionality. Optional character vector of group labels with length equal to number of observations.}
+\item{matrixMethod}{Auxiliary data functionality. Procedure for estimating optimal weighting matrix for generalized method of moments. One of "efficient" for two-step feasible and "cue" for continuously updating. Default is "efficient". Only relevant if \code{h} and \code{group} are specified.}
 \item{overdispersed}{Indicator for the presence of overdispersion. If \code{TRUE}, the beta-binomial model is used in the EM algorithm, if \code{FALSE} the binomial model is used. Not relevant for the \code{NLS} or \code{lm} methods.}
 \item{constrained}{A logical value indicating whether the control group parameters are constrained to be equal.  Not relevant for the \code{NLS} or \code{lm} methods}
 \item{floor}{A logical value indicating whether the floor liar model should be used to adjust for the possible presence of respondents dishonestly reporting a negative preference for the sensitive item among those who hold negative views of all the non-sensitive items.}
@@ -94,6 +98,12 @@ Depending upon the estimator requested by the user, model fit statistics are als
 \item{resid.se}{the residual standard error, if \code{nls} or \code{lm} are used. This will be a scalar if the standard design was used, and a vector if the multiple sensitive item design was used}
 \item{resid.df}{the residual degrees of freedom, if \code{nls} or \code{lm} are used. This will be a scalar if the standard design was used, and a vector if the multiple sensitive item design was used}
 
+When using the auxiliary data functionality, the following objects are included:
+\item{aux}{logical value indicating whether estimation incorporates auxiliary moments}
+\item{nh}{integer count of the number of auxiliary moments}
+\item{wm}{procedure used to estimate the optimal weight matrix}
+\item{J.stat}{numeric value of the Sargan Hansen overidentifying restriction test statistic}
+\item{overid.p}{corresponding p-value for the Sargan Hansen test}
 }
 
 \references{
