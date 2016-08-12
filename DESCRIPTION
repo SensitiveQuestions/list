@@ -18,7 +18,8 @@ Imports:
     quadprog (>= 1.5-5),
     corpcor (>= 1.6.7),
     mvtnorm (>= 1.0-2),
-    coda (>= 0.17-1)
+    coda (>= 0.17-1),
+    stats
 Suggests:
     testthat (>= 0.9.1),
     knitr (>= 1.10.5)
