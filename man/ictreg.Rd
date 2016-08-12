@@ -8,6 +8,7 @@ Function to conduct multivariate regression analyses of survey data with the ite
 } 
 \usage{
 ictreg(formula, data = parent.frame(), treat = "treat", J, method = "ml", 
+       h = NULL, group = NULL, matrixMethod = "efficient",
        weights, overdispersed = FALSE, constrained = TRUE, floor = FALSE, 
        ceiling = FALSE, ceiling.fit = "glm", floor.fit = "glm", 
        ceiling.formula = ~ 1, floor.formula = ~ 1, fit.start = "lm", 
@@ -20,7 +21,10 @@ ictreg(formula, data = parent.frame(), treat = "treat", J, method = "ml",
 \item{data}{A data frame containing the variables in the model}
 \item{treat}{Name of treatment indicator as a string. For single sensitive item models, this refers to a binary indicator, and for multiple sensitive item models it refers to a multi-valued variable with zero representing the control condition. This can be an integer (with 0 for the control group) or a factor (with "control" for the control group).}
 \item{J}{Number of non-sensitive (control) survey items.}
-\item{method}{ Method for regression, either \code{ml} for the Maximum Likelihood (ML) estimation with the Expectation-Maximization algorithm; \code{lm} for linear model estimation; or \code{nls} for the Non-linear Least Squares (NLS) estimation with the two-step procedure.}
+\item{method}{Method for regression, either \code{ml} for the Maximum Likelihood (ML) estimation with the Expectation-Maximization algorithm; \code{lm} for linear model estimation; or \code{nls} for the Non-linear Least Squares (NLS) estimation with the two-step procedure.}
+\item{h}{Optional named numeric vector with length equal to number of groups. Names correspond to group labels and values correspond to auxiliary moments.}
+\item{group}{Character vector of group labels with length equal to number of observations.}
+\item{matrixMethod}{Procedure for estimating optimal weighting matrix for generalized method of moments. One of "efficient" for two-step feasible and "cue" for continuously updating. Default is "efficient".}
 \item{weights}{Name of the weights variable as a string, if weighted regression is desired. Not implemented for the ceiling/floor models, multiple sensitive item design, or for the modified design.}
 \item{overdispersed}{Indicator for the presence of overdispersion. If \code{TRUE}, the beta-binomial model is used in the EM algorithm, if \code{FALSE} the binomial model is used. Not relevant for the \code{NLS} or \code{lm} methods.}
 \item{constrained}{A logical value indicating whether the control group parameters are constrained to be equal.  Not relevant for the \code{NLS} or \code{lm} methods}
