@@ -2222,7 +2222,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
             curr.sum <- sum(decomp$values[1:r]) 
           }
 
-          princompW <- matrix(0, nr = k, nc = k)
+          princompW <- matrix(0, nrow = k, ncol = k)
           for (value in 1:r) {
             princompW <- princompW + 1/decomp$values[value] * decomp$vectors[, value] %*% t(decomp$vectors[, value])
           }
@@ -2321,12 +2321,12 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         Gtmp <- c(J * logistic(x0 %*% gamma)/(1 + exp(x0 %*%
             gamma))) * x0
         G3 <- -t(Gtmp * w0) %*% Gtmp/n
-        G <- rbind(cbind(G1, G2), cbind(matrix(0, nc = ncol(G1), nr = nrow(G3)), G3))
+        G <- rbind(cbind(G1, G2), cbind(matrix(0, ncol = ncol(G1), nrow = nrow(G3)), G3))
         
         # complete moment vector
         M <- c(colSums(m1), colSums(m0), g)/n
         # complete Jacobian
-        if (length(h) > 0) G <- rbind(G, cbind(dh, matrix(0, nr = length(h), nc = ncol(G3))))
+        if (length(h) > 0) G <- rbind(G, cbind(dh, matrix(0, nrow = length(h), ncol = ncol(G3))))
 
         t(M) %*% (W + t(W)) %*% G
 
@@ -2442,10 +2442,10 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         Gtmp <- c(J * logistic(x0 %*% gamma)/(1 + exp(x0 %*%
             gamma))) * x0
         G3 <- -t(Gtmp) %*% Gtmp/n
-        G <- rbind(cbind(G1, G2), cbind(matrix(0, nc = ncol(G1), nr = nrow(G3)), G3))
+        G <- rbind(cbind(G1, G2), cbind(matrix(0, ncol = ncol(G1), nrow = nrow(G3)), G3))
 
         # complete Jacobian
-        if (length(h) > 0) G <- rbind(G, cbind(dh, matrix(0, nr = length(h), nc = ncol(G3))))
+        if (length(h) > 0) G <- rbind(G, cbind(dh, matrix(0, nrow = length(h), ncol = ncol(G3))))
 
         weightMatrix <- invF(pars = coef, J = J, y = y, treat = treat, x = x, w = w, 
           h = h, group = group, matrixMethod = matrixMethod)
