@@ -1,5 +1,6 @@
 
 ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = "ml", weights, 
+                   h = NULL, group = NULL, matrixMethod = "efficient", 
                    overdispersed = FALSE, constrained = TRUE, floor = FALSE, ceiling = FALSE, 
                    ceiling.fit = "glm", floor.fit = "glm", ceiling.formula = ~ 1, floor.formula = ~ 1, 
                    fit.start = "lm", fit.nonsensitive = "nls", multi.condition = "none", maxIter = 5000, verbose = FALSE, ...){
@@ -13,7 +14,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
   mf$method <- mf$maxIter <- mf$verbose <- mf$fit.start <- mf$J <- mf$design <- 
     mf$treat <- mf$weights <- mf$constrained <- mf$overdispersed <- mf$floor <- 
     mf$ceiling <- mf$ceiling.fit <- mf$fit.nonsensitive <- mf$floor.fit <- 
-    mf$multi.condition <- mf$floor.formula <- mf$ceiling.formula <- NULL
+    mf$multi.condition <- mf$floor.formula <- mf$ceiling.formula <- mf$h <-
+    mf$group <- mf$matrixMethod <- NULL
   mf[[1]] <- as.name("model.frame")
   mf$na.action <- 'na.pass'
   mf <- eval.parent(mf)
@@ -131,6 +133,16 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       stop("Weighted list experiment regression is not supported (yet) for the multi-item design.")
   }
 
+  # auxiliary data functionality -- check conditions
+  aux.check <- !(is.null(h) & is.null(group))
+
+  if (aux.check) {
+    if (multi.condition != "none") 
+      stop("The auxiliary data functionality is not yet supported for multiple sensitive item designs.")
+    if (method != "nls")
+      stop("The auxiliary data functionality is currently supported only for the nonlinear least squares method.")
+  }
+  
   n <- nrow(x.treatment) + nrow(x.control)
 
   coef.names <- colnames(x.all)
@@ -2157,7 +2169,310 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     } # end ml for modified design
     
   } # end modified design
-  
+
+  # auxiliary data functionality
+  if (aux.check) {
+
+    # this function returns the weighting matrix for the GMM estimator
+    invF <- function(pars, J, y, treat, x, w = NULL, h, group, matrixMethod = c("efficient", "princomp", "cue")) {
+
+        n <- length(y)
+
+        if (missing(w)) w <- rep(1, n)
+        w <- (n/sum(w)) * w
+        
+        y1 <- y[treat == 1]
+        y0 <- y[treat == 0]
+        x1 <- x[treat == 1, , drop = FALSE]
+        x0 <- x[treat == 0, , drop = FALSE]
+        w1 <- w[treat == 1]
+        w0 <- w[treat == 0]
+        group1 <- group[treat == 1]
+        delta <- pars[1:ncol(x)]
+        gamma <- pars[(ncol(x) + 1):(ncol(x) * 2)]
+
+        m1 <- c((y1 - J * logistic(x1 %*% gamma) - logistic(x1 %*% delta)) * 
+          logistic(x1 %*% delta)/(1 + exp(x1 %*% delta))) * x1
+        m0 <- c((y0 - J * logistic(x0 %*% gamma)) * 
+          J * logistic(x0 %*% gamma)/(1 + exp(x0 %*% gamma))) * x0
+        Em1 <- t(m1) %*% m1/n
+        Em0 <- t(m0) %*% m0/n
+        F <- adiag(Em1, Em0)
+
+        if (length(h) > 0) {
+          group.labels <- names(h)
+          for (label in group.labels) {
+            aux.mom <- h[label] - logistic(x[group == label, , drop = FALSE] %*% delta)
+            F <- adiag(F, t(aux.mom) %*% aux.mom/n)
+          }
+        }
+        
+        efficientW <- solve(F)
+
+        if (matrixMethod == "efficient" | matrixMethod == "cue") {
+          efficientW
+        } else if (matrixMethod == "princomp") {
+          k <- ncol(F)        
+          decomp <- eigen(F)
+
+          threshold <- .95 * sum(decomp$values)
+          curr.sum <- r <- 0
+          while (curr.sum <= threshold) {
+            r <- r + 1
+            curr.sum <- sum(decomp$values[1:r]) 
+          }
+
+          princompW <- matrix(0, nr = k, nc = k)
+          for (value in 1:r) {
+            princompW <- princompW + 1/decomp$values[value] * decomp$vectors[, value] %*% t(decomp$vectors[, value])
+          }
+          princompW
+        }
+
+    }
+
+    # GMM objective function
+    gmm.nls <- function(pars, J, y, treat, x, w = NULL, h, group, W = NULL) {
+
+        n <- length(y)
+
+        if (missing(w)) w <- rep(1, n)
+        if (missing(W)) W <- diag(nrow = length(pars) + length(h)) 
+        w <- (n/sum(w)) * w
+        
+        y1 <- y[treat == 1]
+        y0 <- y[treat == 0]
+        x1 <- x[treat == 1, , drop = FALSE]
+        x0 <- x[treat == 0, , drop = FALSE]
+        w1 <- w[treat == 1]
+        w0 <- w[treat == 0]
+        group1 <- group[treat == 1]
+        delta <- pars[1:ncol(x)]
+        gamma <- pars[(ncol(x) + 1):(2 * ncol(x))]
+
+        # NLS moments
+        m1 <- c((y1 - J * logistic(x1 %*% gamma) - logistic(x1 %*% delta)) * 
+          logistic(x1 %*% delta)/(1 + exp(x1 %*% delta))) * x1
+        m0 <- c((y0 - J * logistic(x0 %*% gamma)) * 
+          J * logistic(x0 %*% gamma)/(1 + exp(x0 %*% gamma))) * x0
+
+        # AUX moments
+        g <- c()
+        if (length(h) > 0) {
+          group.labels <- names(h)
+          for (label in group.labels) {
+              g.tmp <- h[label] - logistic(x[group == label, , drop = FALSE] %*% delta)
+              g <- c(g, sum(g.tmp))
+          }
+        }
+
+        M <- c(colSums(m1), colSums(m0), g)/n
+        as.numeric(t(M) %*% W %*% M)
+
+    }
+
+    # GMM gradient
+    gmm.grad <- function(pars, J, y, treat, x, w = NULL, h, group, W = NULL) {
+
+        n <- length(y)
+
+        if (missing(w)) w <- rep(1, n)
+        if (missing(W)) W <- diag(nrow = length(pars) + length(h)) 
+        w <- (n/sum(w)) * w
+
+        y1 <- y[treat == 1]
+        y0 <- y[treat == 0]
+        x1 <- x[treat == 1, , drop = FALSE]
+        x0 <- x[treat == 0, , drop = FALSE]
+        w1 <- w[treat == 1]
+        w0 <- w[treat == 0]
+        group1 <- group[treat == 1]
+        delta <- pars[1:ncol(x)]
+        gamma <- pars[(ncol(x) + 1):(2 * ncol(x))]
+
+        # NLS moments
+        m1 <- c((y1 - J * logistic(x1 %*% gamma) - logistic(x1 %*% delta)) * 
+          logistic(x1 %*% delta)/(1 + exp(x1 %*% delta))) * x1
+        m0 <- c((y0 - J * logistic(x0 %*% gamma)) * 
+          J * logistic(x0 %*% gamma)/(1 + exp(x0 %*% gamma))) * x0
+
+        # AUX moments
+        g <- dh <- c()
+        if (length(h) > 0) {
+          group.labels <- names(h)
+          for (label in group.labels) {
+              g.tmp <- h[label] - logistic(x[group == label, , drop = FALSE] %*% delta)
+              g <- c(g, sum(g.tmp))
+          # AUX Jacobian
+              dh.tmp <- -c(logistic(x[group == label, , drop = FALSE] %*% delta)/
+                (1 + exp(x[group == label, , drop = FALSE] %*% delta))) * 
+                  x[group == label, , drop = FALSE]
+              dh <- rbind(dh, t(colSums(dh.tmp))/n)
+          }
+        } 
+        # NLS Jacobian
+        Gtmp <- c(logistic(x1 %*% delta)/(1 + exp(x1 %*%
+            delta))) * x1
+        G1 <- -t(Gtmp * w1) %*% Gtmp/n
+        Gtmp <- c(sqrt(J * logistic(x1 %*% delta) * logistic(x1 %*%
+            gamma)/((1 + exp(x1 %*% delta)) * (1 + exp(x1 %*%
+            gamma))))) * x1
+        G2 <- -t(Gtmp * w1) %*% Gtmp/n
+        Gtmp <- c(J * logistic(x0 %*% gamma)/(1 + exp(x0 %*%
+            gamma))) * x0
+        G3 <- -t(Gtmp * w0) %*% Gtmp/n
+        G <- rbind(cbind(G1, G2), cbind(matrix(0, nc = ncol(G1), nr = nrow(G3)), G3))
+        
+        # complete moment vector
+        M <- c(colSums(m1), colSums(m0), g)/n
+        # complete Jacobian
+        if (length(h) > 0) G <- rbind(G, cbind(dh, matrix(0, nr = length(h), nc = ncol(G3))))
+
+        t(M) %*% (W + t(W)) %*% G
+
+    }
+
+    gmm.cue <- function(pars, J, y, treat, x, w, h, group, matrixMethod = c("efficient", "princomp", "cue")) {
+
+        n <- length(y)
+        w <- (n/sum(w)) * w
+        y1 <- y[treat == 1]
+        y0 <- y[treat == 0]
+        x1 <- x[treat == 1, , drop = FALSE]
+        x0 <- x[treat == 0, , drop = FALSE]
+        w1 <- w[treat == 1]
+        w0 <- w[treat == 0]
+        group1 <- group[treat == 1]
+        delta <- pars[1:ncol(x)]
+        gamma <- pars[(ncol(x) + 1):(2 * ncol(x))]
+
+        # NLS moments
+        m1 <- c((y1 - J * logistic(x1 %*% gamma) - logistic(x1 %*% delta)) * 
+          logistic(x1 %*% delta)/(1 + exp(x1 %*% delta))) * x1
+        m0 <- c((y0 - J * logistic(x0 %*% gamma)) * 
+          J * logistic(x0 %*% gamma)/(1 + exp(x0 %*% gamma))) * x0
+
+        # AUX moments
+        g <- c()
+        group.labels <- names(h)
+        for (label in group.labels) {
+            g.tmp <- c(h[label]) - logistic(x[group == label, , drop = FALSE] %*% delta)
+            g <- c(g, sum(g.tmp * w[group == label]))
+        }
+        M <- c(colSums(m1), colSums(m0), g)/n
+
+        Em1 <- t(m1) %*% m1/n
+        Em0 <- t(m0) %*% m0/n
+        F <- adiag(Em1, Em0)
+
+        for (label in group.labels) {
+          aux.mom <- h[label] - logistic(x[group == label, , drop = FALSE] %*% delta)
+          aux.mom.var <- t(aux.mom) %*% aux.mom/n
+          F <- adiag(F, aux.mom.var)
+        }
+        W <- solve(F)
+
+        as.numeric(t(M) %*% W %*% M)
+
+    }
+
+    list.gmm <- function(pars, J, y, treat, x, w, h, group, matrixMethod = c("efficient", "princomp", "cue")) {
+
+        n <- length(y)
+        w <- (n/sum(w)) * w
+
+        y1 <- y[treat == 1]
+        y0 <- y[treat == 0]
+        x1 <- x[treat == 1, , drop = FALSE]
+        x0 <- x[treat == 0, , drop = FALSE]
+        w1 <- w[treat == 1] 
+        w0 <- w[treat == 0]
+        group1 <- group[treat == 1]
+
+        if (matrixMethod == "efficient" | matrixMethod == "princomp") {
+            # step 1
+            W0 <- invF(pars = pars, J = J, y = y, treat = treat, 
+                x = x, w = w, h = h, group = group, matrixMethod = matrixMethod)
+            fit0 <- optim(par = pars, fn = gmm.nls, gr = gmm.grad,
+                J = J, y = y, treat = treat, x = x, w = w, h = h, 
+                group = group, W = W0, method = "BFGS", 
+                control = list(maxit = maxIter))
+            
+            # step 2
+            W1 <- invF(fit0$par, J = J, y = y, treat = treat, 
+                x = x, w = w, h = h, group = group, matrixMethod = matrixMethod)
+            fit1 <- optim(par = fit0$par, fn = gmm.nls, gr = gmm.grad,
+                J = J, y = y, treat = treat, x = x, w = w, h = h, 
+                group = group, W = W1, method = "BFGS", 
+                control = list(maxit = maxIter))
+
+        } else if (matrixMethod == "cue") {
+            fit1 <- optim(par = pars, fn = gmm.cue, J = J, y = y, 
+              treat = treat, x = x, w = w, h = h, group = group, matrixMethod = matrixMethod, 
+              method = "BFGS", control = list(maxit = maxIter))
+
+        }
+        
+        if (fit1$convergence != 0) stop("Optimization routine did not converge.")
+
+        coef <- fit1$par
+        delta <- coef[1:ncol(x)]
+        gamma <- coef[(ncol(x) + 1):(2 * ncol(x))]
+
+        # AUX Jacobian
+        dh <- c()
+        if (length(h) > 0) {
+          group.labels <- names(h)
+          for (label in group.labels) {
+              dh.tmp <- -c(logistic(x[group == label, , drop = FALSE] %*% delta)/
+                (1 + exp(x[group == label, , drop = FALSE] %*% delta))) * 
+                  x[group == label, , drop = FALSE]
+              dh <- rbind(dh, t(colSums(dh.tmp))/n)
+          }
+        }
+
+        # NLS Jacobian
+        Gtmp <- c(logistic(x1 %*% delta)/(1 + exp(x1 %*%
+            delta))) * x1
+        G1 <- -t(Gtmp) %*% Gtmp/n
+        Gtmp <- c(sqrt(J * logistic(x1 %*% delta) * logistic(x1 %*%
+            gamma)/((1 + exp(x1 %*% delta)) * (1 + exp(x1 %*%
+            gamma))))) * x1
+        G2 <- -t(Gtmp) %*% Gtmp/n
+        Gtmp <- c(J * logistic(x0 %*% gamma)/(1 + exp(x0 %*%
+            gamma))) * x0
+        G3 <- -t(Gtmp) %*% Gtmp/n
+        G <- rbind(cbind(G1, G2), cbind(matrix(0, nc = ncol(G1), nr = nrow(G3)), G3))
+
+        # complete Jacobian
+        if (length(h) > 0) G <- rbind(G, cbind(dh, matrix(0, nr = length(h), nc = ncol(G3))))
+
+        weightMatrix <- invF(pars = coef, J = J, y = y, treat = treat, x = x, w = w, 
+          h = h, group = group, matrixMethod = matrixMethod)
+        if (matrixMethod == "princomp") 
+          vcov.aux <- ginv(t(G) %*% weightMatrix %*% G)/n
+        else 
+          vcov.aux <- solve(t(G) %*% weightMatrix %*% G)/n
+        
+        list(coef = coef, vcov = vcov.aux, val = fit1$value)
+    
+    }
+      g.all <- group[na.x == 0 & na.y == 0 & na.w == 0]
+      par.nls.std <- c(par.treat.nls.std, par.control.nls.std)
+      fit.nls.aux <- list.gmm(pars = par.nls.std, J = J, y = y.all, treat = t, 
+        x = x.all, w = w.all, h = h, group = g.all, matrixMethod = matrixMethod)
+      par.nls.aux <- fit.nls.aux$coef
+      vcov.nls <- fit.nls.aux$vcov
+      se.twostep <- sqrt(diag(vcov.nls))
+      par.treat.nls.std <- par.nls.aux[1:ncol(x.all)]
+      par.control.nls.std <- par.nls.aux[(ncol(x.all)+1):(ncol(x.all)*2)]
+
+      # Sargan-Hansen overidentification test
+      J.stat <- fit.nls.aux$val * n
+      overid.p <- round(1 - pchisq(J.stat, df = length(h)), 4)
+     
+  }
+
   ## 
   ## Set up return object
   
@@ -2379,6 +2694,16 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     }
   }
   
+  # auxiliary data functionality -- setting up return object
+  return.object$aux <- aux.check 
+
+  if (aux.check) {
+    return.object$nh <- length(h)
+    return.object$wm <- ifelse(matrixMethod == "cue", "continuously updating", 
+      ifelse(matrixMethod == "princomp", "principal components", "efficient"))
+    return.object$J.stat <- round(J.stat, 4)
+    return.object$overid.p <- overid.p
+  }
   
   class(return.object) <- "ictreg"
   
@@ -2414,7 +2739,11 @@ print.ictreg <- function(x, ...){
   cat("Number of control items J set to ", x$J, ". Treatment groups were indicated by ", sep = "")
   cat(treat.print, sep ="")
   cat(" and the control group by '", x$control.label, "'.\n\n", sep = "")
-     
+  
+  # auxiliary data functionality -- print details
+  if (x$aux) cat("Incorporating ", x$nh, " auxiliary moment(s). Weighting method: ", x$wm, ".\n", 
+    "The overidentification test statistic was: ", x$J.stat, " (p < ", x$overid.p, ")", ".\n", sep = "")
+
   invisible(x)
   
 }
@@ -3276,6 +3605,9 @@ print.summary.ictreg <- function(x, ...){
   cat(treat.print, sep ="")
   cat(" and the control group by '", x$control.label, "'.\n\n", sep = "")
    
+  if (x$aux) cat("Incorporating ", x$nh, " auxiliary moment(s). Weighting method: ", x$wm, ".\n", 
+    "The overidentification test statistic was: ", x$J.stat, " (p < ", x$overid.p, ")", ".\n", sep = "")
+
   invisible(x)
   
 }
