@@ -24,6 +24,7 @@ importFrom(coda, gelman.diag)
 
 importFrom(magic, adiag)
 importFrom(corpcor, cor2pcor)
+importFrom(stats, pchisq)
            
 S3method(summary, ictreg)
 S3method(print, ictreg)
