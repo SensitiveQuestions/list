@@ -1,10 +1,9 @@
 Package: list
-Version: 8.1
+Version: 8.2
 Date: 2016-7-26
-Title: Statistical Methods for the Item Count Technique and
-    List Experiment
+Title: Statistical Methods for the Item Count Technique and List Experiment
 Author: Graeme Blair [aut, cre], Kosuke Imai [aut, cre], Bethany Park [ctb],
-    Alexander Coppock [ctb]
+    Alexander Coppock [ctb], Winston Chou [ctb]
 Maintainer: Graeme Blair <graeme.blair@ucla.edu>
 Depends:
     R (>= 3.2.0),

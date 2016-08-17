@@ -16,4 +16,6 @@ version      date  description
 7.0      8/26/14  List experiments as a predictor in outcome regressions method proposed in Imai, Park, and Greene (2014) incorporated
 7.1	 11/28/14  Bug fixes
 8.0	 05/19/15  Added statistical model to combine responses to a list experiment and a direct question on the same subject proposed in Aronow, Coppock, Crawford, and 	Green (2015), and also added weighted regression for many standard list experiment models including linear, NLS, and several maximum likelihood models. Several bug fixes.
-7.1  07/26/16  Bug fix
+8.1  07/26/16  Bug fix
+8.2  08/15/16  Added functionality for including auxiliary information by generalized method of moments
+
