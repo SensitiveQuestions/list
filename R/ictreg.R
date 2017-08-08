@@ -1,4 +1,310 @@
-
+#' Item Count Technique
+#' 
+#' Function to conduct multivariate regression analyses of survey data with the
+#' item count technique, also known as the list experiment and the unmatched
+#' count technique.
+#' 
+#' This function allows the user to perform regression analysis on data from
+#' the item count technique, also known as the list experiment and the
+#' unmatched count technique.
+#' 
+#' Three list experiment designs are accepted by this function: the standard
+#' design; the multiple sensitive item standard design; and the modified design
+#' proposed by Corstange (2009).
+#' 
+#' For the standard design, three methods are implemented in this function: the
+#' linear model; the Maximum Likelihood (ML) estimation for the
+#' Expectation-Maximization (EM) algorithm; the nonlinear least squares (NLS)
+#' estimation with the two-step procedure both proposed in Imai (2010); and the
+#' Maximum Likelihood (ML) estimator in the presence of two types of dishonest
+#' responses, "ceiling" and "floor" liars. The ceiling model, floor model, or
+#' both, as described in Blair and Imai (2010) can be activated by using the
+#' \code{ceiling} and \code{floor} options. The constrained and unconstrained
+#' ML models presented in Imai (2010) are available through the
+#' \code{constrained} option, and the user can specify if overdispersion is
+#' present in the data for the no liars models using the \code{overdispersed}
+#' option to control whether a beta-binomial or binomial model is used in the
+#' EM algorithm to model the item counts.
+#' 
+#' The modified design and the multiple sensitive item design are automatically
+#' detected by the function, and only the binomial model without overdispersion
+#' is available.
+#' 
+#' @aliases ictreg ict list
+#' @param formula An object of class "formula": a symbolic description of the
+#' model to be fitted.
+#' @param data A data frame containing the variables in the model
+#' @param treat Name of treatment indicator as a string. For single sensitive
+#' item models, this refers to a binary indicator, and for multiple sensitive
+#' item models it refers to a multi-valued variable with zero representing the
+#' control condition. This can be an integer (with 0 for the control group) or
+#' a factor (with "control" for the control group).
+#' @param J Number of non-sensitive (control) survey items.
+#' @param method Method for regression, either \code{ml} for the Maximum
+#' Likelihood (ML) estimation with the Expectation-Maximization algorithm;
+#' \code{lm} for linear model estimation; or \code{nls} for the Non-linear
+#' Least Squares (NLS) estimation with the two-step procedure.
+#' @param weights Name of the weights variable as a string, if weighted
+#' regression is desired. Not implemented for the ceiling/floor models,
+#' multiple sensitive item design, or for the modified design.
+#' @param h Auxiliary data functionality. Optional named numeric vector with
+#' length equal to number of groups. Names correspond to group labels and
+#' values correspond to auxiliary moments.
+#' @param group Auxiliary data functionality. Optional character vector of
+#' group labels with length equal to number of observations.
+#' @param matrixMethod Auxiliary data functionality. Procedure for estimating
+#' optimal weighting matrix for generalized method of moments. One of
+#' "efficient" for two-step feasible and "cue" for continuously updating.
+#' Default is "efficient". Only relevant if \code{h} and \code{group} are
+#' specified.
+#' @param overdispersed Indicator for the presence of overdispersion. If
+#' \code{TRUE}, the beta-binomial model is used in the EM algorithm, if
+#' \code{FALSE} the binomial model is used. Not relevant for the \code{NLS} or
+#' \code{lm} methods.
+#' @param constrained A logical value indicating whether the control group
+#' parameters are constrained to be equal.  Not relevant for the \code{NLS} or
+#' \code{lm} methods
+#' @param floor A logical value indicating whether the floor liar model should
+#' be used to adjust for the possible presence of respondents dishonestly
+#' reporting a negative preference for the sensitive item among those who hold
+#' negative views of all the non-sensitive items.
+#' @param ceiling A logical value indicating whether the ceiling liar model
+#' should be used to adjust for the possible presence of respondents
+#' dishonestly reporting a negative preference for the sensitive item among
+#' those who hold affirmative views of all the non-sensitive items.
+#' @param ceiling.fit Fit method for the M step in the EM algorithm used to fit
+#' the ceiling liar model. \code{glm} uses standard logistic regression, while
+#' \code{bayesglm} uses logistic regression with a weakly informative prior
+#' over the parameters.
+#' @param floor.fit Fit method for the M step in the EM algorithm used to fit
+#' the floor liar model. \code{glm} uses standard logistic regression, while
+#' \code{bayesglm} uses logistic regression with a weakly informative prior
+#' over the parameters.
+#' @param ceiling.formula Covariates to include in ceiling liar model. These
+#' must be a subset of the covariates used in \code{formula}.
+#' @param floor.formula Covariates to include in floor liar model. These must
+#' be a subset of the covariates used in \code{formula}.
+#' @param fit.start Fit method for starting values for standard design
+#' \code{ml} model. The options are \code{lm}, \code{glm}, and \code{nls},
+#' which use OLS, logistic regression, and non-linear least squares to generate
+#' starting values, respectively. The default is \code{nls}.
+#' @param fit.nonsensitive Fit method for the non-sensitive item fit for the
+#' \code{nls} method and the starting values for the \code{ml} method for the
+#' \code{modified} design. Options are \code{glm} and \code{nls}, and the
+#' default is \code{nls}.
+#' @param multi.condition For the multiple sensitive item design, covariates
+#' representing the estimated count of affirmative responses for each
+#' respondent can be included directly as a level variable by choosing
+#' \code{level}, or as indicator variables for each value but one by choosing
+#' \code{indicators}. The default is \code{none}.
+#' @param maxIter Maximum number of iterations for the Expectation-Maximization
+#' algorithm of the ML estimation.  The default is 5000.
+#' @param verbose a logical value indicating whether model diagnostics are
+#' printed out during fitting.
+#' @param ... further arguments to be passed to NLS regression commands.
+#' @return \code{ictreg} returns an object of class "ictreg".  The function
+#' \code{summary} is used to obtain a table of the results.  The object
+#' \code{ictreg} is a list that contains the following components.  Some of
+#' these elements are not available depending on which method is used
+#' (\code{lm}, \code{nls} or \code{ml}), which design is used (\code{standard},
+#' \code{modified}), whether multiple sensitive items are include
+#' (\code{multi}), and whether the constrained model is used (\code{constrained
+#' = TRUE}).
+#' 
+#' \item{par.treat}{point estimate for effect of covariate on item count fitted
+#' on treatment group} \item{se.treat}{standard error for estimate of effect of
+#' covariate on item count fitted on treatment group} \item{par.control}{point
+#' estimate for effect of covariate on item count fitted on control group}
+#' \item{se.control}{standard error for estimate of effect of covariate on item
+#' count fitted on control group} \item{coef.names}{variable names as defined
+#' in the data frame} \item{design}{call indicating whether the \code{standard}
+#' design as proposed in Imai (2010) or thee \code{modified} design as proposed
+#' in Corstange (2009) is used} \item{method}{call of the method used}
+#' \item{overdispersed}{call indicating whether data is overdispersed}
+#' \item{constrained}{call indicating whether the constrained model is used}
+#' \item{boundary}{call indicating whether the floor/ceiling boundary models
+#' are used} \item{multi}{indicator for whether multiple sensitive items were
+#' included in the data frame} \item{call}{the matched call} \item{data}{the
+#' \code{data} argument} \item{x}{the design matrix} \item{y}{the response
+#' vector} \item{treat}{the vector indicating treatment status} \item{J}{Number
+#' of non-sensitive (control) survey items set by the user or detected.}
+#' \item{treat.labels}{a vector of the names used by the \code{treat} vector
+#' for the sensitive item or items. This is the names from the \code{treat}
+#' indicator if it is a factor, or the number of the item if it is numeric.}
+#' \item{control.label}{a vector of the names used by the \code{treat} vector
+#' for the control items. This is the names from the \code{treat} indicator if
+#' it is a factor, or the number of the item if it is numeric.}
+#' 
+#' For the maximum likelihood models, an additional output object is included:
+#' \item{pred.post}{posterior predicted probability of answering "yes" to the
+#' sensitive item. The weights from the E-M algorithm.}
+#' 
+#' For the floor/ceiling models, several additional output objects are
+#' included: \item{ceiling}{call indicating whether the assumption of no
+#' ceiling liars is relaxed, and ceiling parameters are estimated}
+#' \item{par.ceiling}{point estimate for effect of covariate on whether
+#' respondents who answered affirmatively to all non-sensitive items and hold a
+#' true affirmative opinion toward the sensitive item lied and reported a
+#' negative response to the sensitive item } \item{se.ceiling}{standard error
+#' for estimate for effect of covariate on whether respondents who answered
+#' affirmatively to all non-sensitive items and hold a true affirmative opinion
+#' toward the sensitive item lied and reported a negative response to the
+#' sensitive item} \item{floor}{call indicating whether the assumption of no
+#' floor liars is relaxed, and floor parameters are estimated}
+#' \item{par.ceiling}{point estimate for effect of covariate on whether
+#' respondents who answered negatively to all non-sensitive items and hold a
+#' true affirmative opinion toward the sensitive item lied and reported a
+#' negative response to the sensitive item } \item{se.ceiling}{standard error
+#' for estimate for effect of covariate on whether respondents who answered
+#' negatively to all non-sensitive items and hold a true affirmative opinion
+#' toward the sensitive item lied and reported a negative response to the
+#' sensitive item} \item{coef.names.ceiling}{variable names from the ceiling
+#' liar model fit, if applicable} \item{coef.names.floor}{variable names from
+#' the floor liar model fit, if applicable}
+#' 
+#' For the multiple sensitive item design, the \code{par.treat} and
+#' \code{se.treat} vectors are returned as lists of vectors, one for each
+#' sensitive item.
+#' 
+#' For the unconstrained model, the \code{par.control} and \code{se.control}
+#' output is replaced by: \item{par.control.phi0}{point estimate for effect of
+#' covariate on item count fitted on treatment group}
+#' \item{se.control.phi0}{standard error for estimate of effect of covariate on
+#' item count fitted on treatment group} \item{par.control.phi1}{point estimate
+#' for effect of covariate on item count fitted on treatment group}
+#' \item{se.control.phi1}{standard error for estimate of effect of covariate on
+#' item count fitted on treatment group}
+#' 
+#' Depending upon the estimator requested by the user, model fit statistics are
+#' also included: \item{llik}{the log likelihood of the model, if \code{ml} is
+#' used} \item{resid.se}{the residual standard error, if \code{nls} or
+#' \code{lm} are used. This will be a scalar if the standard design was used,
+#' and a vector if the multiple sensitive item design was used}
+#' \item{resid.df}{the residual degrees of freedom, if \code{nls} or \code{lm}
+#' are used. This will be a scalar if the standard design was used, and a
+#' vector if the multiple sensitive item design was used}
+#' 
+#' When using the auxiliary data functionality, the following objects are
+#' included: \item{aux}{logical value indicating whether estimation
+#' incorporates auxiliary moments} \item{nh}{integer count of the number of
+#' auxiliary moments} \item{wm}{procedure used to estimate the optimal weight
+#' matrix} \item{J.stat}{numeric value of the Sargan Hansen overidentifying
+#' restriction test statistic} \item{overid.p}{corresponding p-value for the
+#' Sargan Hansen test}
+#' @author Graeme Blair, Princeton University, \email{gblair@@princeton.edu}
+#' and Kosuke Imai, Princeton University, \email{kimai@@princeton.edu}
+#' @seealso \code{\link{predict.ictreg}} for fitted values
+#' @references Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
+#' List Experiments."  Political Analysis. Forthcoming. available at
+#' \url{http://imai.princeton.edu/research/listP.html}
+#' 
+#' Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item Count
+#' Technique.'' Journal of the American Statistical Association, Vol. 106, No.
+#' 494 (June), pp. 407-416. available at
+#' \url{http://imai.princeton.edu/research/list.html}
+#' @keywords models regression
+#' @examples
+#' 
+#' 
+#' data(race)
+#' 
+#' set.seed(1)
+#' 
+#' # Calculate list experiment difference in means
+#' 
+#' diff.in.means.results <- ictreg(y ~ 1, data = race, 
+#' 	       	      treat = "treat", J=3, method = "lm")
+#' 
+#' summary(diff.in.means.results)
+#' 
+#' # Fit linear regression
+#' # Replicates Table 1 Columns 1-2 Imai (2011); note that age is divided by 10
+#' 
+#' lm.results <- ictreg(y ~ south + age + male + college, data = race, 
+#' 	       	      treat = "treat", J=3, method = "lm")
+#' 
+#' summary(lm.results)
+#' 
+#' # Fit two-step non-linear least squares regression
+#' # Replicates Table 1 Columns 3-4 Imai (2011); note that age is divided by 10
+#' 
+#' nls.results <- ictreg(y ~ south + age + male + college, data = race, 
+#' 	       	      treat = "treat", J=3, method = "nls")
+#' 
+#' summary(nls.results)
+#' 
+#' \dontrun{
+#' 
+#' # Fit EM algorithm ML model with constraint
+#' # Replicates Table 1 Columns 5-6, Imai (2011); note that age is divided by 10
+#' 
+#' ml.constrained.results <- ictreg(y ~ south + age + male + college, data = race, 
+#' 		       	  	 treat = "treat", J=3, method = "ml", 
+#' 				 overdispersed = FALSE, constrained = TRUE)
+#' 
+#' summary(ml.constrained.results)
+#' 
+#' # Fit EM algorithm ML model with no constraint
+#' # Replicates Table 1 Columns 7-10, Imai (2011); note that age is divided by 10
+#' 
+#' ml.unconstrained.results <- ictreg(y ~ south + age + male + college, data = race, 
+#' 			    	   treat = "treat", J=3, method = "ml", 
+#' 				   overdispersed = FALSE, constrained = FALSE)
+#' 
+#' summary(ml.unconstrained.results)
+#' 
+#' # Fit EM algorithm ML model for multiple sensitive items
+#' # Replicates Table 3 in Blair and Imai (2010)
+#' 
+#' multi.results <- ictreg(y ~ male + college + age + south + south:age, treat = "treat", 
+#' 	      	 	J = 3, data = multi, method = "ml", 
+#' 			multi.condition = "level")
+#' 
+#' summary(multi.results)
+#' 
+#' # Fit standard design ML model
+#' # Replicates Table 7 Columns 1-2 in Blair and Imai (2010)
+#' 
+#' noboundary.results <- ictreg(y ~ age + college + male + south, treat = "treat",
+#' 		      	     J = 3, data = affirm, method = "ml", 
+#' 			     overdispersed = FALSE)
+#' 
+#' summary(noboundary.results)
+#' 
+#' # Fit standard design ML model with ceiling effects alone
+#' # Replicates Table 7 Columns 3-4 in Blair and Imai (2010)
+#' 
+#' ceiling.results <- ictreg(y ~ age + college + male + south, treat = "treat", 
+#' 		   	  J = 3, data = affirm, method = "ml", fit.start = "nls",
+#' 			  ceiling = TRUE, ceiling.fit = "bayesglm",
+#' 			  ceiling.formula = ~ age + college + male + south)
+#' 
+#' summary(ceiling.results)
+#' 
+#' # Fit standard design ML model with floor effects alone
+#' # Replicates Table 7 Columns 5-6 in Blair and Imai (2010)
+#' 
+#' floor.results <- ictreg(y ~ age + college + male + south, treat = "treat", 
+#' 	      	 	J = 3, data = affirm, method = "ml", fit.start = "glm", 
+#' 			floor = TRUE, floor.fit = "bayesglm",
+#' 			floor.formula = ~ age + college + male + south)
+#' 
+#' summary(floor.results)
+#' 
+#' # Fit standard design ML model with floor and ceiling effects
+#' # Replicates Table 7 Columns 7-8 in Blair and Imai (2010)
+#' 
+#' both.results <- ictreg(y ~ age + college + male + south, treat = "treat", 
+#' 	     	       J = 3, data = affirm, method = "ml", 
+#' 		       floor = TRUE, ceiling = TRUE, 
+#' 		       floor.fit = "bayesglm", ceiling.fit = "bayesglm",
+#' 		       floor.formula = ~ age + college + male + south,
+#' 		       ceiling.formula = ~ age + college + male + south)
+#' 
+#' summary(both.results)
+#' 
+#' }
+#' 
 ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = "ml", weights, 
                    h = NULL, group = NULL, matrixMethod = "efficient", 
                    overdispersed = FALSE, constrained = TRUE, floor = FALSE, ceiling = FALSE, 
@@ -2778,6 +3084,183 @@ print.predict.ictreg <- function(x, ...){
   
 }
 
+
+
+#' Predict Method for Item Count Technique
+#' 
+#' Function to calculate predictions and uncertainties of predictions from
+#' estimates from multivariate regression analysis of survey data with the item
+#' count technique.
+#' 
+#' \code{predict.ictreg} produces predicted values, obtained by evaluating the
+#' regression function in the frame newdata (which defaults to
+#' \code{model.frame(object)}. If the logical \code{se.fit} is \code{TRUE},
+#' standard errors of the predictions are calculated. Setting \code{interval}
+#' specifies computation of confidence intervals at the specified level or no
+#' intervals.
+#' 
+#' If \code{avg} is set to \code{TRUE}, the mean prediction across all
+#' observations in the dataset will be calculated, and if the \code{se.fit}
+#' option is set to \code{TRUE} a standard error for this mean estimate will be
+#' provided. The \code{interval} option will output confidence intervals
+#' instead of only the point estimate if set to \code{TRUE}.
+#' 
+#' Two additional types of mean prediction are also available. The first, if a
+#' \code{newdata.diff} data frame is provided by the user, calculates the mean
+#' predicted values across two datasets, as well as the mean difference in
+#' predicted value. Standard errors and confidence intervals can also be added.
+#' For difference prediction, \code{avg} must be set to \code{TRUE}.
+#' 
+#' The second type of prediction, triggered if a \code{direct.glm} object is
+#' provided by the user, calculates the mean difference in prediction between
+#' predictions based on an \code{ictreg} fit and a \code{glm} fit from a direct
+#' survey item on the sensitive question. This is defined as the revealed
+#' social desirability bias in Blair and Imai (2010).
+#' 
+#' @param object Object of class inheriting from "ictreg"
+#' @param newdata An optional data frame containing data that will be used to
+#' make predictions from. If omitted, the data used to fit the regression are
+#' used.
+#' @param newdata.diff An optional data frame used to compare predictions with
+#' predictions from the data in the provided newdata data frame.
+#' @param direct.glm A glm object from a logistic binomial regression
+#' predicting responses to a direct survey item regarding the sensitive item.
+#' The predictions from the ictreg object are compared to the predictions based
+#' on this glm object.
+#' @param se.fit A switch indicating if standard errors are required.
+#' @param interval Type of interval calculation.
+#' @param level Significance level for confidence intervals.
+#' @param avg A switch indicating if the mean prediction and associated
+#' statistics across all obserations in the dataframe will be returned instead
+#' of predictions for each observation.
+#' @param sensitive.item For multiple sensitive item design list experiments,
+#' specify which sensitive item fits to use for predictions. Default is the
+#' first sensitive item.
+#' @param ... further arguments to be passed to or from other methods.
+#' @return \code{predict.ictreg} produces a vector of predictions or a matrix
+#' of predictions and bounds with column names fit, lwr, and upr if interval is
+#' set. If se.fit is TRUE, a list with the following components is returned:
+#' 
+#' \item{fit}{vector or matrix as above} \item{se.fit}{standard error of
+#' prediction}
+#' @author Graeme Blair, Princeton University, \email{gblair@@princeton.edu}
+#' and Kosuke Imai, Princeton University, \email{kimai@@princeton.edu}
+#' @seealso \code{\link{ictreg}} for model fitting
+#' @references Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
+#' List Experiments."  Political Analysis, Vol. 20, No 1 (Winter). available at
+#' \url{http://imai.princeton.edu/research/listP.html}
+#' 
+#' Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item Count
+#' Technique.'' Journal of the American Statistical Association, Vol. 106, No.
+#' 494 (June), pp. 407-416. available at
+#' \url{http://imai.princeton.edu/research/list.html}
+#' @keywords models regression
+#' @examples
+#' 
+#' data(race)
+#' 
+#' race.south <- race.nonsouth <- race
+#' 
+#' race.south[, "south"] <- 1
+#' race.nonsouth[, "south"] <- 0
+#' 
+#' \dontrun{
+#' 
+#' # Fit EM algorithm ML model with constraint with no covariates
+#' 
+#' ml.results.south.nocov <- ictreg(y ~ 1, 
+#'    data = race[race$south == 1, ], method = "ml", treat = "treat", 
+#'    J = 3, overdispersed = FALSE, constrained = TRUE)
+#' ml.results.nonsouth.nocov <- ictreg(y ~ 1, 
+#'    data = race[race$south == 0, ], method = "ml", treat = "treat", 
+#'    J = 3, overdispersed = FALSE, constrained = TRUE)
+#' 
+#' # Calculate average predictions for respondents in the South 
+#' # and the the North of the US for the MLE no covariates 
+#' # model, replicating the estimates presented in Figure 1, 
+#' # Imai (2010)
+#' 
+#' avg.pred.south.nocov <- predict(ml.results.south.nocov,
+#'    newdata = as.data.frame(matrix(1, 1, 1)), se.fit = TRUE, 
+#'    avg = TRUE)
+#' avg.pred.nonsouth.nocov <- predict(ml.results.nonsouth.nocov,
+#'    newdata = as.data.frame(matrix(1, 1, 1)), se.fit = TRUE, 
+#'    avg = TRUE)
+#' 
+#' # Fit linear regression
+#' 
+#' lm.results <- ictreg(y ~ south + age + male + college, 
+#'    data = race, treat = "treat", J=3, method = "lm")
+#' 
+#' # Calculate average predictions for respondents in the 
+#' # South and the the North of the US for the lm model, 
+#' # replicating the estimates presented in Figure 1, Imai (2010)
+#' 
+#' avg.pred.south.lm <- predict(lm.results, newdata = race.south, 
+#'    se.fit = TRUE, avg = TRUE)
+#' 
+#' avg.pred.nonsouth.lm <- predict(lm.results, newdata = race.nonsouth, 
+#'    se.fit = TRUE, avg = TRUE)
+#' 
+#' # Fit two-step non-linear least squares regression
+#' 
+#' nls.results <- ictreg(y ~ south + age + male + college, 
+#'    data = race, treat = "treat", J=3, method = "nls")
+#' 
+#' # Calculate average predictions for respondents in the South 
+#' # and the the North of the US for the NLS model, replicating
+#' # the estimates presented in Figure 1, Imai (2010)
+#' 
+#' avg.pred.nls <- predict(nls.results, newdata = race.south, 
+#'    newdata.diff = race.nonsouth, se.fit = TRUE, avg = TRUE)
+#' 
+#' # Fit EM algorithm ML model with constraint
+#' 
+#' ml.constrained.results <- ictreg(y ~ south + age + male + college, 
+#'    data = race, treat = "treat", J=3, method = "ml", 
+#'    overdispersed = FALSE, constrained = TRUE)
+#' 
+#' # Calculate average predictions for respondents in the South 
+#' # and the the North of the US for the MLE model, replicating the 
+#' # estimates presented in Figure 1, Imai (2010)
+#' 
+#' avg.pred.diff.mle <- predict(ml.constrained.results, 
+#'    newdata = race.south, newdata.diff = race.nonsouth,
+#'    se.fit = TRUE, avg = TRUE)
+#' 
+#' # Calculate average predictions from the item count technique
+#' # regression and from a direct sensitive item modeled with
+#' # a logit.
+#' 
+#' # Estimate logit for direct sensitive question
+#' 
+#' data(mis)
+#' 
+#' mis.list <- subset(mis, list.data == 1)
+#' 
+#' mis.sens <- subset(mis, sens.data == 1)
+#' 
+#' # Fit EM algorithm ML model
+#' 
+#' fit.list <- ictreg(y ~ age + college + male + south,
+#'    J = 4, data = mis.list, method = "ml")
+#' 
+#' # Fit logistic regression with directly-asked sensitive question
+#' 
+#' fit.sens <- glm(sensitive ~ age + college + male + south, 
+#'    data = mis.sens, family = binomial("logit"))
+#' 
+#' # Predict difference between response to sensitive item
+#' # under the direct and indirect questions (the list experiment).
+#' # This is an estimate of the revealed social desirability bias
+#' # of respondents. See Blair and Imai (2010).
+#' 
+#' avg.pred.social.desirability <- predict(fit.list, 
+#'    direct.glm = fit.sens, se.fit = TRUE)
+#' 
+#' }
+#' 
+#' 
 predict.ictreg <- function(object, newdata, newdata.diff, direct.glm, se.fit = FALSE,
                            interval = c("none","confidence"), level = .95, avg = FALSE, sensitive.item, ...){
 
@@ -3223,6 +3706,135 @@ c.predict.ictreg <- function(...){
   
 }
 
+
+
+#' Plot Method for the Item Count Technique
+#' 
+#' Function to plot predictions and confidence intervals of predictions from
+#' estimates from multivariate regression analysis of survey data with the item
+#' count technique.
+#' 
+#' \code{plot.predict.ictreg} produces plots with estimated population
+#' proportions of respondents answering the sensitive item in a list experiment
+#' in the affirmative, with confidence intervals.
+#' 
+#' The function accepts a set of \code{predict.ictreg} objects calculated in
+#' the following manner:
+#' 
+#' \code{predict(ictreg.object, avg = TRUE, interval = "confidence")}
+#' 
+#' For each average prediction, a point estimate and its confidence interval is
+#' plotted at equally spaced intervals. The x location of the points can be
+#' manipulated with the \code{xvec} option.
+#' 
+#' Either a single predict object can be plotted, or a group of them combined
+#' with \code{c(predict.object1, predict.object2)}. Predict objects with the
+#' \code{newdata.diff} option, which calculates the mean difference in
+#' probability between two datasets, and the \code{direct.glm} option, which
+#' calculates the mean difference between the mean predicted support for the
+#' sensitive item in the list experiment and in a direct survey item, can also
+#' be plotted in the same way as other \code{predict} objects.
+#' 
+#' @param x object or set of objects of class inheriting from "predict.ictreg".
+#' Either a single object from an \code{ictreg()} model fit or multiple
+#' \code{predict} objects combined with the c() function.
+#' @param labels a vector of labels for each prediction, plotted at the x axis.
+#' @param axes.ict a switch indicating if custom plot axes are to be used with
+#' the user-provided estimate \code{labels}.
+#' @param xlim a title for the y axis.
+#' @param ylim a title for the y axis.
+#' @param xlab a title for the x axis.
+#' @param ylab a title for the y axis.
+#' @param axes an indicator for whether default plot axes are included.
+#' @param pch either an integer specifying a symbol or a single character to be
+#' used as the default in plotting points.
+#' @param xvec a vector of x values at which the proportions will be printed.
+#' @param ... Other graphical parameters to be passed to the \code{plot()}
+#' command are accepted.
+#' @author Graeme Blair, Princeton University, \email{gblair@@princeton.edu}
+#' and Kosuke Imai, Princeton University, \email{kimai@@princeton.edu}
+#' @seealso \code{\link{ictreg}} for model fitting and
+#' \code{\link{predict.ictreg}} for predictions based on the model fits.
+#' @references Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
+#' List Experiments."  Political Analysis, Vol. 20, No 1 (Winter). available at
+#' \url{http://imai.princeton.edu/research/listP.html}
+#' 
+#' Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item Count
+#' Technique.'' Journal of the American Statistical Association, Vol. 106, No.
+#' 494 (June), pp. 407-416. available at
+#' \url{http://imai.princeton.edu/research/list.html}
+#' @keywords models regression
+#' @examples
+#' 
+#' data(race)
+#' race.south <- race.nonsouth <- race
+#' race.south[, "south"] <- 1
+#' race.nonsouth[, "south"] <- 0
+#' 
+#' \dontrun{
+#' 
+#' # Fit EM algorithm ML model with constraint
+#' ml.constrained.results <- ictreg(y ~ south + age + male + college, 
+#'    data = race, treat = "treat", J=3, method = "ml", 
+#'    overdispersed = FALSE, constrained = TRUE)
+#' 
+#' # Calculate average predictions for respondents in the South 
+#' # and the the North of the US for the MLE model, replicating the 
+#' # estimates presented in Figure 1, Imai (2011)
+#' avg.pred.south.mle <- predict(ml.constrained.results, 
+#'    newdata = race.south, avg = TRUE, interval = "confidence")
+#' avg.pred.nonsouth.mle <- predict(ml.constrained.results, 
+#'    newdata = race.nonsouth, avg = TRUE, interval = "confidence")
+#' 
+#' # A plot of a single estimate and its confidence interval
+#' plot(avg.pred.south.mle, labels = "South")
+#' 
+#' # A  plot of the two estimates and their confidence intervals
+#' # use c() to combine more than one predict object for plotting
+#' plot(c(avg.pred.south.mle, avg.pred.nonsouth.mle), labels = c("South", "Non-South"))
+#' 
+#' # The difference option can also be used to simultaneously
+#' # calculate separate estimates of the two sub-groups
+#' # and the estimated difference. This can also be plotted.
+#' 
+#' avg.pred.diff.mle <- predict(ml.constrained.results, 
+#'    newdata = race.south, newdata.diff = race.nonsouth,
+#'    se.fit = TRUE, avg = TRUE, interval="confidence")
+#' 
+#' plot(avg.pred.diff.mle, labels = c("South", "Non-South", "Difference"))
+#' 
+#' # Social desirability bias plots
+#' 
+#' # Estimate logit for direct sensitive question
+#' 
+#' data(mis)
+#' 
+#' mis.list <- subset(mis, list.data == 1)
+#' 
+#' mis.sens <- subset(mis, sens.data == 1)
+#' 
+#' # Fit EM algorithm ML model
+#' 
+#' fit.list <- ictreg(y ~ age + college + male + south,
+#'    J = 4, data = mis.list, method = "ml")
+#' 
+#' # Fit logistic regression with directly-asked sensitive question
+#' 
+#' fit.sens <- glm(sensitive ~ age + college + male + south, 
+#'    data = mis.sens, family = binomial("logit"))
+#' 
+#' # Predict difference between response to sensitive item
+#' # under the direct and indirect questions (the list experiment).
+#' # This is an estimate of the revealed social desirability bias
+#' # of respondents. See Blair and Imai (2010).
+#' 
+#' avg.pred.social.desirability <- predict(fit.list, 
+#'    direct.glm = fit.sens, se.fit = TRUE)
+#' 
+#' plot(avg.pred.social.desirability)
+#' 
+#' }
+#' 
 plot.predict.ictreg <- function(x, labels = NA, axes.ict = TRUE,
                                 xlim = NULL, ylim = NULL, xlab = NULL, ylab = "Estimated Proportion",
                                 axes = F, pch = 19, xvec = NULL, ...){
@@ -3255,6 +3867,72 @@ plot.predict.ictreg <- function(x, labels = NA, axes.ict = TRUE,
   
 }
 
+
+
+#' Summary Method for the Item Count Technique
+#' 
+#' Function to summarize results from list experiment regression based on the
+#' ictreg() function, and to produce proportions of liars estimates.
+#' 
+#' \code{predict.ictreg} produces a summary of the results from an
+#' \code{ictreg} object. It displays the coefficients, standard errors, and fit
+#' statistics for any model from \code{ictreg}.
+#' 
+#' \code{predict.ictreg} also produces estimates of the conditional probability
+#' of lying and of the population proportion of liars for boundary models from
+#' \code{ictreg()} if \code{ceiling = TRUE} or \code{floor = TRUE}.
+#' 
+#' The conditional probability of lying for the ceiling model is the
+#' probability that a respondent with true affirmative views of all the
+#' sensitive and non-sensitive items lies and responds negatively to the
+#' sensitive item. The conditional probability for the floor model is the
+#' probability that a respondent lies to conceal her true affirmative views of
+#' the sensitive item when she also holds true negative views of all the
+#' non-sensitive items. In both cases, the respondent may believe her privacy
+#' is not protected, so may conceal her true affirmative views of the sensitive
+#' item.
+#' 
+#' @param object Object of class inheriting from "ictreg"
+#' @param boundary.proportions A switch indicating whether, for models with
+#' ceiling effects, floor effects, or both (indicated by the \code{floor =
+#' TRUE}, \code{ceiling = TRUE} options in ictreg), the conditional probability
+#' of lying and the population proportions of liars are calculated.
+#' @param n.draws For quasi-Bayesian approximation based predictions, specify
+#' the number of Monte Carlo draws.
+#' @param ... further arguments to be passed to or from other methods.
+#' @author Graeme Blair, Princeton University, \email{gblair@@princeton.edu}
+#' and Kosuke Imai, Princeton University, \email{kimai@@princeton.edu}
+#' @seealso \code{\link{ictreg}} for model fitting
+#' @references Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
+#' List Experiments."  Political Analysis, Vol. 20, No 1 (Winter). available at
+#' \url{http://imai.princeton.edu/research/listP.html}
+#' 
+#' Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item Count
+#' Technique.'' Journal of the American Statistical Association, Vol. 106, No.
+#' 494 (June), pp. 407-416. available at
+#' \url{http://imai.princeton.edu/research/list.html}
+#' @keywords models regression
+#' @examples
+#' 
+#' data(race)
+#' \dontrun{
+#' # Fit standard design ML model with ceiling effects
+#' # Replicates Table 7 Columns 3-4 in Blair and Imai (2012)
+#' 
+#' ceiling.results <- ictreg(y ~ age + college + male + south, treat = "treat", 
+#' 		   	  J = 3, data = affirm, method = "ml", fit.start = "nls",
+#' 			  ceiling = TRUE, ceiling.fit = "bayesglm",
+#' 			  ceiling.formula = ~ age + college + male + south)
+#' 
+#' # Summarize fit object and generate conditional probability 
+#' # of ceiling liars the population proportion of ceiling liars,
+#' # both with standard errors.
+#' # Replicates Table 7 Columns 3-4 last row in Blair and Imai (2012)
+#' 
+#' summary(ceiling.results, boundary.proportions = TRUE)
+#' }
+#' 
+#' 
 summary.ictreg <- function(object, boundary.proportions = FALSE, n.draws = 10000, ...) {
   object$boundary.proportions <- boundary.proportions
   object$n.draws <- n.draws

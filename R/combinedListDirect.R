@@ -1,12 +1,34 @@
 #' Combined List Estimator
-#'
-#' This function implements the combined list estimator described in Aronow, Coppock, Crawford, and Green (2015): Combining List Experiment and Direct Question Estimates of Sensitive Behavior Prevalence
-#' @param formula an object of class "formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted. Should be of the form Y ~ T + X1 + X2, where Y is the list response, T is the treatment indicator, and X1, X2, etc are pretreatment covariates. It is recommended that T be a numeric variable whose values are 0 for subjects in control and 1 for subjects in treatment.
-#' @param data an optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. If not found in data, the variables are taken from environment(formula), typically the environment from which combined.list is called. It is good practice to include all variables used in the estimation (list response, treatment indicator, direct response, and optional pre-treatment covariates) in a dataframe rather than calling data from the global environent.
-#' @param treat a character string giving the name of the treatment variable. Defaults to "treat".
-#' @param direct a character string giving the name of the direct response variable. Defaults to "direct". The direct response variable itself must only contain the values 0 and 1, where 1 refers to subjects who answered "Yes" to the direct question.
-#' @return a list containing conventional, direct, and combined prevalence estimates with associated standard errors as well as the results of two placebo tests.
+#' 
+#' This function implements the combined list estimator described in Aronow,
+#' Coppock, Crawford, and Green (2015): Combining List Experiment and Direct
+#' Question Estimates of Sensitive Behavior Prevalence
+#' 
+#' 
+#' @param formula an object of class "formula" (or one that can be coerced to
+#' that class): a symbolic description of the model to be fitted. Should be of
+#' the form Y ~ T + X1 + X2, where Y is the list response, T is the treatment
+#' indicator, and X1, X2, etc are pretreatment covariates. It is recommended
+#' that T be a numeric variable whose values are 0 for subjects in control and
+#' 1 for subjects in treatment.
+#' @param data an optional data frame, list or environment (or object coercible
+#' by as.data.frame to a data frame) containing the variables in the model. If
+#' not found in data, the variables are taken from environment(formula),
+#' typically the environment from which combined.list is called. It is good
+#' practice to include all variables used in the estimation (list response,
+#' treatment indicator, direct response, and optional pre-treatment covariates)
+#' in a dataframe rather than calling data from the global environent.
+#' @param treat a character string giving the name of the treatment variable.
+#' Defaults to "treat".
+#' @param direct a character string giving the name of the direct response
+#' variable. Defaults to "direct". The direct response variable itself must
+#' only contain the values 0 and 1, where 1 refers to subjects who answered
+#' "Yes" to the direct question.
+#' @return a list containing conventional, direct, and combined prevalence
+#' estimates with associated standard errors as well as the results of two
+#' placebo tests.
 #' @examples
+#' 
 #' # Load data from Aronow, Coppock, Crawford, and Green (2015)
 #' data("combinedListExps")
 #' 
@@ -17,13 +39,15 @@
 #'                             data = subset(combinedListExps, directsfirst==1), 
 #'                             treat = "list1treat", direct = "direct1")
 #' summary(out.1)
-#'
+#' 
 #' # Conduct estimation with covariate adjustment
 #' out.2 <- combinedListDirect(list1N ~ list1treat + gender + 
 #'                             ideology + education + race, 
 #'                             data = subset(combinedListExps, directsfirst==1), 
 #'                             treat = "list1treat", direct = "direct1")
 #' summary(out.2)
+#' 
+#' @export combinedListDirect
 combinedListDirect <- function(formula, data = parent.frame(), treat="treat", direct="direct"){
 
   comblist.call <- match.call()
