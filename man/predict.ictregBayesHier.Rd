@@ -5,7 +5,7 @@
 \title{Predict Method for the Item Count Technique with Bayesian Hierarchical
 Regression}
 \usage{
-predict.ictregBayesHier(object, newdata, se.fit = FALSE,
+\method{predict}{ictregBayesHier}(object, newdata, se.fit = FALSE,
   interval = c("none", "confidence"), level = 0.95, sensitive.item, ...)
 }
 \arguments{

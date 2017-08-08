@@ -4,7 +4,7 @@
 \alias{predict.ictreg.joint}
 \title{Predict Method for Item Count Technique, Outcome Regressions}
 \usage{
-predict.ictreg.joint(object, newdata, newdata.diff, se.fit = FALSE,
+\method{predict}{ictreg.joint}(object, newdata, newdata.diff, se.fit = FALSE,
   interval = c("none", "confidence"), level = 0.95, avg = FALSE,
   sensitive.value = c("0", "1", "both"), sensitive.diff = FALSE,
   return.draws = FALSE, predict.sensitive = FALSE, ...)

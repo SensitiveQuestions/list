@@ -17,7 +17,7 @@ extern void ictregBinomMulti4Level(void *, void *, void *, void *, void *, void 
 extern void ictregBinomMultiMixed(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
 extern void ictregBinomMultiProbit(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
 extern void ictregBinomMultiRobit(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
-extern void R2Robit(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
+/* extern void R2Robit(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *); */
 extern void RpoisbinomEff(void *, void *, void *, void *);
 extern void RpoisbinomEffMatrix(void *, void *, void *, void *, void *, void *);
 extern void RpoisbinomReturn(void *, void *, void *, void *);
@@ -34,7 +34,7 @@ static const R_CMethodDef CEntries[] = {
   {"ictregBinomMultiMixed",    (DL_FUNC) &ictregBinomMultiMixed,    36},
   {"ictregBinomMultiProbit",   (DL_FUNC) &ictregBinomMultiProbit,   21},
   {"ictregBinomMultiRobit",    (DL_FUNC) &ictregBinomMultiRobit,    22},
-  {"R2Robit",                  (DL_FUNC) &R2Robit,                  10},
+  /* {"R2Robit",                  (DL_FUNC) &R2Robit,                  10}, */
   {"RpoisbinomEff",            (DL_FUNC) &RpoisbinomEff,             4},
   {"RpoisbinomEffMatrix",      (DL_FUNC) &RpoisbinomEffMatrix,       6},
   {"RpoisbinomReturn",         (DL_FUNC) &RpoisbinomReturn,          4},

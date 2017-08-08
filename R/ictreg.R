@@ -3834,7 +3834,7 @@ c.predict.ictreg <- function(...){
 #' plot(avg.pred.social.desirability)
 #' 
 #' }
-#' 
+#' @method plot predict.ictreg
 plot.predict.ictreg <- function(x, labels = NA, axes.ict = TRUE,
                                 xlim = NULL, ylim = NULL, xlab = NULL, ylab = "Estimated Proportion",
                                 axes = F, pch = 19, xvec = NULL, ...){

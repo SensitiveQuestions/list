@@ -4,9 +4,9 @@
 \alias{predict.ictreg}
 \title{Predict Method for Item Count Technique}
 \usage{
-predict.ictreg(object, newdata, newdata.diff, direct.glm, se.fit = FALSE,
-  interval = c("none", "confidence"), level = 0.95, avg = FALSE,
-  sensitive.item, ...)
+\method{predict}{ictreg}(object, newdata, newdata.diff, direct.glm,
+  se.fit = FALSE, interval = c("none", "confidence"), level = 0.95,
+  avg = FALSE, sensitive.item, ...)
 }
 \arguments{
 \item{object}{Object of class inheriting from "ictreg"}

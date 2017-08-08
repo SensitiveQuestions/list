@@ -4,9 +4,9 @@
 \alias{plot.predict.ictreg}
 \title{Plot Method for the Item Count Technique}
 \usage{
-plot.predict.ictreg(x, labels = NA, axes.ict = TRUE, xlim = NULL,
-  ylim = NULL, xlab = NULL, ylab = "Estimated Proportion", axes = F,
-  pch = 19, xvec = NULL, ...)
+\method{plot}{predict.ictreg}(x, labels = NA, axes.ict = TRUE,
+  xlim = NULL, ylim = NULL, xlab = NULL, ylab = "Estimated Proportion",
+  axes = F, pch = 19, xvec = NULL, ...)
 }
 \arguments{
 \item{x}{object or set of objects of class inheriting from "predict.ictreg".
@@ -133,7 +133,6 @@ avg.pred.social.desirability <- predict(fit.list,
 plot(avg.pred.social.desirability)
 
 }
-
 }
 \references{
 Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
