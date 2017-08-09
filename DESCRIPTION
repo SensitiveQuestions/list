@@ -2,9 +2,11 @@ Package: list
 Version: 8.3
 Date: 2016-10-25
 Title: Statistical Methods for the Item Count Technique and List Experiment
-Author: Graeme Blair [aut, cre], Kosuke Imai [aut, cre], Bethany Park [ctb],
-    Alexander Coppock [ctb], Winston Chou [ctb]
-Maintainer: Graeme Blair <graeme.blair@ucla.edu>
+Authors@R: c(person("Graeme", "Blair", email = "graeme.blair@ucla.edu", role = c("aut", "cre")),
+             person("Kosuke", "Imai", email = "kimai@princeton.edu", role = c("aut")),
+             person("Bethany", "Park", email = "bapark@princeton.edu", role = c("ctb")),
+             person("Alexander", "Coppock", email = "alex.coppock@yale.edu", role = c("ctb")),
+             person("Winston", "Chou", email = "macartan@gmail.com", role = c("ctb")))
 Depends:
     R (>= 3.2.0),
     utils,
