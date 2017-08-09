@@ -8,21 +8,41 @@ combinedListDirect(formula, data = parent.frame(), treat = "treat",
   direct = "direct")
 }
 \arguments{
-\item{formula}{an object of class "formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted. Should be of the form Y ~ T + X1 + X2, where Y is the list response, T is the treatment indicator, and X1, X2, etc are pretreatment covariates. It is recommended that T be a numeric variable whose values are 0 for subjects in control and 1 for subjects in treatment.}
+\item{formula}{an object of class "formula" (or one that can be coerced to
+that class): a symbolic description of the model to be fitted. Should be of
+the form Y ~ T + X1 + X2, where Y is the list response, T is the treatment
+indicator, and X1, X2, etc are pretreatment covariates. It is recommended
+that T be a numeric variable whose values are 0 for subjects in control and
+1 for subjects in treatment.}
 
-\item{data}{an optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. If not found in data, the variables are taken from environment(formula), typically the environment from which combined.list is called. It is good practice to include all variables used in the estimation (list response, treatment indicator, direct response, and optional pre-treatment covariates) in a dataframe rather than calling data from the global environent.}
+\item{data}{an optional data frame, list or environment (or object coercible
+by as.data.frame to a data frame) containing the variables in the model. If
+not found in data, the variables are taken from environment(formula),
+typically the environment from which combined.list is called. It is good
+practice to include all variables used in the estimation (list response,
+treatment indicator, direct response, and optional pre-treatment covariates)
+in a dataframe rather than calling data from the global environent.}
 
-\item{treat}{a character string giving the name of the treatment variable. Defaults to "treat".}
+\item{treat}{a character string giving the name of the treatment variable.
+Defaults to "treat".}
 
-\item{direct}{a character string giving the name of the direct response variable. Defaults to "direct". The direct response variable itself must only contain the values 0 and 1, where 1 refers to subjects who answered "Yes" to the direct question.}
+\item{direct}{a character string giving the name of the direct response
+variable. Defaults to "direct". The direct response variable itself must
+only contain the values 0 and 1, where 1 refers to subjects who answered
+"Yes" to the direct question.}
 }
 \value{
-a list containing conventional, direct, and combined prevalence estimates with associated standard errors as well as the results of two placebo tests.
+a list containing conventional, direct, and combined prevalence
+estimates with associated standard errors as well as the results of two
+placebo tests.
 }
 \description{
-This function implements the combined list estimator described in Aronow, Coppock, Crawford, and Green (2015): Combining List Experiment and Direct Question Estimates of Sensitive Behavior Prevalence
+This function implements the combined list estimator described in Aronow,
+Coppock, Crawford, and Green (2015): Combining List Experiment and Direct
+Question Estimates of Sensitive Behavior Prevalence
 }
 \examples{
+
 # Load data from Aronow, Coppock, Crawford, and Green (2015)
 data("combinedListExps")
 
@@ -40,4 +60,3 @@ out.2 <- combinedListDirect(list1N ~ list1treat + gender +
                             data = subset(combinedListExps, directsfirst==1), 
                             treat = "list1treat", direct = "direct1")
 summary(out.2)
-}

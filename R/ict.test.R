@@ -1,3 +1,52 @@
+#' Item Count Technique
+#' 
+#' Function to conduct a statistical test with the null hypothesis that there
+#' is no "design effect" in a list experiment, a failure of the experiment.
+#' 
+#' This function allows the user to perform a statistical test on data from a
+#' list experiment or item count technique with the null hypothesis of no
+#' design effect. A design effect occurs when an individual's response to the
+#' non-sensitive items changes depending upon the respondent's treatment
+#' status.
+#' 
+#' @param y A numerical vector containing the response data for a list
+#' experiment.
+#' @param treat A numerical vector containing the binary treatment status for a
+#' list experiment.
+#' @param J Number of non-sensitive (control) survey items.
+#' @param alpha Confidence level for the statistical test.
+#' @param n.draws Number of Monte Carlo draws.
+#' @param gms A logical value indicating whether the generalized moment
+#' selection procedure should be used.
+#' @param pi.table A logical value indicating whether a table of estimated
+#' proportions of respondent types with standard errors is displayed.
+#' @return \code{ict.test} returns a numerical scalar with the
+#' Bonferroni-corrected minimum p-value of the statistical test.
+#' @author Graeme Blair, Princeton University, \email{gblair@@princeton.edu}
+#' and Kosuke Imai, Princeton University, \email{kimai@@princeton.edu}
+#' @seealso \code{\link{ictreg}} for list experiment regression based on the
+#' assumption of no design effect
+#' @references Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
+#' List Experiments."  Political Analysis, Vol. 20, No 1 (Winter). available at
+#' \url{http://imai.princeton.edu/research/listP.html}
+#' @keywords models regression
+#' @examples
+#' 
+#' 
+#' data(affirm)
+#' data(race)
+#' 
+#' # Conduct test with null hypothesis that there is no design effect
+#' # Replicates results on Blair and Imai (2010) pg. 30
+#' 
+#' test.value.affirm <- ict.test(affirm$y, affirm$treat, J = 3, gms = TRUE)
+#' print(test.value.affirm)
+#' 
+#' test.value.race <- ict.test(race$y, race$treat, J = 3, gms = TRUE)
+#' print(test.value.race)
+#' 
+#' 
+#' @export ict.test
 ict.test <- function(y, treat, J = NA, alpha = 0.05, n.draws = 250000, gms = TRUE, pi.table = TRUE){
 
   if(class(y)=="matrix") design <- "modified"
