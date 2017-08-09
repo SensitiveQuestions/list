@@ -41,4 +41,3 @@ out.2 <- combinedListDirect(list1N ~ list1treat + gender +
                             treat = "list1treat", direct = "direct1")
 summary(out.2)
 }
-

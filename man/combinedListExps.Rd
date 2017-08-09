@@ -13,4 +13,3 @@ A dataset containing the five list experiments in
 Aronow, Coppock, Crawford, and Green (2015)
 }
 \keyword{datasets}
-
