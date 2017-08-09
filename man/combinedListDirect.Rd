@@ -60,5 +60,3 @@ out.2 <- combinedListDirect(list1N ~ list1treat + gender +
                             data = subset(combinedListExps, directsfirst==1), 
                             treat = "list1treat", direct = "direct1")
 summary(out.2)
-
-}
