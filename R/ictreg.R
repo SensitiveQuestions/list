@@ -2844,15 +2844,12 @@ predict.ictreg <- function(object, newdata, newdata.diff, direct.glm, se.fit = F
       
       v <- pix/(1+exp(xvar %*% beta))
       
-      if(avg==FALSE){
-        var.pred <- rep(NA, n)
-        for (i in 1:n) {
-          if (object$method == "lm")
-            var.pred[i] <- xvar[i,, drop = FALSE] %*% var.beta %*% t(xvar[i,, drop = FALSE])
-          else
-            var.pred[i] <- v[i] * v[i] * (xvar[i,, drop = FALSE] %*% var.beta %*%
-                                          t(xvar[i,, drop = FALSE]))
-        }
+      if(avg==FALSE){        
+          if (object$method == "lm"){
+            var.pred <- diag(xvar %*% var.beta %*% t(xvar))
+          } else {
+            var.pred <- v^2 * diag(xvar %*% var.beta %*% t(xvar))
+          }
         
         se <- sqrt(var.pred)
         
@@ -2860,16 +2857,10 @@ predict.ictreg <- function(object, newdata, newdata.diff, direct.glm, se.fit = F
         
         pix <- mean(pix)
         
-        var.pred <- 0
-        for (i in 1:n) {
-          for (j in 1:n) {
-            if (object$method == "lm")
-              var.pred <- var.pred + xvar[i,, drop = FALSE] %*% var.beta %*%
-                t(xvar[j,, drop = FALSE])
-            else
-              var.pred <- var.pred + v[i] * v[j] * (xvar[i,, drop = FALSE] %*%
-                                                    var.beta %*% t(xvar[j,, drop = FALSE]))
-          }
+        if (object$method == "lm"){
+          var.pred <- sum(xvar %*% var.beta %*% t(xvar))
+        } else {
+          var.pred <- sum(v %*% t(v) * xvar %*% var.beta %*% t(xvar))
         }
         
         se <- c(sqrt(var.pred)/n)
@@ -2912,15 +2903,10 @@ predict.ictreg <- function(object, newdata, newdata.diff, direct.glm, se.fit = F
       pixb <- logistic(xb %*% beta)
       va <- pixa/(1+exp(xa %*% beta))
       vb <- pixb/(1+exp(xb %*% beta))
-      
-      for (i in 1:n) {
-        for (j in 1:n) {
-          var <- var + va[i] * va[j] * (xa[i,, drop = FALSE] %*% var.beta %*% t(xa[j,, drop = FALSE]))
-          - 2 * va[i] * vb[j] * (xa[i,, drop = FALSE] %*% var.beta %*% t(xb[j,, drop = FALSE]))
-          + vb[i] * vb[j] * (xb[i,, drop = FALSE] %*% var.beta %*% t(xb[j,, drop = FALSE]))
-        }
-      }
-      
+
+      var <- sum( va %*% t(va) * xa %*% var.beta %*% t(xa)) + sum(vb %*% t(vb) * xb %*% var.beta %*% t(xb)) - 
+        2 * sum(va %*% t(vb) * xa %*% var.beta %*% t(xb))
+        
       est <- mean(pixa-pixb)
       
       se <- as.vector(sqrt(var)) / n
