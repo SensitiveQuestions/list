@@ -4,7 +4,6 @@
 #' Coppock, Crawford, and Green (2015): Combining List Experiment and Direct
 #' Question Estimates of Sensitive Behavior Prevalence
 #' 
-#' 
 #' @param formula an object of class "formula" (or one that can be coerced to
 #' that class): a symbolic description of the model to be fitted. Should be of
 #' the form Y ~ T + X1 + X2, where Y is the list response, T is the treatment

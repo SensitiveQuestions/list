@@ -93,11 +93,13 @@
     </div>
 
     
-    <p>Function to summarize results from list experiment regression based on the ictreg() function, and to produce proportions of liars estimates.</p>
+    <p>Function to summarize results from list experiment regression based on the
+ictreg() function, and to produce proportions of liars estimates.</p>
     
 
     <pre class="usage"><span class='co'># S3 method for ictreg</span>
-<span class='fu'>summary</span>(<span class='no'>object</span>, <span class='kw'>boundary.proportions</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='no'>...</span>)</pre>
+<span class='fu'>summary</span>(<span class='no'>object</span>, <span class='kw'>boundary.proportions</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <table class="ref-arguments">
@@ -108,11 +110,15 @@
     </tr>
     <tr>
       <th>boundary.proportions</th>
-      <td><p>A switch indicating whether, for models with ceiling effects, floor effects, or both (indicated by the <code>floor = TRUE</code>, <code>ceiling = TRUE</code> options in ictreg), the conditional probability of lying and the population proportions of liars are calculated.</p></td>
+      <td><p>A switch indicating whether, for models with
+ceiling effects, floor effects, or both (indicated by the <code>floor =
+TRUE</code>, <code>ceiling = TRUE</code> options in ictreg), the conditional probability
+of lying and the population proportions of liars are calculated.</p></td>
     </tr>
     <tr>
       <th>n.draws</th>
-      <td><p>For quasi-Bayesian approximation based predictions, specify the number of Monte Carlo draws.</p></td>
+      <td><p>For quasi-Bayesian approximation based predictions, specify
+the number of Monte Carlo draws.</p></td>
     </tr>
     <tr>
       <th>...</th>
@@ -122,27 +128,40 @@
     
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p><code>predict.ictreg</code> produces a summary of the results from an <code>ictreg</code> object. It displays the coefficients, standard errors, and fit statistics for any model from <code>ictreg</code>.
-    <code>predict.ictreg</code> also produces estimates of the conditional probability of lying and of the population proportion of liars for boundary models from <code>ictreg()</code> if <code>ceiling = TRUE</code> or <code>floor = TRUE</code>.</p>
-<p>The conditional probability of lying for the ceiling model is the probability that a respondent with true affirmative views of all the sensitive and non-sensitive items lies and responds negatively to the sensitive item. The conditional probability for the floor model is the probability that a respondent lies to conceal her true affirmative views of the sensitive item when she also holds true negative views of all the non-sensitive items. In both cases, the respondent may believe her privacy is not protected, so may conceal her true affirmative views of the sensitive item.</p>
+    <p><code>predict.ictreg</code> produces a summary of the results from an
+<code>ictreg</code> object. It displays the coefficients, standard errors, and fit
+statistics for any model from <code>ictreg</code>.
+    <code>predict.ictreg</code> also produces estimates of the conditional probability
+of lying and of the population proportion of liars for boundary models from
+<code>ictreg()</code> if <code>ceiling = TRUE</code> or <code>floor = TRUE</code>.</p>
+<p>The conditional probability of lying for the ceiling model is the
+probability that a respondent with true affirmative views of all the
+sensitive and non-sensitive items lies and responds negatively to the
+sensitive item. The conditional probability for the floor model is the
+probability that a respondent lies to conceal her true affirmative views of
+the sensitive item when she also holds true negative views of all the
+non-sensitive items. In both cases, the respondent may believe her privacy
+is not protected, so may conceal her true affirmative views of the sensitive
+item.</p>
+    
+    <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
+
+    <p>Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
+List Experiments."  Political Analysis, Vol. 20, No 1 (Winter). available at
+<a href = 'http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
+<p>Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item Count
+Technique.'' Journal of the American Statistical Association, Vol. 106, No.
+494 (June), pp. 407-416. available at
+<a href = 'http://imai.princeton.edu/research/list.html'>http://imai.princeton.edu/research/list.html</a></p>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
     <p><code><a href='ictreg.html'>ictreg</a></code> for model fitting</p>
     
-    <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
-
-    <p>Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of List Experiments." 
-  Political Analysis, Vol. 20, No 1 (Winter). available at 
-  <a href = 'http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
-<p>Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item
-  Count Technique.''  Journal of the American Statistical Association, 
-  Vol. 106, No. 494 (June), pp. 407-416. available at
-  <a href = 'http://imai.princeton.edu/research/list.html'>http://imai.princeton.edu/research/list.html</a></p>
-    
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'>data</span>(<span class='no'>race</span>)
+    <pre class="examples"><div class='input'>
+<span class='fu'>data</span>(<span class='no'>race</span>)
 <span class='fu'>not_run</span>({
   <span class='co'># Fit standard design ML model with ceiling effects</span>
   <span class='co'># Replicates Table 7 Columns 3-4 in Blair and Imai (2012)</span>
@@ -167,17 +186,17 @@
       
       <li><a href="#details">Details</a></li>
 
-      <li><a href="#see-also">See also</a></li>
-
       <li><a href="#references">References</a></li>
+
+      <li><a href="#see-also">See also</a></li>
       
       <li><a href="#examples">Examples</a></li>
     </ul>
 
     <h2>Author</h2>
-    Graeme Blair, Princeton University,
-<a href='mailto:gblair@princeton.edu'>gblair@princeton.edu</a> and Kosuke Imai, Princeton University,
-<a href='mailto:kimai@princeton.edu'>kimai@princeton.edu</a> 
+    
+Graeme Blair, Princeton University, <a href='mailto:gblair@princeton.edu'>gblair@princeton.edu</a>
+and Kosuke Imai, Princeton University, <a href='mailto:kimai@princeton.edu'>kimai@princeton.edu</a>
 
   </div>
 </div>

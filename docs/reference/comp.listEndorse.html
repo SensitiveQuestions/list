@@ -93,27 +93,32 @@
     </div>
 
     
-    <p>Function to conduct a statistical test with the null hypothesis that there is no difference between the correlation coefficients between list experiment and endorsement experiment data.</p>
+    <p>Function to conduct a statistical test with the null hypothesis that there
+is no difference between the correlation coefficients between list
+experiment and endorsement experiment data.</p>
     
 
-    <pre class="usage"><span class='fu'>comp.listEndorse</span>(<span class='no'>y.endorse</span>, <span class='no'>y.list</span>, <span class='no'>treat</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>10000</span>,
-         <span class='kw'>alpha</span> <span class='kw'>=</span> <span class='fl'>.05</span>, <span class='kw'>endorse.mean</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-         <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"pearson"</span>)</pre>
+    <pre class="usage"><span class='fu'>comp.listEndorse</span>(<span class='no'>y.endorse</span>, <span class='no'>y.list</span>, <span class='no'>treat</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>alpha</span> <span class='kw'>=</span> <span class='fl'>0.05</span>,
+  <span class='kw'>endorse.mean</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"pearson"</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>y.endorse</th>
-      <td><p>A numerical matrix containing the response data for the endorsement experiment.</p></td>
+      <td><p>A numerical matrix containing the response data for the
+endorsement experiment.</p></td>
     </tr>
     <tr>
       <th>y.list</th>
-      <td><p>A numerical vector containing the response data for a list experiment.</p></td>
+      <td><p>A numerical vector containing the response data for a list
+experiment.</p></td>
     </tr>
     <tr>
       <th>treat</th>
-      <td><p>A numerical vector containing the binary treatment status for the experiments. The treatment assignment must be the same for both experiments to compare across experiments.</p></td>
+      <td><p>A numerical vector containing the binary treatment status for
+the experiments. The treatment assignment must be the same for both
+experiments to compare across experiments.</p></td>
     </tr>
     <tr>
       <th>n.draws</th>
@@ -125,28 +130,38 @@
     </tr>
     <tr>
       <th>endorse.mean</th>
-      <td><p>A logical value indicating whether the mean endorsement experiment response is taken across questions.</p></td>
+      <td><p>A logical value indicating whether the mean endorsement
+experiment response is taken across questions.</p></td>
     </tr>
     <tr>
       <th>method</th>
-      <td><p>The method for calculating the correlation, either Pearson's rho or Kendall's tau.</p></td>
+      <td><p>The method for calculating the correlation, either Pearson's
+rho or Kendall's tau.</p></td>
     </tr>
     </table>
     
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>This function allows the user to calculate the correlation between list and endorsement experiment data within the control group and the treatment group, and to conduct a statistical test with the null hypothesis of no difference between the two correlation coefficients.</p>
-    
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p><code>comp.listEndorse</code> returns a list with four elements: the correlation statistic (rho or tau) for the treatment group as <code>cor.treat</code>, the correlation statistic for the control group as <code>cor.control</code>, the p.value for the statistical test comparing the two correlation statistics as <code>p.value</code>, and the bootstrapped confidence interval of the difference as <code>ci</code>.</p>
+    <p><code>comp.listEndorse</code> returns a list with four elements: the
+correlation statistic (rho or tau) for the treatment group as
+<code>cor.treat</code>, the correlation statistic for the control group as
+<code>cor.control</code>, the p.value for the statistical test comparing the two
+correlation statistics as <code>p.value</code>, and the bootstrapped confidence
+interval of the difference as <code>ci</code>.</p>
+    
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>This function allows the user to calculate the correlation between list and
+endorsement experiment data within the control group and the treatment
+group, and to conduct a statistical test with the null hypothesis of no
+difference between the two correlation coefficients.</p>
     
     <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
 
-    <p>Blair, Graeme, Jason Lyall and Kosuke Imai. (2014) ``Comparing and Combining
-  List and Experiments: Evidence from Afghanistan." 
-  American Journal of Political Science. available at 
-  <a href = 'http://imai.princeton.edu/research/comp.html'>http://imai.princeton.edu/research/comp.html</a></p>
+    <p>Blair, Graeme, Jason Lyall and Kosuke Imai. (2014) ``Comparing
+and Combining List and Experiments: Evidence from Afghanistan."  American
+Journal of Political Science. available at
+<a href = 'http://imai.princeton.edu/research/comp.html'>http://imai.princeton.edu/research/comp.html</a></p>
     
 
   </div>
@@ -155,17 +170,17 @@
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       
-      <li><a href="#details">Details</a></li>
-
       <li><a href="#value">Value</a></li>
+
+      <li><a href="#details">Details</a></li>
 
       <li><a href="#references">References</a></li>
           </ul>
 
     <h2>Author</h2>
-    Graeme Blair, Princeton University,
-<a href='mailto:gblair@princeton.edu'>gblair@princeton.edu</a> and Kosuke Imai, Princeton University,
-<a href='mailto:kimai@princeton.edu'>kimai@princeton.edu</a> 
+    
+Graeme Blair, Princeton University, <a href='mailto:gblair@princeton.edu'>gblair@princeton.edu</a>
+and Kosuke Imai, Princeton University, <a href='mailto:kimai@princeton.edu'>kimai@princeton.edu</a>
 
   </div>
 </div>

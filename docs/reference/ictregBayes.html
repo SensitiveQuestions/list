@@ -93,26 +93,26 @@
     </div>
 
     
-    <p>Function to conduct multivariate regression analyses of survey data with the item count technique, also known as the list experiment and the unmatched count technique.</p>
+    <p>Function to conduct multivariate regression analyses of survey data with the
+item count technique, also known as the list experiment and the unmatched
+count technique.</p>
     
 
     <pre class="usage"><span class='fu'>ictregBayes</span>(<span class='no'>formula</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='fu'>parent.frame</span>(), <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>, <span class='no'>J</span>,
-            <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"full"</span>,
-            <span class='kw'>constrained.multi</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>fit.start</span> <span class='kw'>=</span> <span class='st'>"lm"</span>,
-            <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>5000</span>, <span class='kw'>thin</span> <span class='kw'>=</span> <span class='fl'>0</span>, <span class='no'>delta.start</span>,
-            <span class='no'>psi.start</span>, <span class='no'>Sigma.start</span>, <span class='no'>Phi.start</span>, <span class='no'>delta.mu0</span>, <span class='no'>psi.mu0</span>,
-            <span class='no'>delta.A0</span>, <span class='no'>psi.A0</span>, <span class='no'>Sigma.df</span>, <span class='no'>Sigma.scale</span>, <span class='no'>Phi.df</span>, <span class='no'>Phi.scale</span>,
-            <span class='no'>delta.tune</span>, <span class='no'>psi.tune</span>, <span class='no'>gamma.tune</span>, <span class='no'>zeta.tune</span>,
-            <span class='no'>formula.mixed</span>, <span class='no'>group.mixed</span>,
-            <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>sensitive.model</span> <span class='kw'>=</span> <span class='st'>"logit"</span>,
-            <span class='kw'>df</span> <span class='kw'>=</span> <span class='fl'>5</span>, <span class='no'>endorse.options</span>, <span class='no'>...</span>)</pre>
+  <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"full"</span>, <span class='kw'>constrained.multi</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>fit.start</span> <span class='kw'>=</span> <span class='st'>"lm"</span>,
+  <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>5000</span>, <span class='kw'>thin</span> <span class='kw'>=</span> <span class='fl'>0</span>, <span class='no'>delta.start</span>, <span class='no'>psi.start</span>,
+  <span class='no'>Sigma.start</span>, <span class='no'>Phi.start</span>, <span class='no'>delta.mu0</span>, <span class='no'>psi.mu0</span>, <span class='no'>delta.A0</span>, <span class='no'>psi.A0</span>, <span class='no'>Sigma.df</span>,
+  <span class='no'>Sigma.scale</span>, <span class='no'>Phi.df</span>, <span class='no'>Phi.scale</span>, <span class='no'>delta.tune</span>, <span class='no'>psi.tune</span>, <span class='no'>gamma.tune</span>, <span class='no'>zeta.tune</span>,
+  <span class='no'>formula.mixed</span>, <span class='no'>group.mixed</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>sensitive.model</span> <span class='kw'>=</span> <span class='st'>"logit"</span>,
+  <span class='kw'>df</span> <span class='kw'>=</span> <span class='fl'>5</span>, <span class='no'>endorse.options</span>, <span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>formula</th>
-      <td><p>An object of class "formula": a symbolic description of the model to be fitted.</p></td>
+      <td><p>An object of class "formula": a symbolic description of the
+model to be fitted.</p></td>
     </tr>
     <tr>
       <th>data</th>
@@ -120,23 +120,37 @@
     </tr>
     <tr>
       <th>treat</th>
-      <td><p>Name of treatment indicator as a string. For single sensitive item models, this refers to a binary indicator, and for multiple sensitive item models it refers to a multi-valued variable with zero representing the control condition. This can be an integer (with 0 for the control group) or a factor (with "control" for the control group).</p></td>
+      <td><p>Name of treatment indicator as a string. For single sensitive
+item models, this refers to a binary indicator, and for multiple sensitive
+item models it refers to a multi-valued variable with zero representing the
+control condition. This can be an integer (with 0 for the control group) or
+a factor (with "control" for the control group).</p></td>
     </tr>
     <tr>
       <th>J</th>
-      <td><p>Number of non-sensitive (control) survey items. This will be set automatically to the maximum value of the outcome variable in the treatment group if no input is sent by the user.</p></td>
+      <td><p>Number of non-sensitive (control) survey items. This will be set
+automatically to the maximum value of the outcome variable in the treatment
+group if no input is sent by the user.</p></td>
     </tr>
     <tr>
       <th>constrained.single</th>
-      <td><p>A string indicating whether the control group parameters are constrained to be equal in the single sensitive item design, either setting all parameters to be equal (<code>full</code>) or only the intercept (<code>intercept</code>). If neither, set to <code>none</code>.</p></td>
+      <td><p>A string indicating whether the control group
+parameters are constrained to be equal in the single sensitive item design,
+either setting all parameters to be equal (<code>full</code>) or only the
+intercept (<code>intercept</code>). If neither, set to <code>none</code>.</p></td>
     </tr>
     <tr>
       <th>constrained.multi</th>
-      <td><p>A logical value indicating whether the non-sensitive item count is included as a predictor in the sensitive item fits for the multiple sensitive item design.</p></td>
+      <td><p>A logical value indicating whether the
+non-sensitive item count is included as a predictor in the sensitive item
+fits for the multiple sensitive item design.</p></td>
     </tr>
     <tr>
       <th>fit.start</th>
-      <td><p>Fit method for starting values. The options are <code>lm</code>, <code>glm</code>, <code>nls</code>, and <code>ml</code>, which use OLS, logistic regression, non-linear least squares, and maximum likelihood estimation to generate starting values, respectively. The default is <code>lm</code>.</p></td>
+      <td><p>Fit method for starting values. The options are <code>lm</code>,
+<code>glm</code>, <code>nls</code>, and <code>ml</code>, which use OLS, logistic regression,
+non-linear least squares, and maximum likelihood estimation to generate
+starting values, respectively. The default is <code>lm</code>.</p></td>
     </tr>
     <tr>
       <th>n.draws</th>
@@ -148,95 +162,133 @@
     </tr>
     <tr>
       <th>thin</th>
-      <td><p>The interval of thinning, in which every other (<code>thin</code> = 1) or more iterations are discarded in the output object</p></td>
+      <td><p>The interval of thinning, in which every other (<code>thin</code> = 1)
+or more iterations are discarded in the output object</p></td>
     </tr>
     <tr>
       <th>delta.start</th>
-      <td><p>Optional starting values for the sensitive item fit. This should be a vector with the length of the number of covariates for the single sensitive item design, and either a vector or a list with a vector of starting values for each of the sensitive items. The default runs an <code>ictreg</code> fit with the method set by the <code>fit.start</code> option.</p></td>
+      <td><p>Optional starting values for the sensitive item fit. This
+should be a vector with the length of the number of covariates for the
+single sensitive item design, and either a vector or a list with a vector of
+starting values for each of the sensitive items. The default runs an
+<code>ictreg</code> fit with the method set by the <code>fit.start</code> option.</p></td>
     </tr>
     <tr>
       <th>psi.start</th>
-      <td><p>Optional starting values for the control items fit. This should be a vector of length the number of covariates for the constrained models. The default runs an <code>ictreg</code> fit with the method set by the <code>fit.start</code> option.</p></td>
+      <td><p>Optional starting values for the control items fit. This
+should be a vector of length the number of covariates for the constrained
+models. The default runs an <code>ictreg</code> fit with the method set by the
+<code>fit.start</code> option.</p></td>
     </tr>
     <tr>
       <th>Sigma.start</th>
-      <td><p>Optional starting values for Sigma parameter for mixed effects models for sensitive item.</p></td>
+      <td><p>Optional starting values for Sigma parameter for mixed
+effects models for sensitive item.</p></td>
     </tr>
     <tr>
       <th>Phi.start</th>
-      <td><p>Optional starting values for the Phi parameter for mixed effects models for control item.</p></td>
+      <td><p>Optional starting values for the Phi parameter for mixed
+effects models for control item.</p></td>
     </tr>
     <tr>
       <th>delta.mu0</th>
-      <td><p>Optional vector of prior means for the sensitive item fit parameters, a vector of length the number of covariates.</p></td>
+      <td><p>Optional vector of prior means for the sensitive item fit
+parameters, a vector of length the number of covariates.</p></td>
     </tr>
     <tr>
       <th>psi.mu0</th>
-      <td><p>Optional vector of prior means for the control item fit parameters, a vector of length the number of covariates.</p></td>
+      <td><p>Optional vector of prior means for the control item fit
+parameters, a vector of length the number of covariates.</p></td>
     </tr>
     <tr>
       <th>delta.A0</th>
-      <td><p>Optional matrix of prior precisions for the sensitive item fit parameters, a matrix of dimension the number of covariates.</p></td>
+      <td><p>Optional matrix of prior precisions for the sensitive item
+fit parameters, a matrix of dimension the number of covariates.</p></td>
     </tr>
     <tr>
       <th>psi.A0</th>
-      <td><p>Optional matrix of prior precisions for the control items fit parameters, a matrix of dimension the number of covariates.</p></td>
+      <td><p>Optional matrix of prior precisions for the control items fit
+parameters, a matrix of dimension the number of covariates.</p></td>
     </tr>
     <tr>
       <th>Sigma.df</th>
-      <td><p>Optional prior degrees of freedom parameter for mixed effects models for sensitive item.</p></td>
+      <td><p>Optional prior degrees of freedom parameter for mixed
+effects models for sensitive item.</p></td>
     </tr>
     <tr>
       <th>Sigma.scale</th>
-      <td><p>Optional prior scale parameter for mixed effects models for sensitive item.</p></td>
+      <td><p>Optional prior scale parameter for mixed effects models
+for sensitive item.</p></td>
     </tr>
     <tr>
       <th>Phi.df</th>
-      <td><p>Optional prior degress of freedom parameter for mixed effects models for control item.</p></td>
+      <td><p>Optional prior degress of freedom parameter for mixed effects
+models for control item.</p></td>
     </tr>
     <tr>
       <th>Phi.scale</th>
-      <td><p>Optional prior scale parameter for mixed effects models for control item.</p></td>
+      <td><p>Optional prior scale parameter for mixed effects models for
+control item.</p></td>
     </tr>
     <tr>
       <th>delta.tune</th>
-      <td><p>A required vector of tuning parameters for the Metropolis algorithm for the sensitive item fit. This must be set and refined by the user until the acceptance ratios are approximately .4 (reported in the output).</p></td>
+      <td><p>A required vector of tuning parameters for the Metropolis
+algorithm for the sensitive item fit. This must be set and refined by the
+user until the acceptance ratios are approximately .4 (reported in the
+output).</p></td>
     </tr>
     <tr>
       <th>psi.tune</th>
-      <td><p>A required vector of tuning parameters for the Metropolis algorithm for the control item fit. This must be set and refined by the user until the acceptance ratios are approximately .4 (reported in the output).</p></td>
+      <td><p>A required vector of tuning parameters for the Metropolis
+algorithm for the control item fit. This must be set and refined by the user
+until the acceptance ratios are approximately .4 (reported in the output).</p></td>
     </tr>
     <tr>
       <th>gamma.tune</th>
-      <td><p>An optional vector of tuning parameters for the Metropolis algorithm for the control item fit for the random effects. This can be set and refined by the user until the acceptance ratios are approximately .4 (reported in the output).</p></td>
+      <td><p>An optional vector of tuning parameters for the Metropolis
+algorithm for the control item fit for the random effects. This can be set
+and refined by the user until the acceptance ratios are approximately .4
+(reported in the output).</p></td>
     </tr>
     <tr>
       <th>zeta.tune</th>
-      <td><p>An optional vector of tuning parameters for the Metropolis algorithm for the sensitive item fit for the random effects. This can be set and refined by the user until the acceptance ratios are approximately .4 (reported in the output).</p></td>
+      <td><p>An optional vector of tuning parameters for the Metropolis
+algorithm for the sensitive item fit for the random effects. This can be set
+and refined by the user until the acceptance ratios are approximately .4
+(reported in the output).</p></td>
     </tr>
     <tr>
       <th>formula.mixed</th>
-      <td><p>To specify a mixed effects model, include this formula object for the group-level fit. ~1 allows intercepts to vary, and including covariates in the formula allows the slopes to vary also.</p></td>
+      <td><p>To specify a mixed effects model, include this formula
+object for the group-level fit. ~1 allows intercepts to vary, and including
+covariates in the formula allows the slopes to vary also.</p></td>
     </tr>
     <tr>
       <th>group.mixed</th>
-      <td><p>A numerical group indicator specifying which group each individual belongs to for a mixed effects model.</p></td>
+      <td><p>A numerical group indicator specifying which group each
+individual belongs to for a mixed effects model.</p></td>
     </tr>
     <tr>
       <th>verbose</th>
-      <td><p>A logical value indicating whether model diagnostics are printed out during fitting.</p></td>
+      <td><p>A logical value indicating whether model diagnostics are
+printed out during fitting.</p></td>
     </tr>
     <tr>
       <th>sensitive.model</th>
-      <td><p>A logical value indicating which model is used for the sensitive item fit,  logistic regression (<code>logit</code>, default), robit regression (<code>robit</code>), or probit regression (<code>probit</code>).</p></td>
+      <td><p>A logical value indicating which model is used for
+the sensitive item fit, logistic regression (<code>logit</code>, default), robit
+regression (<code>robit</code>), or probit regression (<code>probit</code>).</p></td>
     </tr>
     <tr>
       <th>df</th>
-      <td><p>Degrees of freedom for the robit model for the sensitive item fit, only used if <code>robit</code> is set to <code>TRUE</code>.</p></td>
+      <td><p>Degrees of freedom for the robit model for the sensitive item fit,
+only used if <code>robit</code> is set to <code>TRUE</code>.</p></td>
     </tr>
     <tr>
       <th>endorse.options</th>
-      <td><p>A list of inputs and options for running the combined list experiment and endorsement experiment model. Options documented more fully in <code>endorse</code> package.</p></td>
+      <td><p>A list of inputs and options for running the combined
+list experiment and endorsement experiment model. Options documented more
+fully in <code>endorse</code> package.</p></td>
     </tr>
     <tr>
       <th>...</th>
@@ -244,52 +296,110 @@
     </tr>
     </table>
     
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>This function allows the user to perform regression analysis on data from the item count technique, also known as the list experiment and the unmatched count technique using a Bayesian MCMC algorithm.</p>
-<p>Unlike the maximum likelihood and least squares estimators in the <code>ictreg</code> function, the Metropolis algorithm for the Bayesian MCMC estimators in this function must be tuned to work correctly. The <code>delta.tune</code> and <code>psi.tune</code> are required, and the values, one for each estimated parameter, will need to be manipulated. The output of the <code>ictregBayes</code> function, and of the <code>summary</code> function run on an <code>ictregBayes</code> object display the acceptance ratios from the Metropolis algorithm. If these values are far from 0.4, the tuning parameters should be changed until the ratios approach 0.4.</p>
-<p>For the single sensitive item design, the model can constrain all control parameters to be equal (<code>constrained = "full"</code>), or just the intercept (<code>constrained = "intercept"</code>) or all the control fit parameters can be allowed to vary across the potential sensitive item values (<code>constrained = "none"</code>).</p>
-<p>For the multiple sensitive item design, the model can include the estimated number of affirmative responses to the control items as a covariate in the sensitive item model fit (<code>constrained</code> set to <code>TRUE</code>) or exclude it (<code>FALSE</code>).</p>
-<p>The function also allows the user to perform combined list experiment and endorsement experiment regression. Setting <code>endorse.options</code> to a list with the options from the <code>endorse</code> package for endorsement experiment regression, the function will return the combined model in which the relationship between covariates and the sensitive item in the list experiment model is set to be identical to the relationship between covariates and support for endorsers in the endorsement experiment model. For more details on endorsement experiment regression, see the help for the <code>endorse</code> package.</p>
-<p>Convergence is at times difficult to achieve, so we recommend running multiple chains from overdispersed starting values by, for example, running an MLE or linear model using the ictreg() function, and then generating a set of overdispersed starting values using those estimates and their estimated variance-covariance matrix. An example is provided below for each of the possible designs. Running <code>summary()</code> after such a procedure will output the Gelman-Rubin convergence statistics in addition to the estimates. If the G-R statistics are all below 1.1, the model is said to have converged.</p>
-    
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p><code>ictregBayes</code> returns an object of class "ictregBayes".  The function <code>summary</code> is used to obtain a table of the results, using the <code>coda</code> package. Two attributes are also included, the data ("x"), the call ("call"), which can be extracted using the command, e.g., attr(ictregBayes.object, "x").</p>
-<dt>mcmc</dt><dd><p>an object of class "mcmc" that can be analyzed using the <code>coda</code> package.</p></dd>
-<dt>x</dt><dd><p>the design matrix</p></dd>
-<dt>multi</dt><dd><p>a logical value indicating whether the data included multiple sensitive items.</p></dd>
-<dt>constrained</dt><dd><p>a logical or character value indicating whether the control group parameters are constrained to be equal in the single sensitive item design, and whether the non-sensitive item count is included as a predictor in the sensitive item fits for the multiple sensitive item design.</p></dd>
-<dt>delta.start</dt><dd><p>Optional starting values for the sensitive item fit. This should be a vector with the length of the number of covariates. The default runs an <code>ictreg</code> fit with the method set by the <code>fit.start</code> option.</p></dd>
-<dt>psi.start</dt><dd><p>Optional starting values for the control items fit. This should be a vector of length the number of covariates. The default runs an <code>ictreg</code> fit with the method set by the <code>fit.start</code> option.</p></dd>
-<dt>delta.mu0</dt><dd><p>Optional vector of prior means for the sensitive item fit parameters, a vector of length the number of covariates.</p></dd>
-<dt>psi.mu0</dt><dd><p>Optional vector of prior means for the control item fit parameters, a vector of length the number of covariates.</p></dd>
-<dt>delta.A0</dt><dd><p>Optional matrix of prior precisions for the sensitive item fit parameters, a matrix of dimension the number of covariates.</p></dd>
-<dt>psi.A0</dt><dd><p>Optional matrix of prior precisions for the control items fit parameters, a matrix of dimension the number of covariates.</p></dd>
-<dt>delta.tune</dt><dd><p>A required vector of tuning parameters for the Metropolis algorithm for the sensitive item fit. This must be set and refined by the user until the acceptance ratios are approximately .4 (reported in the output).</p></dd>
-<dt>psi.tune</dt><dd><p>A required vector of tuning parameters for the Metropolis algorithm for the control item fit. This must be set and refined by the user until the acceptance ratios are approximately .4 (reported in the output).</p></dd>
-<dt>J</dt><dd><p>Number of non-sensitive (control) survey items set by the user or detected.</p></dd>
-<dt>treat.labels</dt><dd><p>a vector of the names used by the <code>treat</code> vector for the sensitive item or items. This is the names from the <code>treat</code> indicator if it is a factor, or the number of the item if it is numeric.</p></dd> 
-<dt>control.label</dt><dd><p>a vector of the names used by the <code>treat</code> vector for the control items. This is the names from the <code>treat</code> indicator if it is a factor, or the number of the item if it is numeric.</p></dd>
-<dt>call</dt><dd><p>the matched call</p></dd>
+    <p><code>ictregBayes</code> returns an object of class "ictregBayes".  The
+function <code>summary</code> is used to obtain a table of the results, using the
+<code>coda</code> package. Two attributes are also included, the data ("x"), the
+call ("call"), which can be extracted using the command, e.g.,
+attr(ictregBayes.object, "x").</p>
+<dt>mcmc</dt><dd><p>an object of class "mcmc" that can be analyzed using the
+<code>coda</code> package.</p></dd> <dt>x</dt><dd><p>the design matrix</p></dd> <dt>multi</dt><dd><p>a logical
+value indicating whether the data included multiple sensitive items.</p></dd>
+<dt>constrained</dt><dd><p>a logical or character value indicating whether the
+control group parameters are constrained to be equal in the single sensitive
+item design, and whether the non-sensitive item count is included as a
+predictor in the sensitive item fits for the multiple sensitive item
+design.</p></dd> <dt>delta.start</dt><dd><p>Optional starting values for the sensitive item
+fit. This should be a vector with the length of the number of covariates.
+The default runs an <code>ictreg</code> fit with the method set by the
+<code>fit.start</code> option.</p></dd> <dt>psi.start</dt><dd><p>Optional starting values for the
+control items fit. This should be a vector of length the number of
+covariates. The default runs an <code>ictreg</code> fit with the method set by the
+<code>fit.start</code> option.</p></dd> <dt>delta.mu0</dt><dd><p>Optional vector of prior means
+for the sensitive item fit parameters, a vector of length the number of
+covariates.</p></dd> <dt>psi.mu0</dt><dd><p>Optional vector of prior means for the control
+item fit parameters, a vector of length the number of covariates.</p></dd>
+<dt>delta.A0</dt><dd><p>Optional matrix of prior precisions for the sensitive item
+fit parameters, a matrix of dimension the number of covariates.</p></dd>
+<dt>psi.A0</dt><dd><p>Optional matrix of prior precisions for the control items fit
+parameters, a matrix of dimension the number of covariates.</p></dd>
+<dt>delta.tune</dt><dd><p>A required vector of tuning parameters for the Metropolis
+algorithm for the sensitive item fit. This must be set and refined by the
+user until the acceptance ratios are approximately .4 (reported in the
+output).</p></dd> <dt>psi.tune</dt><dd><p>A required vector of tuning parameters for the
+Metropolis algorithm for the control item fit. This must be set and refined
+by the user until the acceptance ratios are approximately .4 (reported in
+the output).</p></dd> <dt>J</dt><dd><p>Number of non-sensitive (control) survey items set by
+the user or detected.</p></dd> <dt>treat.labels</dt><dd><p>a vector of the names used by the
+<code>treat</code> vector for the sensitive item or items. This is the names from
+the <code>treat</code> indicator if it is a factor, or the number of the item if
+it is numeric.</p></dd> <dt>control.label</dt><dd><p>a vector of the names used by the
+<code>treat</code> vector for the control items. This is the names from the
+<code>treat</code> indicator if it is a factor, or the number of the item if it is
+numeric.</p></dd> <dt>call</dt><dd><p>the matched call</p></dd>
 
-If the data includes multiple sensitive items, the following object is also included:
-<dt>treat.values</dt><dd><p>a vector of the values used in the <code>treat</code> vector for the sensitive items, either character or numeric depending on the class of <code>treat</code>. Does not include the value for the control status</p></dd>
+If the data includes multiple sensitive items, the following object is also
+included: <dt>treat.values</dt><dd><p>a vector of the values used in the
+<code>treat</code> vector for the sensitive items, either character or numeric
+depending on the class of <code>treat</code>. Does not include the value for the
+control status</p></dd>
 
+    
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>This function allows the user to perform regression analysis on data from
+the item count technique, also known as the list experiment and the
+unmatched count technique using a Bayesian MCMC algorithm.</p>
+<p>Unlike the maximum likelihood and least squares estimators in the
+<code>ictreg</code> function, the Metropolis algorithm for the Bayesian MCMC
+estimators in this function must be tuned to work correctly. The
+<code>delta.tune</code> and <code>psi.tune</code> are required, and the values, one for
+each estimated parameter, will need to be manipulated. The output of the
+<code>ictregBayes</code> function, and of the <code>summary</code> function run on an
+<code>ictregBayes</code> object display the acceptance ratios from the Metropolis
+algorithm. If these values are far from 0.4, the tuning parameters should be
+changed until the ratios approach 0.4.</p>
+<p>For the single sensitive item design, the model can constrain all control
+parameters to be equal (<code>constrained = "full"</code>), or just the intercept
+(<code>constrained = "intercept"</code>) or all the control fit parameters can be
+allowed to vary across the potential sensitive item values
+(<code>constrained = "none"</code>).</p>
+<p>For the multiple sensitive item design, the model can include the estimated
+number of affirmative responses to the control items as a covariate in the
+sensitive item model fit (<code>constrained</code> set to <code>TRUE</code>) or exclude
+it (<code>FALSE</code>).</p>
+<p>The function also allows the user to perform combined list experiment and
+endorsement experiment regression. Setting <code>endorse.options</code> to a list
+with the options from the <code>endorse</code> package for endorsement experiment
+regression, the function will return the combined model in which the
+relationship between covariates and the sensitive item in the list
+experiment model is set to be identical to the relationship between
+covariates and support for endorsers in the endorsement experiment model.
+For more details on endorsement experiment regression, see the help for the
+<code>endorse</code> package.</p>
+<p>Convergence is at times difficult to achieve, so we recommend running
+multiple chains from overdispersed starting values by, for example, running
+an MLE or linear model using the ictreg() function, and then generating a
+set of overdispersed starting values using those estimates and their
+estimated variance-covariance matrix. An example is provided below for each
+of the possible designs. Running <code>summary()</code> after such a procedure
+will output the Gelman-Rubin convergence statistics in addition to the
+estimates. If the G-R statistics are all below 1.1, the model is said to
+have converged.</p>
     
     <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
 
-    <p>Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of List Experiments." 
-  Political Analysis, Vol. 20, No 1 (Winter). available at 
-  <a href = 'http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
-<p>Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item
-  Count Technique.''  Journal of the American Statistical Association, 
-  Vol. 106, No. 494 (June), pp. 407-416. available at
-  <a href = 'http://imai.princeton.edu/research/list.html'>http://imai.princeton.edu/research/list.html</a></p>
+    <p>Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
+List Experiments."  Political Analysis, Vol. 20, No 1 (Winter). available at
+<a href = 'http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
+<p>Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item Count
+Technique.'' Journal of the American Statistical Association, Vol. 106, No.
+494 (June), pp. 407-416. available at
+<a href = 'http://imai.princeton.edu/research/list.html'>http://imai.princeton.edu/research/list.html</a></p>
 <p>Blair, Graeme, Jason Lyall and Kosuke Imai. (2013) ``Comparing and Combining
-  List and Experiments: Evidence from Afghanistan." 
-  Working paper. available at 
-  <a href = 'http://imai.princeton.edu/research/comp.html'>http://imai.princeton.edu/research/comp.html</a></p>
+List and Experiments: Evidence from Afghanistan."  Working paper. available
+at <a href = 'http://imai.princeton.edu/research/comp.html'>http://imai.princeton.edu/research/comp.html</a></p>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
@@ -298,6 +408,7 @@ If the data includes multiple sensitive items, the following object is also incl
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'>
+
 <span class='fu'>data</span>(<span class='no'>race</span>)
 
 <span class='fu'>not_run</span>({
@@ -492,9 +603,9 @@ If the data includes multiple sensitive items, the following object is also incl
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       
-      <li><a href="#details">Details</a></li>
-
       <li><a href="#value">Value</a></li>
+
+      <li><a href="#details">Details</a></li>
 
       <li><a href="#references">References</a></li>
 
@@ -504,9 +615,9 @@ If the data includes multiple sensitive items, the following object is also incl
     </ul>
 
     <h2>Author</h2>
-    Graeme Blair, Princeton University,
-<a href='mailto:gblair@princeton.edu'>gblair@princeton.edu</a> and Kosuke Imai, Princeton University,
-<a href='mailto:kimai@princeton.edu'>kimai@princeton.edu</a> 
+    
+Graeme Blair, Princeton University, <a href='mailto:gblair@princeton.edu'>gblair@princeton.edu</a>
+and Kosuke Imai, Princeton University, <a href='mailto:kimai@princeton.edu'>kimai@princeton.edu</a>
 
   </div>
 </div>

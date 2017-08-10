@@ -93,12 +93,15 @@
     </div>
 
     
-    <p>Function to calculate predictions and uncertainties of predictions from estimates from multivariate regression analysis of survey data with the item count technique.</p>
+    <p>Function to calculate predictions and uncertainties of predictions from
+estimates from multivariate regression analysis of survey data with the item
+count technique.</p>
     
 
     <pre class="usage"><span class='co'># S3 method for ictreg</span>
-<span class='fu'>predict</span>(<span class='no'>object</span>, <span class='no'>newdata</span>, <span class='no'>newdata.diff</span>, <span class='no'>direct.glm</span>, <span class='kw'>se.fit</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
- <span class='kw'>interval</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"none"</span>,<span class='st'>"confidence"</span>), <span class='kw'>level</span> <span class='kw'>=</span> <span class='fl'>.95</span>, <span class='kw'>avg</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='no'>sensitive.item</span>, <span class='no'>...</span>)</pre>
+<span class='fu'>predict</span>(<span class='no'>object</span>, <span class='no'>newdata</span>, <span class='no'>newdata.diff</span>, <span class='no'>direct.glm</span>,
+  <span class='kw'>se.fit</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>interval</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"none"</span>, <span class='st'>"confidence"</span>), <span class='kw'>level</span> <span class='kw'>=</span> <span class='fl'>0.95</span>,
+  <span class='kw'>avg</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='no'>sensitive.item</span>, <span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <table class="ref-arguments">
@@ -109,15 +112,21 @@
     </tr>
     <tr>
       <th>newdata</th>
-      <td><p>An optional data frame containing data that will be used to make predictions from. If omitted, the data used to fit the regression are used.</p></td>
+      <td><p>An optional data frame containing data that will be used to
+make predictions from. If omitted, the data used to fit the regression are
+used.</p></td>
     </tr>
     <tr>
       <th>newdata.diff</th>
-      <td><p>An optional data frame used to compare predictions with predictions from the data in the provided newdata data frame.</p></td>
+      <td><p>An optional data frame used to compare predictions with
+predictions from the data in the provided newdata data frame.</p></td>
     </tr>
     <tr>
       <th>direct.glm</th>
-      <td><p>A glm object from a logistic binomial regression predicting responses to a direct survey item regarding the sensitive item. The predictions from the ictreg object are compared to the predictions based on this glm object.</p></td>
+      <td><p>A glm object from a logistic binomial regression
+predicting responses to a direct survey item regarding the sensitive item.
+The predictions from the ictreg object are compared to the predictions based
+on this glm object.</p></td>
     </tr>
     <tr>
       <th>se.fit</th>
@@ -133,11 +142,15 @@
     </tr>
     <tr>
       <th>avg</th>
-      <td><p>A switch indicating if the mean prediction and associated statistics across all obserations in the dataframe will be returned instead of predictions for each observation.</p></td>
+      <td><p>A switch indicating if the mean prediction and associated
+statistics across all obserations in the dataframe will be returned instead
+of predictions for each observation.</p></td>
     </tr>
     <tr>
       <th>sensitive.item</th>
-      <td><p>For multiple sensitive item design list experiments, specify which sensitive item fits to use for predictions. Default is the first sensitive item.</p></td>
+      <td><p>For multiple sensitive item design list experiments,
+specify which sensitive item fits to use for predictions. Default is the
+first sensitive item.</p></td>
     </tr>
     <tr>
       <th>...</th>
@@ -145,37 +158,57 @@
     </tr>
     </table>
     
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p><code>predict.ictreg</code> produces predicted values, obtained by evaluating the regression function in the frame newdata (which defaults to <code>model.frame(object)</code>. If the logical <code>se.fit</code> is <code>TRUE</code>, standard errors of the predictions are calculated. Setting <code>interval</code> specifies computation of confidence intervals at the specified level or no intervals.</p>
-<p>If <code>avg</code> is set to <code>TRUE</code>, the mean prediction across all observations in the dataset will be calculated, and if the <code>se.fit</code> option is set to <code>TRUE</code> a standard error for this mean estimate will be provided. The <code>interval</code> option will output confidence intervals instead of only the point estimate if set to <code>TRUE</code>.</p>
-<p>Two additional types of mean prediction are also available. The first, if a <code>newdata.diff</code> data frame is provided by the user, calculates the mean predicted values across two datasets, as well as the mean difference in predicted value. Standard errors and confidence intervals can also be added. For difference prediction, <code>avg</code> must be set to <code>TRUE</code>.</p>
-<p>The second type of prediction, triggered if a <code>direct.glm</code> object is provided by the user, calculates the mean difference in prediction between predictions based on an <code>ictreg</code> fit and a <code>glm</code> fit from a direct survey item on the sensitive question. This is defined as the revealed social desirability bias in Blair and Imai (2010).</p>
-    
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p><code>predict.ictreg</code> produces a vector of predictions or a matrix of predictions and bounds with column names fit, lwr, and upr if interval is set. If se.fit is TRUE, a list with the following components is returned:</p>
-<dt>fit</dt><dd><p>vector or matrix as above</p></dd>
-<dt>se.fit</dt><dd><p>standard error of prediction</p></dd>
+    <p><code>predict.ictreg</code> produces a vector of predictions or a matrix
+of predictions and bounds with column names fit, lwr, and upr if interval is
+set. If se.fit is TRUE, a list with the following components is returned:</p>
+<dt>fit</dt><dd><p>vector or matrix as above</p></dd> <dt>se.fit</dt><dd><p>standard error of
+prediction</p></dd>
 
+    
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p><code>predict.ictreg</code> produces predicted values, obtained by evaluating the
+regression function in the frame newdata (which defaults to
+<code>model.frame(object)</code>. If the logical <code>se.fit</code> is <code>TRUE</code>,
+standard errors of the predictions are calculated. Setting <code>interval</code>
+specifies computation of confidence intervals at the specified level or no
+intervals.</p>
+<p>If <code>avg</code> is set to <code>TRUE</code>, the mean prediction across all
+observations in the dataset will be calculated, and if the <code>se.fit</code>
+option is set to <code>TRUE</code> a standard error for this mean estimate will be
+provided. The <code>interval</code> option will output confidence intervals
+instead of only the point estimate if set to <code>TRUE</code>.</p>
+<p>Two additional types of mean prediction are also available. The first, if a
+<code>newdata.diff</code> data frame is provided by the user, calculates the mean
+predicted values across two datasets, as well as the mean difference in
+predicted value. Standard errors and confidence intervals can also be added.
+For difference prediction, <code>avg</code> must be set to <code>TRUE</code>.</p>
+<p>The second type of prediction, triggered if a <code>direct.glm</code> object is
+provided by the user, calculates the mean difference in prediction between
+predictions based on an <code>ictreg</code> fit and a <code>glm</code> fit from a direct
+survey item on the sensitive question. This is defined as the revealed
+social desirability bias in Blair and Imai (2010).</p>
+    
+    <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
+
+    <p>Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
+List Experiments."  Political Analysis, Vol. 20, No 1 (Winter). available at
+<a href = 'http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
+<p>Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item Count
+Technique.'' Journal of the American Statistical Association, Vol. 106, No.
+494 (June), pp. 407-416. available at
+<a href = 'http://imai.princeton.edu/research/list.html'>http://imai.princeton.edu/research/list.html</a></p>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
     <p><code><a href='ictreg.html'>ictreg</a></code> for model fitting</p>
     
-    <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
-
-    <p>Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of List Experiments." 
-  Political Analysis, Vol. 20, No 1 (Winter). available at 
-  <a href = 'http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
-<p>Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item
-  Count Technique.''  Journal of the American Statistical Association, 
-  Vol. 106, No. 494 (June), pp. 407-416. available at
-  <a href = 'http://imai.princeton.edu/research/list.html'>http://imai.princeton.edu/research/list.html</a></p>
-    
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'>data</span>(<span class='no'>race</span>)
+    <pre class="examples"><div class='input'>
+<span class='fu'>data</span>(<span class='no'>race</span>)
 
 <span class='no'>race.south</span> <span class='kw'>&lt;-</span> <span class='no'>race.nonsouth</span> <span class='kw'>&lt;-</span> <span class='no'>race</span>
 
@@ -283,21 +316,21 @@
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       
-      <li><a href="#details">Details</a></li>
-
       <li><a href="#value">Value</a></li>
 
-      <li><a href="#see-also">See also</a></li>
+      <li><a href="#details">Details</a></li>
 
       <li><a href="#references">References</a></li>
+
+      <li><a href="#see-also">See also</a></li>
       
       <li><a href="#examples">Examples</a></li>
     </ul>
 
     <h2>Author</h2>
-    Graeme Blair, Princeton University,
-<a href='mailto:gblair@princeton.edu'>gblair@princeton.edu</a> and Kosuke Imai, Princeton University,
-<a href='mailto:kimai@princeton.edu'>kimai@princeton.edu</a> 
+    
+Graeme Blair, Princeton University, <a href='mailto:gblair@princeton.edu'>gblair@princeton.edu</a>
+and Kosuke Imai, Princeton University, <a href='mailto:kimai@princeton.edu'>kimai@princeton.edu</a>
 
   </div>
 </div>

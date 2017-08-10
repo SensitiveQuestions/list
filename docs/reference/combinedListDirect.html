@@ -93,7 +93,9 @@
     </div>
 
     
-    <p>This function implements the combined list estimator described in Aronow, Coppock, Crawford, and Green (2015): Combining List Experiment and Direct Question Estimates of Sensitive Behavior Prevalence</p>
+    <p>This function implements the combined list estimator described in Aronow,
+Coppock, Crawford, and Green (2015): Combining List Experiment and Direct
+Question Estimates of Sensitive Behavior Prevalence</p>
     
 
     <pre class="usage"><span class='fu'>combinedListDirect</span>(<span class='no'>formula</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='fu'>parent.frame</span>(), <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
@@ -104,29 +106,47 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>formula</th>
-      <td><p>an object of class "formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted. Should be of the form Y ~ T + X1 + X2, where Y is the list response, T is the treatment indicator, and X1, X2, etc are pretreatment covariates. It is recommended that T be a numeric variable whose values are 0 for subjects in control and 1 for subjects in treatment.</p></td>
+      <td><p>an object of class "formula" (or one that can be coerced to
+that class): a symbolic description of the model to be fitted. Should be of
+the form Y ~ T + X1 + X2, where Y is the list response, T is the treatment
+indicator, and X1, X2, etc are pretreatment covariates. It is recommended
+that T be a numeric variable whose values are 0 for subjects in control and
+1 for subjects in treatment.</p></td>
     </tr>
     <tr>
       <th>data</th>
-      <td><p>an optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. If not found in data, the variables are taken from environment(formula), typically the environment from which combined.list is called. It is good practice to include all variables used in the estimation (list response, treatment indicator, direct response, and optional pre-treatment covariates) in a dataframe rather than calling data from the global environent.</p></td>
+      <td><p>an optional data frame, list or environment (or object coercible
+by as.data.frame to a data frame) containing the variables in the model. If
+not found in data, the variables are taken from environment(formula),
+typically the environment from which combined.list is called. It is good
+practice to include all variables used in the estimation (list response,
+treatment indicator, direct response, and optional pre-treatment covariates)
+in a dataframe rather than calling data from the global environent.</p></td>
     </tr>
     <tr>
       <th>treat</th>
-      <td><p>a character string giving the name of the treatment variable. Defaults to "treat".</p></td>
+      <td><p>a character string giving the name of the treatment variable.
+Defaults to "treat".</p></td>
     </tr>
     <tr>
       <th>direct</th>
-      <td><p>a character string giving the name of the direct response variable. Defaults to "direct". The direct response variable itself must only contain the values 0 and 1, where 1 refers to subjects who answered "Yes" to the direct question.</p></td>
+      <td><p>a character string giving the name of the direct response
+variable. Defaults to "direct". The direct response variable itself must
+only contain the values 0 and 1, where 1 refers to subjects who answered
+"Yes" to the direct question.</p></td>
     </tr>
     </table>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>a list containing conventional, direct, and combined prevalence estimates with associated standard errors as well as the results of two placebo tests.</p>
+    <p>a list containing conventional, direct, and combined prevalence
+estimates with associated standard errors as well as the results of two
+placebo tests.</p>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'># Load data from Aronow, Coppock, Crawford, and Green (2015)</span>
+    <pre class="examples"><div class='input'>
+<span class='co'># Load data from Aronow, Coppock, Crawford, and Green (2015)</span>
 <span class='fu'>data</span>(<span class='st'>"combinedListExps"</span>)
 
 <span class='co'># complete case analysis</span>
@@ -192,7 +212,8 @@
 #&gt;        Ha: delta != 0
 #&gt;       
 #&gt;          Estimate         SE         p   n
-#&gt; delta 0.04366578 0.03896286 0.2624145 500</div></pre>
+#&gt; delta 0.04366578 0.03896286 0.2624145 500</div><div class='input'>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>

@@ -93,154 +93,162 @@
     </div>
 
     
-    <p>This dataset is a subset of the 2012 Mexico Elections Panel Study and contains a list experiment
-question. It reads as follows:
-<code> I am going to read you a list of four activities that appear on this
-	card and I want you to tell me how many of these activities you have 
-	done in recent weeks.  Please don''t tell me which ones, just HOW
-	MANY. The four activities are... (SHOW CARD AND READ)
-	a. See television news that mentions a candidate
-	b. Attend a campaign event
-	c. Exchange your vote for a gift, favor, or access to a service
-	d. Talk about politics with other people</code>
-
-    where item c. is presented only to the treatment group, and the control list only contains the other three items.</p>
+    <p>This dataset is a subset of the 2012 Mexico Elections Panel Study and
+contains a list experiment question. It reads as follows: <code> I am going
+to read you a list of four activities that appear on this card and I want
+you to tell me how many of these activities you have done in recent weeks.
+Please don''t tell me which ones, just HOW MANY. The four activities are...
+(SHOW CARD AND READ) a. See television news that mentions a candidate b.
+Attend a campaign event c. Exchange your vote for a gift, favor, or access
+to a service d. Talk about politics with other people</code></p>
     
 
-    <pre class="usage"><span class='fu'>data</span>(<span class='no'>mexico</span>)</pre>
         
     <h2 class="hasAnchor" id="format"><a class="anchor" href="#format"></a>Format</h2>
 
-    <p>A data frame containing the following variables for 1004 observations.</p><table><tr><td>
-	y </td>
+    <p>A data frame containing the following variables for 1004
+observations.</p><table><tr><td> y </td>
 <td> numeric </td>
-<td> the number of items that make respondents angry </td>
+<td> the number of items that
+make respondents angry </td>
 </tr><tr><td> 0 - 4 </td>
 <td>
     mex.t </td>
 <td> numeric </td>
 </tr><tr><td> treatment status </td>
 <td> 0-1 </td>
-<td>
-	mex.male </td>
-</tr><tr><td> numeric </td>
+<td> mex.male </td>
+</tr><tr><td> numeric
+</td>
 <td> whether or not a respondent is male</td>
 <td> 0-1 </td>
-</tr><tr><td>
-	mex.age </td>
-<td> numeric </td>
+</tr><tr><td> mex.age </td>
+<td> numeric
+</td>
 <td> age of a respondent </td>
-</tr><tr><td>
-	mex.education </td>
+</tr><tr><td> mex.education </td>
 <td> numeric </td>
-<td> respondent's level of education </td>
+<td> respondent's
+level of education </td>
 </tr><tr><td> 0-9 </td>
-<td>
-	mex.y.all </td>
+<td> mex.y.all </td>
 <td> numeric </td>
-</tr><tr><td> the number of activities that respondent did </td>
+</tr><tr><td> the number of
+activities that respondent did </td>
 <td> 0 - 4 </td>
-<td>
-	mex.vote </td>
+<td> mex.vote </td>
 </tr><tr><td> numeric </td>
-<td> respondent's self-reported turnout </td>
-<td> 0-1 </td>
-</tr><tr><td>
-	mex.age2 </td>
-<td> numeric </td>
-<td> age of a respondent, squared </td>
-</tr><tr><td>
-	mex.interest </td>
-<td> numeric </td>
-<td> how interested respondent is in politics </td>
-</tr><tr><td> 1-4 </td>
 <td>
-	mex.married </td>
+respondent's self-reported turnout </td>
+<td> 0-1 </td>
+</tr><tr><td> mex.age2 </td>
 <td> numeric </td>
+<td>
+age of a respondent, squared </td>
+</tr><tr><td> mex.interest </td>
+<td> numeric </td>
+<td> how
+interested respondent is in politics </td>
+</tr><tr><td> 1-4 </td>
+<td> mex.married </td>
+<td> numeric
+</td>
 </tr><tr><td> indicator for whether respondent is married </td>
 <td> 0-1 </td>
-<td>
-	mex.pidpanw2 </td>
+<td> mex.pidpanw2
+</td>
 </tr><tr><td> numeric </td>
-<td> indicator for whether respondent identifies with PAN party </td>
+<td> indicator for whether respondent identifies with PAN party
+</td>
 <td> 0-1 </td>
-</tr><tr><td>
-	mex.pidprdw2 </td>
+</tr><tr><td> mex.pidprdw2 </td>
 <td> numeric </td>
-<td> indicator for whether respondent identifies with PRD party </td>
+<td> indicator for whether respondent
+identifies with PRD party </td>
 </tr><tr><td> 0-1 </td>
-<td>
-	mex.pidpriw2 </td>
+<td> mex.pidpriw2 </td>
 <td> numeric </td>
-</tr><tr><td> indicator for whether respondent identifies with PRI party </td>
+</tr><tr><td>
+indicator for whether respondent identifies with PRI party </td>
 <td> 0-1 </td>
 <td>
-	mex.votecard </td>
+mex.votecard </td>
 </tr><tr><td> numeric </td>
 <td> respondent's enumerator-verified turnout </td>
-<td> 0-1 </td>
-</tr><tr><td>
-	mex.urban </td>
+<td>
+0-1 </td>
+</tr><tr><td> mex.urban </td>
 <td> numeric </td>
-<td> indicator for whether respondent lives in urban area </td>
+<td> indicator for whether respondent lives
+in urban area </td>
 </tr><tr><td> 0-1 </td>
-<td>
-	mex.cleanelections </td>
+<td> mex.cleanelections </td>
 <td> numeric </td>
-</tr><tr><td> indicator for whether respondent thinks elections were clean </td>
+</tr><tr><td> indicator
+for whether respondent thinks elections were clean </td>
 <td> 0-1 </td>
 <td>
-	mex.cleanelectionsmiss </td>
+mex.cleanelectionsmiss </td>
 </tr><tr><td> numeric </td>
-<td> indicator for whether cleanelections variable was missing </td>
+<td> indicator for whether
+cleanelections variable was missing </td>
 <td> 0-1 </td>
-</tr><tr><td>
-	mex.metro </td>
+</tr><tr><td> mex.metro </td>
 <td> numeric </td>
-<td> indicator for whether respondent lives in Mexico City metro area </td>
-</tr><tr><td> 0-1 </td>
 <td>
-	mex.centralregion </td>
+indicator for whether respondent lives in Mexico City metro area </td>
+</tr><tr><td> 0-1
+</td>
+<td> mex.centralregion </td>
 <td> numeric </td>
-</tr><tr><td> indicator for whether respondent lives in Mexico's central region </td>
+</tr><tr><td> indicator for whether respondent
+lives in Mexico's central region </td>
 <td> 0-1 </td>
-<td>	
-	mex.northregion </td>
-</tr><tr><td> numeric </td>
-<td> indicator for whether respondent lives in Mexico's north region  </td>
-<td> 0-1 </td>
-</tr><tr><td>
-	mex.wealth </td>
+<td> mex.northregion </td>
+</tr><tr><td> numeric
+</td>
+<td> indicator for whether respondent lives in Mexico's north region </td>
+<td>
+0-1 </td>
+</tr><tr><td> mex.wealth </td>
 <td> numeric </td>
-<td> scale for respondent's wealth, based on household asset indicators </td>
-</tr><tr><td>
-	mex.epnapprove </td>
+<td> scale for respondent's wealth, based on
+household asset indicators </td>
+</tr><tr><td> mex.epnapprove </td>
 <td> numeric </td>
-<td> respondent's approval rating of Enrique Pena-Nieto </td>
+<td> respondent's
+approval rating of Enrique Pena-Nieto </td>
 </tr><tr><td> 1-11 </td>
+<td> mex.havepropoganda </td>
 <td>
-	mex.havepropoganda </td>
-<td> numeric </td>
-</tr><tr><td> indicator for whether respondent has propaganda outside their home </td>
+numeric </td>
+</tr><tr><td> indicator for whether respondent has propaganda outside their
+home </td>
 <td> 0-1 </td>
-<td>
-	mex.concurrent </td>
+<td> mex.concurrent </td>
 </tr><tr><td> numeric </td>
-<td> indicator for whether respondent lives in state with concurrent elections </td>
+<td> indicator for whether
+respondent lives in state with concurrent elections </td>
 <td> 0-1 </td>
-</tr><tr><td>
-	mex.loyal </td>
+</tr><tr><td> mex.loyal
+</td>
 <td> numeric </td>
-<td> indicator for whether respondent strongly identifies with the PAN, PRI, or PRD party </td>
+<td> indicator for whether respondent strongly identifies with
+the PAN, PRI, or PRD party </td>
 </tr><tr><td> 0-1 </td>
-<td>
-	y </td>
+<td> y </td>
 <td> numeric </td>
 </tr></table>
     
     <h2 class="hasAnchor" id="source"><a class="anchor" href="#source"></a>Source</h2>
 
-    <p>The full data set is available at the Mexico Panel Study website (<a href = 'http://mexicopanelstudy.mit.edu/'>http://mexicopanelstudy.mit.edu/</a>)</p>
+    <p>The full data set is available at the Mexico Panel Study website
+(<a href = 'http://mexicopanelstudy.mit.edu/'>http://mexicopanelstudy.mit.edu/</a>)</p>
+    
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>where item c. is presented only to the treatment group, and the control list
+only contains the other three items.</p>
     
 
   </div>
@@ -251,6 +259,8 @@ question. It reads as follows:
       <li><a href="#format">Format</a></li>
 
       <li><a href="#source">Source</a></li>
+
+      <li><a href="#details">Details</a></li>
           </ul>
 
   </div>

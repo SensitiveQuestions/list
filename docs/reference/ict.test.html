@@ -93,22 +93,25 @@
     </div>
 
     
-    <p>Function to conduct a statistical test with the null hypothesis that there is no "design effect" in a list experiment, a failure of the experiment.</p>
+    <p>Function to conduct a statistical test with the null hypothesis that there
+is no "design effect" in a list experiment, a failure of the experiment.</p>
     
 
     <pre class="usage"><span class='fu'>ict.test</span>(<span class='no'>y</span>, <span class='no'>treat</span>, <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>NA</span>, <span class='kw'>alpha</span> <span class='kw'>=</span> <span class='fl'>0.05</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>250000</span>, <span class='kw'>gms</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-         <span class='kw'>pi.table</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
+  <span class='kw'>pi.table</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>y</th>
-      <td><p>A numerical vector containing the response data for a list experiment.</p></td>
+      <td><p>A numerical vector containing the response data for a list
+experiment.</p></td>
     </tr>
     <tr>
       <th>treat</th>
-      <td><p>A numerical vector containing the binary treatment status for a list experiment.</p></td>
+      <td><p>A numerical vector containing the binary treatment status for a
+list experiment.</p></td>
     </tr>
     <tr>
       <th>J</th>
@@ -124,35 +127,44 @@
     </tr>
     <tr>
       <th>gms</th>
-      <td><p>A logical value indicating whether the generalized moment selection procedure should be used.</p></td>
+      <td><p>A logical value indicating whether the generalized moment
+selection procedure should be used.</p></td>
     </tr>
     <tr>
       <th>pi.table</th>
-      <td><p>A logical value indicating whether a table of estimated proportions of respondent types with standard errors is displayed.</p></td>
+      <td><p>A logical value indicating whether a table of estimated
+proportions of respondent types with standard errors is displayed.</p></td>
     </tr>
     </table>
     
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>This function allows the user to perform a statistical test on data from a list experiment or item count technique with the null hypothesis of no design effect. A design effect occurs when an individual's response to the non-sensitive items changes depending upon the respondent's treatment status.</p>
-    
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p><code>ict.test</code> returns a numerical scalar with the Bonferroni-corrected minimum p-value of the statistical test.</p>
+    <p><code>ict.test</code> returns a numerical scalar with the
+Bonferroni-corrected minimum p-value of the statistical test.</p>
+    
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>This function allows the user to perform a statistical test on data from a
+list experiment or item count technique with the null hypothesis of no
+design effect. A design effect occurs when an individual's response to the
+non-sensitive items changes depending upon the respondent's treatment
+status.</p>
     
     <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
 
-    <p>Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of List Experiments." 
-  Political Analysis, Vol. 20, No 1 (Winter). available at 
-  <a href = 'http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
+    <p>Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
+List Experiments."  Political Analysis, Vol. 20, No 1 (Winter). available at
+<a href = 'http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <p><code><a href='ictreg.html'>ictreg</a></code> for list experiment regression based on the assumption of no design effect</p>
+    <p><code><a href='ictreg.html'>ictreg</a></code> for list experiment regression based on the
+assumption of no design effect</p>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'>
+
 <span class='fu'>data</span>(<span class='no'>affirm</span>)
 <span class='fu'>data</span>(<span class='no'>race</span>)
 
@@ -201,6 +213,7 @@
 #&gt; Sensitive Item 1 
 #&gt;       0.04431109 
 #&gt; </div><div class='input'>
+
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
@@ -208,9 +221,9 @@
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       
-      <li><a href="#details">Details</a></li>
-
       <li><a href="#value">Value</a></li>
+
+      <li><a href="#details">Details</a></li>
 
       <li><a href="#references">References</a></li>
 
@@ -220,9 +233,9 @@
     </ul>
 
     <h2>Author</h2>
-    Graeme Blair, Princeton University,
-<a href='mailto:gblair@princeton.edu'>gblair@princeton.edu</a> and Kosuke Imai, Princeton University,
-<a href='mailto:kimai@princeton.edu'>kimai@princeton.edu</a> 
+    
+Graeme Blair, Princeton University, <a href='mailto:gblair@princeton.edu'>gblair@princeton.edu</a>
+and Kosuke Imai, Princeton University, <a href='mailto:kimai@princeton.edu'>kimai@princeton.edu</a>
 
   </div>
 </div>

@@ -93,21 +93,24 @@
     </div>
 
     
-    <p>Function to plot predictions and confidence intervals of predictions from estimates from multivariate regression analysis of survey data with the item count technique.</p>
+    <p>Function to plot predictions and confidence intervals of predictions from
+estimates from multivariate regression analysis of survey data with the item
+count technique.</p>
     
 
     <pre class="usage"><span class='co'># S3 method for predict.ictreg</span>
 <span class='fu'>plot</span>(<span class='no'>x</span>, <span class='kw'>labels</span> <span class='kw'>=</span> <span class='fl'>NA</span>, <span class='kw'>axes.ict</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-                                <span class='kw'>xlim</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>ylim</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>xlab</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-                                <span class='kw'>ylab</span> <span class='kw'>=</span> <span class='st'>"Estimated Proportion"</span>,
-                                <span class='kw'>axes</span> <span class='kw'>=</span> <span class='no'>F</span>, <span class='kw'>pch</span> <span class='kw'>=</span> <span class='fl'>19</span>, <span class='kw'>xvec</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>)</pre>
+  <span class='kw'>xlim</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>ylim</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>xlab</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>ylab</span> <span class='kw'>=</span> <span class='st'>"Estimated Proportion"</span>,
+  <span class='kw'>axes</span> <span class='kw'>=</span> <span class='no'>F</span>, <span class='kw'>pch</span> <span class='kw'>=</span> <span class='fl'>19</span>, <span class='kw'>xvec</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>object or set of objects of class inheriting from "predict.ictreg". Either a single object from an <code>ictreg()</code> model fit or multiple <code>predict</code> objects combined with the c() function.</p></td>
+      <td><p>object or set of objects of class inheriting from "predict.ictreg".
+Either a single object from an <code>ictreg()</code> model fit or multiple
+<code>predict</code> objects combined with the c() function.</p></td>
     </tr>
     <tr>
       <th>labels</th>
@@ -115,7 +118,8 @@
     </tr>
     <tr>
       <th>axes.ict</th>
-      <td><p>a switch indicating if custom plot axes are to be used with the user-provided estimate <code>labels</code>.</p></td>
+      <td><p>a switch indicating if custom plot axes are to be used with
+the user-provided estimate <code>labels</code>.</p></td>
     </tr>
     <tr>
       <th>xlim</th>
@@ -139,7 +143,8 @@
     </tr>
     <tr>
       <th>pch</th>
-      <td><p>either an integer specifying a symbol or a single character to be used as the default in plotting points.</p></td>
+      <td><p>either an integer specifying a symbol or a single character to be
+used as the default in plotting points.</p></td>
     </tr>
     <tr>
       <th>xvec</th>
@@ -147,35 +152,49 @@
     </tr>
     <tr>
       <th>...</th>
-      <td><p>Other graphical parameters to be passed to the <code>plot()</code> command are accepted.</p></td>
+      <td><p>Other graphical parameters to be passed to the <code>plot()</code>
+command are accepted.</p></td>
     </tr>
     </table>
     
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p><code>plot.predict.ictreg</code> produces plots with estimated population proportions of respondents answering the sensitive item in a list experiment in the affirmative, with confidence intervals.</p>
-<p>The function accepts a set of <code>predict.ictreg</code> objects calculated in the following manner:
+    <p><code>plot.predict.ictreg</code> produces plots with estimated population
+proportions of respondents answering the sensitive item in a list experiment
+in the affirmative, with confidence intervals.</p>
+<p>The function accepts a set of <code>predict.ictreg</code> objects calculated in
+the following manner:
     <code>predict(ictreg.object, avg = TRUE, interval = "confidence")</code></p>
-<p>For each average prediction, a point estimate and its confidence interval is plotted at equally spaced intervals. The x location of the points can be manipulated with the <code>xvec</code> option.</p>
-<p>Either a single predict object can be plotted, or a group of them combined with <code>c(predict.object1, predict.object2)</code>. Predict objects with the <code>newdata.diff</code> option, which calculates the mean difference in probability between two datasets, and the <code>direct.glm</code> option, which calculates the mean difference between the mean predicted support for the sensitive item in the list experiment and in a direct survey item, can also be plotted in the same way as other <code>predict</code> objects.</p>
-    
-    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
-
-    <p><code><a href='ictreg.html'>ictreg</a></code> for model fitting and <code><a href='predict.ictreg.html'>predict.ictreg</a></code> for predictions based on the model fits.</p>
+<p>For each average prediction, a point estimate and its confidence interval is
+plotted at equally spaced intervals. The x location of the points can be
+manipulated with the <code>xvec</code> option.</p>
+<p>Either a single predict object can be plotted, or a group of them combined
+with <code>c(predict.object1, predict.object2)</code>. Predict objects with the
+<code>newdata.diff</code> option, which calculates the mean difference in
+probability between two datasets, and the <code>direct.glm</code> option, which
+calculates the mean difference between the mean predicted support for the
+sensitive item in the list experiment and in a direct survey item, can also
+be plotted in the same way as other <code>predict</code> objects.</p>
     
     <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
 
-    <p>Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of List Experiments." 
-  Political Analysis, Vol. 20, No 1 (Winter). available at 
-  <a href = 'http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
-<p>Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item
-  Count Technique.''  Journal of the American Statistical Association, 
-  Vol. 106, No. 494 (June), pp. 407-416. available at
-  <a href = 'http://imai.princeton.edu/research/list.html'>http://imai.princeton.edu/research/list.html</a></p>
+    <p>Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
+List Experiments."  Political Analysis, Vol. 20, No 1 (Winter). available at
+<a href = 'http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
+<p>Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item Count
+Technique.'' Journal of the American Statistical Association, Vol. 106, No.
+494 (June), pp. 407-416. available at
+<a href = 'http://imai.princeton.edu/research/list.html'>http://imai.princeton.edu/research/list.html</a></p>
+    
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <p><code><a href='ictreg.html'>ictreg</a></code> for model fitting and
+<code><a href='predict.ictreg.html'>predict.ictreg</a></code> for predictions based on the model fits.</p>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'>data</span>(<span class='no'>race</span>)
+    <pre class="examples"><div class='input'>
+<span class='fu'>data</span>(<span class='no'>race</span>)
 <span class='no'>race.south</span> <span class='kw'>&lt;-</span> <span class='no'>race.nonsouth</span> <span class='kw'>&lt;-</span> <span class='no'>race</span>
 <span class='no'>race.south</span>[, <span class='st'>"south"</span>] <span class='kw'>&lt;-</span> <span class='fl'>1</span>
 <span class='no'>race.nonsouth</span>[, <span class='st'>"south"</span>] <span class='kw'>&lt;-</span> <span class='fl'>0</span>
@@ -251,17 +270,17 @@
       
       <li><a href="#details">Details</a></li>
 
-      <li><a href="#see-also">See also</a></li>
-
       <li><a href="#references">References</a></li>
+
+      <li><a href="#see-also">See also</a></li>
       
       <li><a href="#examples">Examples</a></li>
     </ul>
 
     <h2>Author</h2>
-    Graeme Blair, Princeton University,
-<a href='mailto:gblair@princeton.edu'>gblair@princeton.edu</a> and Kosuke Imai, Princeton University,
-<a href='mailto:kimai@princeton.edu'>kimai@princeton.edu</a> 
+    
+Graeme Blair, Princeton University, <a href='mailto:gblair@princeton.edu'>gblair@princeton.edu</a>
+and Kosuke Imai, Princeton University, <a href='mailto:kimai@princeton.edu'>kimai@princeton.edu</a>
 
   </div>
 </div>
