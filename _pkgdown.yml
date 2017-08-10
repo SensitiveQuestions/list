@@ -1,15 +1,17 @@
 navbar:
   type: default
   left:
+  - text: How-To's
+    href: articles/
   - text: Reference
     href: reference/
-  - text: "Methods"
+  - text: "Packages"
     menu:
-      - text: endorsement experiments
-        href: http://endorse.declaredesign.org
-      - text: list experiment
+      - text: Endorsement experiments
+        href: http://endorse.sensitivequestions.org
+      - text: List experiments
         href: http://list.sensitivequestions.org
-      - text: randomized response technique
+      - text: Randomized response technique
         href: http://rr.sensitivequestions.org
   - text: "Sensitive Questions home"
     href: http://sensitivequestions.org
