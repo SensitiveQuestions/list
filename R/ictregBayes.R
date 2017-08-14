@@ -2240,7 +2240,7 @@ ictregBayesEndorse <- function( ## START LIST OPTIONS
                0,0, # ceiling and floor effects
                as.integer(verbose),
                psiStore = double((M+1) * printout),
-               package = "list")
+               PACKAGE = "list")
   }
 
   seedStore <- .Random.seed
