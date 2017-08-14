@@ -22,8 +22,8 @@
 #' proportions of respondent types with standard errors is displayed.
 #' @return \code{ict.test} returns a numerical scalar with the
 #' Bonferroni-corrected minimum p-value of the statistical test.
-#' @author Graeme Blair, Princeton University, \email{gblair@@princeton.edu}
-#' and Kosuke Imai, Princeton University, \email{kimai@@princeton.edu}
+#' @author Graeme Blair, UCLA, \email{graeme.blair@ucla.edu}
+#' and Kosuke Imai, Princeton University, \email{kimai@princeton.edu}
 #' @seealso \code{\link{ictreg}} for list experiment regression based on the
 #' assumption of no design effect
 #' @references Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of

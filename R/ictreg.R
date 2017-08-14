@@ -191,8 +191,8 @@
 #' matrix} \item{J.stat}{numeric value of the Sargan Hansen overidentifying
 #' restriction test statistic} \item{overid.p}{corresponding p-value for the
 #' Sargan Hansen test}
-#' @author Graeme Blair, Princeton University, \email{gblair@@princeton.edu}
-#' and Kosuke Imai, Princeton University, \email{kimai@@princeton.edu}
+#' @author Graeme Blair, UCLA, \email{graeme.blair@ucla.edu}
+#' and Kosuke Imai, Princeton University, \email{kimai@princeton.edu}
 #' @seealso \code{\link{predict.ictreg}} for fitted values
 #' @references Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
 #' List Experiments."  Political Analysis. Forthcoming. available at
@@ -3143,8 +3143,8 @@ print.predict.ictreg <- function(x, ...){
 #' 
 #' \item{fit}{vector or matrix as above} \item{se.fit}{standard error of
 #' prediction}
-#' @author Graeme Blair, Princeton University, \email{gblair@@princeton.edu}
-#' and Kosuke Imai, Princeton University, \email{kimai@@princeton.edu}
+#' @author Graeme Blair, UCLA, \email{graeme.blair@ucla.edu}
+#' and Kosuke Imai, Princeton University, \email{kimai@princeton.edu}
 #' @seealso \code{\link{ictreg}} for model fitting
 #' @references Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
 #' List Experiments."  Political Analysis, Vol. 20, No 1 (Winter). available at
@@ -3737,8 +3737,8 @@ c.predict.ictreg <- function(...){
 #' @param xvec a vector of x values at which the proportions will be printed.
 #' @param ... Other graphical parameters to be passed to the \code{plot()}
 #' command are accepted.
-#' @author Graeme Blair, Princeton University, \email{gblair@@princeton.edu}
-#' and Kosuke Imai, Princeton University, \email{kimai@@princeton.edu}
+#' @author Graeme Blair, UCLA, \email{graeme.blair@ucla.edu}
+#' and Kosuke Imai, Princeton University, \email{kimai@princeton.edu}
 #' @seealso \code{\link{ictreg}} for model fitting and
 #' \code{\link{predict.ictreg}} for predictions based on the model fits.
 #' @references Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
@@ -3886,8 +3886,8 @@ plot.predict.ictreg <- function(x, labels = NA, axes.ict = TRUE,
 #' @param n.draws For quasi-Bayesian approximation based predictions, specify
 #' the number of Monte Carlo draws.
 #' @param ... further arguments to be passed to or from other methods.
-#' @author Graeme Blair, Princeton University, \email{gblair@@princeton.edu}
-#' and Kosuke Imai, Princeton University, \email{kimai@@princeton.edu}
+#' @author Graeme Blair, UCLA, \email{graeme.blair@ucla.edu}
+#' and Kosuke Imai, Princeton University, \email{kimai@princeton.edu}
 #' @seealso \code{\link{ictreg}} for model fitting
 #' @references Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
 #' List Experiments."  Political Analysis, Vol. 20, No 1 (Winter). available at

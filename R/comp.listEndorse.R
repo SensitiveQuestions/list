@@ -28,8 +28,8 @@
 #' \code{cor.control}, the p.value for the statistical test comparing the two
 #' correlation statistics as \code{p.value}, and the bootstrapped confidence
 #' interval of the difference as \code{ci}.
-#' @author Graeme Blair, Princeton University, \email{gblair@@princeton.edu}
-#' and Kosuke Imai, Princeton University, \email{kimai@@princeton.edu}
+#' @author Graeme Blair, UCLA, \email{graeme.blair@ucla.edu}
+#' and Kosuke Imai, Princeton University, \email{kimai@princeton.edu}
 #' @references Blair, Graeme, Jason Lyall and Kosuke Imai. (2014) ``Comparing
 #' and Combining List and Experiments: Evidence from Afghanistan."  American
 #' Journal of Political Science. available at

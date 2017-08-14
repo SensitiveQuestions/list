@@ -365,7 +365,7 @@ Technique.'' Journal of the American Statistical Association, Vol. 106, No.
 \code{\link{predict.ictreg}} for fitted values
 }
 \author{
-Graeme Blair, Princeton University, \email{gblair@princeton.edu}
+Graeme Blair, UCLA, \email{graeme.blair@ucla.edu}
 and Kosuke Imai, Princeton University, \email{kimai@princeton.edu}
 }
 \keyword{models}

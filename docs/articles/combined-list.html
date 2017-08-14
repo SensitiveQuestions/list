@@ -72,7 +72,7 @@
 </h1>
                         <h4 class="author">Alexander Coppock</h4>
             
-            <h4 class="date">2017-08-10</h4>
+            <h4 class="date">2017-08-14</h4>
           </div>
 
     
@@ -105,7 +105,7 @@ type &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="kw">
 <h1 class="hasAnchor">
 <a href="#direct-question" class="anchor"></a>Direct Question</h1>
 <p>Now suppose we were to ask the direct question, “Do you engage?”</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">D &lt;-<span class="st"> </span><span class="kw">ifelse</span>(type==<span class="st">"TA"</span>, <span class="dv">1</span>, <span class="dv">0</span>)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">D &lt;-<span class="st"> </span><span class="kw">ifelse</span>(type<span class="op">==</span><span class="st">"TA"</span>, <span class="dv">1</span>, <span class="dv">0</span>)
 direct.est &lt;-<span class="st"> </span><span class="kw">mean</span>(D)
 direct.est</code></pre></div>
 <pre><code>## [1] 0.3333333</code></pre>
@@ -119,19 +119,19 @@ direct.est</code></pre></div>
 <span class="co"># Generate list response potential outcomes</span>
 
 <span class="co"># Control potential outcome</span>
-Y0 &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="dv">1</span>:<span class="dv">4</span>, N, <span class="dt">replace=</span><span class="ot">TRUE</span>)
+Y0 &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">4</span>, N, <span class="dt">replace=</span><span class="ot">TRUE</span>)
 
 <span class="co"># Treated potential outcome is 1 higher for true admitters and withholders</span>
-Y1 &lt;-<span class="st"> </span>Y0 +<span class="st"> </span><span class="kw">ifelse</span>(type %in%<span class="st"> </span><span class="kw">c</span>(<span class="st">"TA"</span>, <span class="st">"WH"</span>), <span class="dv">1</span>, <span class="dv">0</span>)
+Y1 &lt;-<span class="st"> </span>Y0 <span class="op">+</span><span class="st"> </span><span class="kw">ifelse</span>(type <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">"TA"</span>, <span class="st">"WH"</span>), <span class="dv">1</span>, <span class="dv">0</span>)
 
 <span class="co"># Conduct random assignment</span>
 Z &lt;-<span class="st"> </span><span class="kw">rbinom</span>(N, <span class="dv">1</span>, <span class="fl">0.5</span>)
 
 <span class="co"># Reveal list responses</span>
-Y &lt;-<span class="st"> </span>Z*Y1 +<span class="st"> </span>(<span class="dv">1</span>-Z)*Y0
+Y &lt;-<span class="st"> </span>Z<span class="op">*</span>Y1 <span class="op">+</span><span class="st"> </span>(<span class="dv">1</span><span class="op">-</span>Z)<span class="op">*</span>Y0
 
-list.est &lt;-<span class="st"> </span><span class="kw">mean</span>(Y[Z==<span class="dv">1</span>]) -<span class="st"> </span><span class="kw">mean</span>(Y[Z==<span class="dv">0</span>])
-list.se &lt;-<span class="st"> </span><span class="kw">sqrt</span>((<span class="kw">var</span>(Y[Z==<span class="dv">1</span>])/<span class="kw">sum</span>(Z) +<span class="st"> </span><span class="kw">var</span>(Y[Z==<span class="dv">0</span>])/<span class="kw">sum</span>(<span class="dv">1</span>-Z)))
+list.est &lt;-<span class="st"> </span><span class="kw">mean</span>(Y[Z<span class="op">==</span><span class="dv">1</span>]) <span class="op">-</span><span class="st"> </span><span class="kw">mean</span>(Y[Z<span class="op">==</span><span class="dv">0</span>])
+list.se &lt;-<span class="st"> </span><span class="kw">sqrt</span>((<span class="kw">var</span>(Y[Z<span class="op">==</span><span class="dv">1</span>])<span class="op">/</span><span class="kw">sum</span>(Z) <span class="op">+</span><span class="st"> </span><span class="kw">var</span>(Y[Z<span class="op">==</span><span class="dv">0</span>])<span class="op">/</span><span class="kw">sum</span>(<span class="dv">1</span><span class="op">-</span>Z)))
 list.est</code></pre></div>
 <pre><code>## [1] 0.6334232</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">list.se</code></pre></div>
@@ -147,8 +147,8 @@ list.est</code></pre></div>
 <pre><code>## Loading required package: sandwich</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Wrap up all data in a dataframe</span>
 df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(Y, Z, D)
-out<span class="fl">.1</span> &lt;-<span class="st"> </span><span class="kw"><a href="../reference/combinedListDirect.html">combinedListDirect</a></span>(<span class="dt">formula =</span> Y ~<span class="st"> </span>Z, <span class="dt">data =</span> df, <span class="dt">treat =</span> <span class="st">"Z"</span>, <span class="dt">direct =</span> <span class="st">"D"</span>)
-out<span class="fl">.1</span></code></pre></div>
+out.<span class="dv">1</span> &lt;-<span class="st"> </span><span class="kw"><a href="../reference/combinedListDirect.html">combinedListDirect</a></span>(<span class="dt">formula =</span> Y <span class="op">~</span><span class="st"> </span>Z, <span class="dt">data =</span> df, <span class="dt">treat =</span> <span class="st">"Z"</span>, <span class="dt">direct =</span> <span class="st">"D"</span>)
+out.<span class="dv">1</span></code></pre></div>
 <pre><code>## 
 ##  Combined List Estimates 
 ## 
@@ -174,7 +174,7 @@ out<span class="fl">.1</span></code></pre></div>
 <a href="#placebo-test-ii" class="anchor"></a>Placebo Test II</h2>
 <p>This test checks to see if the direct question is affected by the treatment. If Treatment Independnce is satisfied, the (possibly covariate-adjusted) difference-in-means should not be significantly different from 0.</p>
 <p>It’s easy to see the results of both tests using <code>summary.comblist()</code>. Because we generated the data above respecting the list experiment assumptions, we know that we should pass both tests.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">summary</span>(out<span class="fl">.1</span>)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">summary</span>(out.<span class="dv">1</span>)</code></pre></div>
 <pre><code>## 
 ##  Combined List Estimates 
 ## 
@@ -221,23 +221,23 @@ type &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="kw">
             <span class="dt">times=</span><span class="kw">c</span>(N.trueadmitter, N.withholder, N.innocent, N.designaffected))
 N &lt;-<span class="st"> </span><span class="kw">length</span>(type)
 
-D &lt;-<span class="st"> </span><span class="kw">ifelse</span>(type%in%<span class="kw">c</span>(<span class="st">"TA"</span>,<span class="st">"DA"</span>), <span class="dv">1</span>, <span class="dv">0</span>)
+D &lt;-<span class="st"> </span><span class="kw">ifelse</span>(type<span class="op">%in%</span><span class="kw">c</span>(<span class="st">"TA"</span>,<span class="st">"DA"</span>), <span class="dv">1</span>, <span class="dv">0</span>)
 
 <span class="co"># Control potential outcome</span>
-Y0 &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="dv">1</span>:<span class="dv">4</span>, N, <span class="dt">replace=</span><span class="ot">TRUE</span>)
+Y0 &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">4</span>, N, <span class="dt">replace=</span><span class="ot">TRUE</span>)
 
 <span class="co"># Treated potential outcome is 1 higher for true admitters and withholders</span>
 <span class="co"># Note that it is NOT higher for those who are "design affected"</span>
-Y1 &lt;-<span class="st"> </span>Y0 +<span class="st"> </span><span class="kw">ifelse</span>(type %in%<span class="st"> </span><span class="kw">c</span>(<span class="st">"TA"</span>, <span class="st">"WH"</span>), <span class="dv">1</span>, <span class="dv">0</span>)
+Y1 &lt;-<span class="st"> </span>Y0 <span class="op">+</span><span class="st"> </span><span class="kw">ifelse</span>(type <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">"TA"</span>, <span class="st">"WH"</span>), <span class="dv">1</span>, <span class="dv">0</span>)
 
 Z &lt;-<span class="st"> </span><span class="kw">rbinom</span>(N, <span class="dv">1</span>, <span class="fl">0.5</span>)
-Y &lt;-<span class="st"> </span>Z*Y1 +<span class="st"> </span>(<span class="dv">1</span>-Z)*Y0
+Y &lt;-<span class="st"> </span>Z<span class="op">*</span>Y1 <span class="op">+</span><span class="st"> </span>(<span class="dv">1</span><span class="op">-</span>Z)<span class="op">*</span>Y0
 df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(Y, Z, D)
 
-out<span class="fl">.2</span> &lt;-<span class="st"> </span><span class="kw"><a href="../reference/combinedListDirect.html">combinedListDirect</a></span>(<span class="dt">formula =</span> Y ~<span class="st"> </span>Z, <span class="dt">data =</span> df, <span class="dt">treat =</span> <span class="st">"Z"</span>, <span class="dt">direct =</span> <span class="st">"D"</span>)
+out.<span class="dv">2</span> &lt;-<span class="st"> </span><span class="kw"><a href="../reference/combinedListDirect.html">combinedListDirect</a></span>(<span class="dt">formula =</span> Y <span class="op">~</span><span class="st"> </span>Z, <span class="dt">data =</span> df, <span class="dt">treat =</span> <span class="st">"Z"</span>, <span class="dt">direct =</span> <span class="st">"D"</span>)
 
 <span class="co"># Extract Placebo Test I results </span>
-<span class="kw">unlist</span>(out<span class="fl">.2</span>$placebo.I)</code></pre></div>
+<span class="kw">unlist</span>(out.<span class="dv">2</span><span class="op">$</span>placebo.I)</code></pre></div>
 <pre><code>##     estimate           se            p            n 
 ##   0.75924415   0.10355750   0.02007988 500.00000000</code></pre>
 <p>The low p-value suggests that we should reject the hypothesis that the list experimental estimate is equal to one among those who answer “Yes” to the direct question. We could reject this hypothesis if any of the four assumptions above were violated in some way. If the null is rejected, the list experiment estimates - both conventional and combined - are possibly biased.</p>
@@ -258,24 +258,24 @@ type &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="kw">
 N &lt;-<span class="st"> </span><span class="kw">length</span>(type)
 
 <span class="co"># Direct Question Potential outcomes</span>
-D0 &lt;-<span class="st"> </span><span class="kw">ifelse</span>(type%in%<span class="kw">c</span>(<span class="st">"TA"</span>,<span class="st">"ABT"</span>), <span class="dv">1</span>, <span class="dv">0</span>)
-D1 &lt;-<span class="st"> </span><span class="kw">ifelse</span>(type%in%<span class="kw">c</span>(<span class="st">"TA"</span>), <span class="dv">1</span>, <span class="dv">0</span>)
+D0 &lt;-<span class="st"> </span><span class="kw">ifelse</span>(type<span class="op">%in%</span><span class="kw">c</span>(<span class="st">"TA"</span>,<span class="st">"ABT"</span>), <span class="dv">1</span>, <span class="dv">0</span>)
+D1 &lt;-<span class="st"> </span><span class="kw">ifelse</span>(type<span class="op">%in%</span><span class="kw">c</span>(<span class="st">"TA"</span>), <span class="dv">1</span>, <span class="dv">0</span>)
 
 <span class="co"># List Experiment potential outcomes</span>
-Y0 &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="dv">1</span>:<span class="dv">4</span>, N, <span class="dt">replace=</span><span class="ot">TRUE</span>)
-Y1 &lt;-<span class="st"> </span>Y0 +<span class="st"> </span><span class="kw">ifelse</span>(type %in%<span class="st"> </span><span class="kw">c</span>(<span class="st">"TA"</span>, <span class="st">"WH"</span>), <span class="dv">1</span>, <span class="dv">0</span>)
+Y0 &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">4</span>, N, <span class="dt">replace=</span><span class="ot">TRUE</span>)
+Y1 &lt;-<span class="st"> </span>Y0 <span class="op">+</span><span class="st"> </span><span class="kw">ifelse</span>(type <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">"TA"</span>, <span class="st">"WH"</span>), <span class="dv">1</span>, <span class="dv">0</span>)
 
 <span class="co"># Reveal outcomes according to random assignment</span>
 Z &lt;-<span class="st"> </span><span class="kw">rbinom</span>(N, <span class="dv">1</span>, <span class="fl">0.5</span>)
-Y &lt;-<span class="st"> </span>Z*Y1 +<span class="st"> </span>(<span class="dv">1</span>-Z)*Y0
-D &lt;-<span class="st"> </span>Z*D1 +<span class="st"> </span>(<span class="dv">1</span>-Z)*D0
+Y &lt;-<span class="st"> </span>Z<span class="op">*</span>Y1 <span class="op">+</span><span class="st"> </span>(<span class="dv">1</span><span class="op">-</span>Z)<span class="op">*</span>Y0
+D &lt;-<span class="st"> </span>Z<span class="op">*</span>D1 <span class="op">+</span><span class="st"> </span>(<span class="dv">1</span><span class="op">-</span>Z)<span class="op">*</span>D0
 
 df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(Y, Z, D)
 
-out<span class="fl">.3</span> &lt;-<span class="st"> </span><span class="kw"><a href="../reference/combinedListDirect.html">combinedListDirect</a></span>(<span class="dt">formula =</span> Y ~<span class="st"> </span>Z, <span class="dt">data =</span> df, <span class="dt">treat =</span> <span class="st">"Z"</span>, <span class="dt">direct =</span> <span class="st">"D"</span>)
+out.<span class="dv">3</span> &lt;-<span class="st"> </span><span class="kw"><a href="../reference/combinedListDirect.html">combinedListDirect</a></span>(<span class="dt">formula =</span> Y <span class="op">~</span><span class="st"> </span>Z, <span class="dt">data =</span> df, <span class="dt">treat =</span> <span class="st">"Z"</span>, <span class="dt">direct =</span> <span class="st">"D"</span>)
 
 <span class="co"># Extract Placebo Test II results </span>
-<span class="kw">unlist</span>(out<span class="fl">.3</span>$placebo.II)</code></pre></div>
+<span class="kw">unlist</span>(out.<span class="dv">3</span><span class="op">$</span>placebo.II)</code></pre></div>
 <pre><code>##      estimate            se             p             n 
 ##   -0.05092491    0.02364766    0.03128051 1500.00000000</code></pre>
 <p>Again, the low p-value suggests that the null hypothesis that the average effect of the treatment on the direct response is zero is false. When this null is rejected, the combined estimator may yield biased results.</p>
@@ -297,18 +297,18 @@ N &lt;-<span class="st"> </span><span class="kw">length</span>(type)
 X &lt;-<span class="st"> </span><span class="kw">rnorm</span>(N, <span class="dt">sd =</span> <span class="dv">2</span>)
 
 <span class="co"># Control potential outcome is related to "X"</span>
-Y0 &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">cut</span>(X +<span class="st"> </span><span class="kw">runif</span>(N), <span class="dt">breaks =</span> <span class="dv">4</span>))
-Y1 &lt;-<span class="st"> </span>Y0 +<span class="st"> </span><span class="kw">ifelse</span>(type %in%<span class="st"> </span><span class="kw">c</span>(<span class="st">"TA"</span>, <span class="st">"WH"</span>), <span class="dv">1</span>, <span class="dv">0</span>)
+Y0 &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">cut</span>(X <span class="op">+</span><span class="st"> </span><span class="kw">runif</span>(N), <span class="dt">breaks =</span> <span class="dv">4</span>))
+Y1 &lt;-<span class="st"> </span>Y0 <span class="op">+</span><span class="st"> </span><span class="kw">ifelse</span>(type <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">"TA"</span>, <span class="st">"WH"</span>), <span class="dv">1</span>, <span class="dv">0</span>)
 
 Z &lt;-<span class="st"> </span><span class="kw">rbinom</span>(N, <span class="dv">1</span>, <span class="fl">0.5</span>)
-D &lt;-<span class="st"> </span><span class="kw">ifelse</span>(type==<span class="st">"TA"</span>, <span class="dv">1</span>, <span class="dv">0</span>)
-Y &lt;-<span class="st"> </span>Z*Y1 +<span class="st"> </span>(<span class="dv">1</span>-Z)*Y0
+D &lt;-<span class="st"> </span><span class="kw">ifelse</span>(type<span class="op">==</span><span class="st">"TA"</span>, <span class="dv">1</span>, <span class="dv">0</span>)
+Y &lt;-<span class="st"> </span>Z<span class="op">*</span>Y1 <span class="op">+</span><span class="st"> </span>(<span class="dv">1</span><span class="op">-</span>Z)<span class="op">*</span>Y0
 
 df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(Y, Z, D, X)
 
 <span class="co"># Conduct estimation without covariate adjustment</span>
-out<span class="fl">.4</span> &lt;-<span class="st"> </span><span class="kw"><a href="../reference/combinedListDirect.html">combinedListDirect</a></span>(<span class="dt">formula =</span> Y ~<span class="st"> </span>Z, <span class="dt">data =</span> df, <span class="dt">treat =</span> <span class="st">"Z"</span>, <span class="dt">direct =</span> <span class="st">"D"</span>)
-out<span class="fl">.4</span></code></pre></div>
+out.<span class="dv">4</span> &lt;-<span class="st"> </span><span class="kw"><a href="../reference/combinedListDirect.html">combinedListDirect</a></span>(<span class="dt">formula =</span> Y <span class="op">~</span><span class="st"> </span>Z, <span class="dt">data =</span> df, <span class="dt">treat =</span> <span class="st">"Z"</span>, <span class="dt">direct =</span> <span class="st">"D"</span>)
+out.<span class="dv">4</span></code></pre></div>
 <pre><code>## 
 ##  Combined List Estimates 
 ## 
@@ -320,8 +320,8 @@ out<span class="fl">.4</span></code></pre></div>
 ## Standard Error 0.03165778</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Conduct estimation with covariate adjustment</span>
 <span class="co"># Just add the covariate on the right-hand side of the formula</span>
-out<span class="fl">.5</span> &lt;-<span class="st"> </span><span class="kw"><a href="../reference/combinedListDirect.html">combinedListDirect</a></span>(<span class="dt">formula =</span> Y ~<span class="st"> </span>Z +<span class="st"> </span>X, <span class="dt">data =</span> df, <span class="dt">treat =</span> <span class="st">"Z"</span>, <span class="dt">direct =</span> <span class="st">"D"</span>)
-out<span class="fl">.5</span></code></pre></div>
+out.<span class="dv">5</span> &lt;-<span class="st"> </span><span class="kw"><a href="../reference/combinedListDirect.html">combinedListDirect</a></span>(<span class="dt">formula =</span> Y <span class="op">~</span><span class="st"> </span>Z <span class="op">+</span><span class="st"> </span>X, <span class="dt">data =</span> df, <span class="dt">treat =</span> <span class="st">"Z"</span>, <span class="dt">direct =</span> <span class="st">"D"</span>)
+out.<span class="dv">5</span></code></pre></div>
 <pre><code>## 
 ##  Combined List Estimates 
 ## 

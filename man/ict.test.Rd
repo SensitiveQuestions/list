@@ -68,7 +68,7 @@ List Experiments."  Political Analysis, Vol. 20, No 1 (Winter). available at
 assumption of no design effect
 }
 \author{
-Graeme Blair, Princeton University, \email{gblair@princeton.edu}
+Graeme Blair, UCLA, \email{graeme.blair@ucla.edu}
 and Kosuke Imai, Princeton University, \email{kimai@princeton.edu}
 }
 \keyword{models}

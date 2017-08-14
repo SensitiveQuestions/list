@@ -182,8 +182,8 @@
 #' \code{treat} vector for the sensitive items, either character or numeric
 #' depending on the class of \code{treat}. Does not include the value for the
 #' control status}
-#' @author Graeme Blair, Princeton University, \email{gblair@@princeton.edu}
-#' and Kosuke Imai, Princeton University, \email{kimai@@princeton.edu}
+#' @author Graeme Blair, UCLA, \email{graeme.blair@ucla.edu}
+#' and Kosuke Imai, Princeton University, \email{kimai@princeton.edu}
 #' @seealso \code{\link{predict.ictreg}} for fitted values
 #' @references Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
 #' List Experiments."  Political Analysis, Vol. 20, No 1 (Winter). available at
@@ -1299,8 +1299,8 @@ predict.ictregBayes.list <- function(object, ...) {
 #' 
 #' \item{fit}{vector or matrix as above} \item{se.fit}{standard error of
 #' prediction}
-#' @author Graeme Blair, Princeton University, \email{gblair@@princeton.edu}
-#' and Kosuke Imai, Princeton University, \email{kimai@@princeton.edu}
+#' @author Graeme Blair, UCLA, \email{graeme.blair@ucla.edu}
+#' and Kosuke Imai, Princeton University, \email{kimai@princeton.edu}
 #' @seealso \code{\link{ictreg}} for model fitting
 #' @references Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
 #' List Experiments."  Political Analysis, Vol. 20, No 1 (Winter). available at
