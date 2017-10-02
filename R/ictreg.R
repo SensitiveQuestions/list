@@ -2779,6 +2779,264 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
      
   }
 
+  # robust ml functionality
+  if (method == "robust") {
+
+    sweepCross <- function(M, x) t(M) %*% sweep(M, MAR = 1, STATS = x, "*")
+
+    beta.foc <- function(params, J, Y, T, X) {
+      
+      K     <- length(params)
+      beta  <- params[1:(K/2)]
+      gamma <- params[(K/2 + 1):K]
+
+      Xb <- X %*% beta
+      Xg <- X %*% gamma
+
+      tmp1 <- -logistic(Xb)
+      tmp2 <- ifelse(T == 1 & Y == J + 1, 1, 0)
+      tmp3 <- ifelse(T == 0, logistic(Xb), 0)
+      tmp4 <- ifelse(T == 1 & Y %in% 1:J, exp(Xb)/(exp(Xb) + exp(Xg)), 0)
+
+      return.obj <- 
+        list(mat = sweep(X, MARGIN = 1, STATS = tmp1 + tmp2 + tmp3 + tmp4, "*"), 
+             foc = colMeans(sweep(X, MARGIN = 1, STATS = tmp1 + tmp2 + tmp3 + tmp4, "*"))
+        )
+
+      return(return.obj)
+
+    } 
+
+    gamma.foc <- function(params, J, Y, T, X) {
+      
+      K     <- length(params)
+      beta  <- params[1:(K/2)]
+      gamma <- params[(K/2 + 1):K]
+
+      Xb <- X %*% beta
+      Xg <- X %*% gamma
+
+      tmp1 <- -J*logistic(Xg)
+      tmp2 <- ifelse(T == 1 & Y == J + 1, J, 0)
+      tmp3 <- ifelse(T == 0, Y, 0)
+      tmp4 <- ifelse(T == 1 & Y %in% 1:J, Y - 1 + exp(Xg)/(exp(Xb) + exp(Xg)), 0)
+
+      return.obj <- 
+        list(mat = sweep(X, MARGIN = 1, STATS = tmp1 + tmp2 + tmp3 + tmp4, "*"), 
+             foc = colMeans(sweep(X, MARGIN = 1, STATS = tmp1 + tmp2 + tmp3 + tmp4, "*"))
+        )
+        
+      return(return.obj)
+      
+    } 
+
+    MLGMM <- function(params, cW, J, Y, T, X) {
+      
+      n     <- length(Y)
+      K     <- length(params)
+      beta  <- params[1:(K/2)]
+      gamma <- params[(K/2 + 1):K]
+
+      # identification of beta
+      beta.out  <- beta.foc(params, J, Y, T, X)
+
+      # identification of gamma
+      gamma.out <- gamma.foc(params, J, Y, T, X)
+
+      # auxiliary moment
+      diff.in.means <- mean(Y[T==1]) - mean(Y[T==0])
+      z.hat <- logistic(X %*% beta)
+      aux.vector <- z.hat - diff.in.means # N-vector
+      aux.moment <- mean(aux.vector)
+
+      # moment vector
+      cG <- c(beta.out$foc, gamma.out$foc, aux.moment) # (2K + 1)-vector
+
+      # objective function
+      gmm.objective <- t(cG) %*% solve(cW) %*% cG
+
+      return(as.numeric(gmm.objective))
+
+    }
+
+    MLGMM.Grad <- function(params, cW, J, Y, T, X) {
+      
+      n     <- length(Y)
+      K     <- length(params)
+      beta  <- params[1:(K/2)]
+      gamma <- params[(K/2 + 1):K]
+
+      # identification of beta
+      beta.out <- beta.foc(params, J, Y, T, X)
+
+      # identification of gamma
+      gamma.out <- gamma.foc(params, J, Y, T, X)
+
+      # auxiliary moment
+      diff.in.means <- mean(Y[T==1]) - mean(Y[T==0])
+      z.hat <- logistic(X %*% beta)
+      aux.vector <- z.hat - diff.in.means # N-vector
+      aux.moment <- mean(aux.vector)
+
+      # moment vector
+      cG <- c(beta.out$foc, gamma.out$foc, aux.moment) # (2K + 1)-vector
+
+      # jacobian
+      Xb  <- X %*% beta
+      Xg  <- X %*% gamma
+      Xbg <- X %*% (beta + gamma)
+
+      tmp1 <- -logistic(Xb)/(1 + exp(Xb)) + 
+        ifelse(T == 0, logistic(Xb)/(1 + exp(Xb)), 0) + 
+          ifelse(T == 1 & Y %in% 1:J, exp(Xbg)/((exp(Xb) + exp(Xg))^2), 0)
+      tmp2 <- -J*logistic(Xg)/(1+exp(Xg)) + 
+        ifelse(T == 1 & Y %in% 1:J, exp(Xbg)/((exp(Xb) + exp(Xg))^2), 0)
+      tmp3 <- -ifelse(T == 1 & Y %in% 1:J, exp(Xbg)/((exp(Xb) + exp(Xg))^2), 0)
+      tmp4 <- logistic(Xb)/(1+exp(Xb))
+
+      dcG <- 1/n * rbind(
+        cbind(sweepCross(M = X, x = tmp1), sweepCross(M = X, x = tmp3)), 
+        cbind(t(sweepCross(M = X, x = tmp3)), sweepCross(M = X, x = tmp2)), 
+        cbind(t(colSums(sweep(X, MAR = 1, STATS = tmp4, "*"))), matrix(0, nc = K/2, nr = 1))
+      )
+
+      return.vec <- t(cG) %*% (solve(cW) + t(solve(cW))) %*% dcG
+      
+      return(return.vec)
+
+    }
+
+    weightMatrix <- function(params, J, Y, T, X) {
+      
+      n     <- length(Y)
+      K     <- length(params)
+      beta  <- params[1:(K/2)]
+      gamma <- params[(K/2 + 1):K]
+
+      # identification of beta
+      beta.out <- beta.foc(params, J, Y, T, X)
+
+      # identification of gamma
+      gamma.out <- gamma.foc(params, J, Y, T, X)
+
+      # auxiliary moment
+      diff.in.means <- mean(Y[T==1]) - mean(Y[T==0])
+      z.hat <- logistic(X %*% beta)
+      aux.vector <- z.hat - diff.in.means # N-vector
+      aux.moment <- mean(aux.vector)
+
+      # moment vector
+      cG <- c(beta.out$foc, gamma.out$foc, aux.moment) # (2K + 1)-vector
+
+      # weight matrix
+      Wtmp <- cbind(beta.out$mat, gamma.out$mat, aux.vector) # N by (2K + 1)
+      cW <- (t(Wtmp) %*% Wtmp)/n # (2K + 1) by (2K + 1)
+
+      return(cW)
+
+    }
+
+    asymptotic.var <- function(params, J, Y, T, X) {
+      
+      n     <- length(Y)
+      K     <- length(params)
+      beta  <- params[1:(K/2)]
+      gamma <- params[(K/2 + 1):K]
+
+      # jacobian
+      Xb  <- X %*% beta
+      Xg  <- X %*% gamma
+      Xbg <- X %*% (beta + gamma)
+
+      tmp1 <- -logistic(Xb)/(1 + exp(Xb)) + 
+        ifelse(T == 0, logistic(Xb)/(1 + exp(Xb)), 0) + 
+          ifelse(T == 1 & Y %in% 1:J, exp(Xbg)/((exp(Xb) + exp(Xg))^2), 0)
+      tmp2 <- -J*logistic(Xg)/(1+exp(Xg)) + 
+        ifelse(T == 1 & Y %in% 1:J, exp(Xbg)/((exp(Xb) + exp(Xg))^2), 0)
+      tmp3 <- -ifelse(T == 1 & Y %in% 1:J, exp(Xbg)/((exp(Xb) + exp(Xg))^2), 0)
+      tmp4 <- logistic(Xb)/(1+exp(Xb))
+
+      dcG <- 1/n * rbind(
+        cbind(sweepCross(M = X, x = tmp1), sweepCross(M = X, x = tmp3)), 
+        cbind(t(sweepCross(M = X, x = tmp3)), sweepCross(M = X, x = tmp2)), 
+        cbind(t(colSums(sweep(X, MAR = 1, STATS = tmp4, "*"))), matrix(0, nc = K/2, nr = 1))
+      )
+
+      # identification of beta
+      beta.out <- beta.foc(params, J, Y, T, X)
+
+      # identification of gamma
+      gamma.out <- gamma.foc(params, J, Y, T, X)
+
+      # auxiliary moment
+      diff.in.means <- mean(Y[T==1]) - mean(Y[T==0])
+      z.hat <- logistic(X %*% beta)
+      aux.vector <- z.hat - diff.in.means # N-vector
+      aux.moment <- mean(aux.vector)
+
+      # # weight matrix
+      Wtmp <- cbind(beta.out$mat, gamma.out$mat, aux.vector) # N by (2K + 1)
+      cW <- (t(Wtmp) %*% Wtmp)/n # (2K + 1) by (2K + 1)
+
+      return.mat <- solve(t(dcG) %*% solve(cW) %*% dcG)
+
+      return(return.mat)
+
+    }
+
+    ictrobust <- function(formula, data, treat, J) {
+      
+      mf <- model.frame(formula, data)
+      n  <- nrow(mf)
+
+      Y  <- model.response(mf)
+      X  <- model.matrix(formula, data)
+      T  <- data[row.names(mf), treat]
+      k  <- ncol(X)
+
+      nls.fit <- ictreg(formula, data = data, treat = treat, J = J, method = "nls")
+      par0   <- c(nls.fit$par.treat, nls.fit$par.control)
+
+      step1 <- optim(par = par0, fn = MLGMM, gr = MLGMM.Grad, 
+        J = 4, Y = Y, T = T, X = X, cW = diag(1, nc = 2*k + 1, nr = 2*k + 1), 
+        method = "L-BFGS-B", control = list(maxit = 5000))
+      par1  <- step1$par
+      cW1   <- weightMatrix(params = par1, J = 4, Y = Y, T = T, X = X)
+
+      step2 <- optim(par = par1, fn = MLGMM, gr = MLGMM.Grad, 
+        J = 4, Y = Y, T = T, X = X, cW = cW1, 
+        method = "L-BFGS-B", control = list(maxit = 5000))
+      par2  <- step2$par
+      cW2   <- weightMatrix(params = par2, J = 4, Y = Y, T = T, X = X)
+
+      step3 <- optim(par = par2, fn = MLGMM, gr = MLGMM.Grad, 
+        J = 4, Y = Y, T = T, X = X, cW = cW2, 
+        method = "L-BFGS-B", control = list(maxit = 5000))
+
+      vcov  <- asymptotic.var(params = step3$par, J = J, Y = Y, T = T, X = X)/n
+
+      return(list(
+        par = step3$par, 
+        vcov = vcov, 
+        se = sqrt(diag(vcov)), 
+        converge = 1 - step3$convergence, 
+        J.stat = step3$value, 
+        p.val = 1 - pchisq(q = step3$value, df = 1),
+        samp.mean = mean(logistic(X %*% step3$par[1:k]))
+        )
+      )
+
+    }
+
+    
+    robust.out <- ictrobust(formula = formula, data = data, treat = treat, J = J)
+    par.treat <- robust.out$par[1:nPar]
+    par.control <- robust.out$par[(nPar+1):(2*nPar)]
+    se.treat <- robust.out$se[1:nPar]
+    se.control <- robust.out$se[(nPar+1):(2*nPar)]
+    vcov.rob <- robust.out$vcov
+
+  }
   ## 
   ## Set up return object
   
@@ -2999,6 +3257,19 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
           return.object$weights <- w.all
     }
   }
+
+  if (method == "robust") {
+    
+    if (design != "standard") {
+      stop("The robust ML functionality is currently supported only for the standard design.")
+    }
+
+    return.object <- list(par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, vcov=vcov.rob, treat.labels = treatment.labels, control.label = control.label, coef.names=coef.names,  J=J, design = design, method = method, boundary = FALSE, multi = FALSE, call = match.call(), data=data, x = x.all, y = y.all, treat = t)
+    return.object$samp.mean <- round(robust.out$samp.mean, 3)
+    return.object$J.stat <- round(robust.out$J.stat, 4)
+    return.object$p.val <- robust.out$p.val
+
+  }
   
   # auxiliary data functionality -- setting up return object
   return.object$aux <- aux.check 
@@ -3049,6 +3320,10 @@ print.ictreg <- function(x, ...){
   # auxiliary data functionality -- print details
   if (x$aux) cat("Incorporating ", x$nh, " auxiliary moment(s). Weighting method: ", x$wm, ".\n", 
     "The overidentification test statistic was: ", x$J.stat, " (p < ", x$overid.p, ")", ".\n", sep = "")
+
+  # robust ml functionality -- print details
+  if (x$method == "robust") cat("Predicted sample mean: ", x$samp.mean, ".\n", 
+    "The overidentification test statistic was: ", x$J.stat, " (p < ", x$p.val, ")", ".\n", sep = "")
 
   invisible(x)
   
@@ -3508,7 +3783,7 @@ coef.ictreg <- function(object, ...){
   
   nPar <- length(object$coef.names)
   
-  if((object$method=="lm" | object$method=="nls" | object$design=="modified") & object$boundary == FALSE & object$multi == FALSE){
+  if((object$method=="lm" | object$method=="nls" | object$design=="modified" | object$method == "robust") & object$boundary == FALSE & object$multi == FALSE){
     coef <- c(object$par.treat,object$par.control)
     
     if(object$design=="standard") {
@@ -3588,7 +3863,7 @@ vcov.ictreg <- function(object, ...){
   nPar <- length(object$coef.names)
   
   ## dummy value for constraint
-  if(object$method=="nls" | object$design=="modified" | object$method == "lm")
+  if(object$method=="nls" | object$design=="modified" | object$method == "lm" | object == "robust")
     object$constrained <- F
   
   if (object$method == "lm" | (object$method=="ml" & object$constrained==T &
@@ -3933,12 +4208,12 @@ print.summary.ictreg <- function(x, ...){
 
   cat("\n")
   
-  if(x$method=="nls" | x$design=="modified" | x$method == "lm")
+  if(x$method=="nls" | x$design=="modified" | x$method == "lm" | x$method == "robust")
     x$constrained <- T
 
   if (x$design == "standard") {
   
-    if((x$method=="nls" | x$method == "lm") & x$multi == FALSE){
+    if((x$method=="nls" | x$method == "lm" | x$method == "robust") & x$multi == FALSE){
       ##cat(rep(" ", max(nchar(x$coef.names))+8), "Sensitive Item", rep(" ", 5),
       ##    "Control Items \n", sep="")
       tb.treat <- tb.control <- matrix(NA, ncol = 2, nrow = length(x$par.control))
@@ -4271,6 +4546,9 @@ print.summary.ictreg <- function(x, ...){
   
   if (x$aux) cat("Incorporating ", x$nh, " auxiliary moment(s). Weighting method: ", x$wm, ".\n", 
     "The overidentification test statistic was: ", x$J.stat, " (p < ", x$overid.p, ")", ".\n", sep = "")
+
+  if (x$method == "robust") cat("Predicted sample mean: ", x$samp.mean, ".\n", 
+    "The overidentification test statistic was: ", x$J.stat, " (p < ", x$p.val, ")", ".\n", sep = "")
 
   invisible(x)
   
