@@ -306,7 +306,7 @@
 #' }
 #' 
 ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = "ml", weights, 
-                   h = NULL, group = NULL, matrixMethod = "efficient", 
+                   h = NULL, group = NULL, matrixMethod = "efficient", robust = FALSE, 
                    overdispersed = FALSE, constrained = TRUE, floor = FALSE, ceiling = FALSE, 
                    ceiling.fit = "glm", floor.fit = "glm", ceiling.formula = ~ 1, floor.formula = ~ 1, 
                    fit.start = "lm", fit.nonsensitive = "nls", multi.condition = "none", maxIter = 5000, verbose = FALSE, ...){
@@ -321,7 +321,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     mf$treat <- mf$weights <- mf$constrained <- mf$overdispersed <- mf$floor <- 
     mf$ceiling <- mf$ceiling.fit <- mf$fit.nonsensitive <- mf$floor.fit <- 
     mf$multi.condition <- mf$floor.formula <- mf$ceiling.formula <- mf$h <-
-    mf$group <- mf$matrixMethod <- NULL
+    mf$group <- mf$matrixMethod <- mf$robust <- NULL
   mf[[1]] <- as.name("model.frame")
   mf$na.action <- 'na.pass'
   mf <- eval.parent(mf)
@@ -439,6 +439,14 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       stop("Weighted list experiment regression is not supported (yet) for the multi-item design.")
   }
 
+  # robust ml functionality -- check conditions
+  if (robust) {
+    if (multi.condition != "none") 
+      stop("The robust ML functionality is not yet supported for multiple sensitive item designs.")
+    if (method != "ml")
+      stop("You must specify method as 'ml' to use the robust ML functionality.")
+  }
+
   # auxiliary data functionality -- check conditions
   aux.check <- !(is.null(h) & is.null(group))
 
@@ -447,6 +455,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       stop("The auxiliary data functionality is not yet supported for multiple sensitive item designs.")
     if (method != "nls")
       stop("The auxiliary data functionality is currently supported only for the nonlinear least squares method.")
+    if (robust)
+      stop("The auxiliary data functionality is not yet compatible with the robust ML functionality.")
   }
 
   n <- nrow(x.treatment) + nrow(x.control)
@@ -694,7 +704,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     
     par.control.nls.std <- coef(fit.control)
 
-    if(method=="ml") {
+    if(method=="ml" & robust == FALSE) {
       
       if(boundary == FALSE) {
       
@@ -2476,6 +2486,339 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     
   } # end modified design
   
+  # robust ml functionality 
+
+  if (robust) { 
+
+    coef.control.start <- par.control.nls.std
+    coef.treat.start <- par.treat.nls.std
+    coef.start <- c(coef.treat.start, coef.control.start)
+
+    sweepCross <- function(M, x) t(M) %*% sweep(M, MAR = 1, STATS = x, "*")
+
+    loglik <- function(params, J, Y, T, X) {
+      
+      n     <- length(Y)
+      K     <- length(params)
+      beta  <- params[1:(K/2)]
+      gamma <- params[(K/2 + 1):K]
+
+      Xb    <- X %*% beta
+      Xg    <- X %*% gamma
+     
+      llik <- c(
+         -J * log(1 + exp(Xg)) - log(1 + exp(Xb)) + 
+          ifelse(Y == J + 1, Xb + J * Xg, 0) +  
+          ifelse(T == 0, log(choose(J, Y)) + Y * Xg + log(1 + exp(Xb)), 0) + 
+          ifelse(T == 1 & Y %in% 1:J, (Y - 1) * Xg + log(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
+        )
+
+      return(sum(llik))
+
+    }
+
+    MLGMM <- function(params, cW, J, Y, T, X, robust) {
+      
+      n     <- length(Y)
+      K     <- length(params)
+      beta  <- params[1:(K/2)]
+      gamma <- params[(K/2 + 1):K]
+
+      Xb    <- X %*% beta
+      Xg    <- X %*% gamma
+      Xbg   <- X %*% (beta + gamma)
+
+      # identification of beta
+      beta.coef <- c(
+        -logistic(Xb) + 
+        ifelse(Y == J + 1, 1, 0) + 
+        ifelse(T == 0, logistic(Xb), 0) + 
+        ifelse(T == 1 & Y %in% 1:J, choose(J, Y - 1) * exp(Xb)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
+       )
+
+      beta.foc <- colMeans(X*beta.coef)
+
+      # identification of gamma
+      gamma.coef <- c(
+        -J*logistic(Xg) + 
+        ifelse(Y == J + 1, J, 0) + 
+        ifelse(T == 0, Y, 0) + 
+        ifelse(T == 1 & Y %in% 1:J, (Y - 1) + choose(J, Y) * exp(Xg)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
+      )
+      
+      gamma.foc <- colMeans(X*gamma.coef)
+
+      # dim moment
+      if (robust == TRUE) {
+        diff.in.means <- mean(Y[T==1]) - mean(Y[T==0])
+        z.hat <- logistic(Xb)
+        aux.vec <- z.hat - diff.in.means # N-vector
+        aux.mom <- mean(aux.vec)
+        cG <- c(beta.foc, gamma.foc, aux.mom) 
+      } else {
+        cG <- c(beta.foc, gamma.foc)
+      }
+
+      # gmm objective
+      gmm.objective <- as.numeric(t(cG) %*% solve(cW) %*% cG)
+
+      return(gmm.objective)
+
+    }
+
+    MLGMM.Grad <- function(params, cW, J, Y, T, X, robust) {
+      
+      n     <- length(Y)
+      K     <- length(params)
+      beta  <- params[1:(K/2)]
+      gamma <- params[(K/2 + 1):K]
+
+      Xb    <- X %*% beta
+      Xg    <- X %*% gamma
+      Xbg   <- X %*% (beta + gamma)
+
+      # identification of beta
+      beta.coef <- c(
+        -logistic(Xb) + 
+        ifelse(Y == J + 1, 1, 0) + 
+        ifelse(T == 0, logistic(Xb), 0) + 
+        ifelse(T == 1 & Y %in% 1:J, choose(J, Y - 1) * exp(Xb)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
+       )
+
+      beta.foc <- colMeans(X*beta.coef)
+
+      # identification of gamma
+      gamma.coef <- c(
+        -J*logistic(Xg) + 
+        ifelse(Y == J + 1, J, 0) + 
+        ifelse(T == 0, Y, 0) + 
+        ifelse(T == 1 & Y %in% 1:J, (Y - 1) + choose(J, Y) * exp(Xg)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
+      )
+      
+      gamma.foc <- colMeans(X*gamma.coef)
+
+      # dim moment
+      if (robust == TRUE) {
+        diff.in.means <- mean(Y[T==1]) - mean(Y[T==0])
+        z.hat <- logistic(Xb)
+        aux.vec <- z.hat - diff.in.means # N-vector
+        aux.mom <- mean(aux.vec)
+        cG <- c(beta.foc, gamma.foc, aux.mom) 
+      } else {
+        cG <- c(beta.foc, gamma.foc)
+      }
+
+      # jacobian
+      tmp1 <- -logistic(Xb)/(1 + exp(Xb)) + 
+        ifelse(T == 0, logistic(Xb)/(1 + exp(Xb)), 0) + 
+          ifelse(T == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
+      tmp2 <- -J*logistic(Xg)/(1+exp(Xg)) + 
+        ifelse(T == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
+      tmp3 <- -ifelse(T == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
+      tmp4 <- logistic(Xb)/(1+exp(Xb))
+
+      if (robust == TRUE) {
+        dcG <- 1/n * rbind(
+          cbind(sweepCross(M = X, x = tmp1), sweepCross(M = X, x = tmp3)), 
+          cbind(t(sweepCross(M = X, x = tmp3)), sweepCross(M = X, x = tmp2)), 
+          cbind(t(colSums(X*c(tmp4))), matrix(0, nc = K/2, nr = 1))
+        )
+      } else {
+        dcG <- 1/n * rbind(
+          cbind(sweepCross(M = X, x = tmp1), sweepCross(M = X, x = tmp3)), 
+          cbind(t(sweepCross(M = X, x = tmp3)), sweepCross(M = X, x = tmp2))
+        )
+      }
+
+      return.vec <- c(t(cG) %*% (solve(cW) + t(solve(cW))) %*% dcG)
+      
+      return(return.vec)
+
+    }
+
+    weightMatrix <- function(params, J, Y, T, X, robust) {
+      
+      n     <- length(Y)
+      K     <- length(params)
+      beta  <- params[1:(K/2)]
+      gamma <- params[(K/2 + 1):K]
+
+      Xb    <- X %*% beta
+      Xg    <- X %*% gamma
+      Xbg   <- X %*% (beta + gamma)
+
+      # identification of beta
+      beta.coef <- c(
+        -logistic(Xb) + 
+        ifelse(Y == J + 1, 1, 0) + 
+        ifelse(T == 0, logistic(Xb), 0) + 
+        ifelse(T == 1 & Y %in% 1:J, choose(J, Y - 1) * exp(Xb)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
+       )
+
+      beta.mat <- X*beta.coef
+
+      # identification of gamma
+      gamma.coef <- c(
+        -J*logistic(Xg) + 
+        ifelse(Y == J + 1, J, 0) + 
+        ifelse(T == 0, Y, 0) + 
+        ifelse(T == 1 & Y %in% 1:J, (Y - 1) + choose(J, Y) * exp(Xg)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
+      )
+      
+      gamma.mat <- X*gamma.coef
+
+      # dim moment
+      if (robust == TRUE) {
+        diff.in.means <- mean(Y[T==1]) - mean(Y[T==0])
+        z.hat <- logistic(Xb)
+        aux.vec <- z.hat - diff.in.means # N-vector
+        Wtmp <- cbind(beta.mat, gamma.mat, aux.vec) # N by (2K + 1)
+      } else {
+        Wtmp <- cbind(beta.mat, gamma.mat)
+      }
+
+      # weight matrix
+      cW <- (t(Wtmp) %*% Wtmp)/n # (2K + 1) by (2K + 1)
+
+      return(cW)
+
+    }
+
+    MLGMM.var <- function(params, J, Y, T, X, robust) {
+      
+      n     <- length(Y)
+      K     <- length(params)
+      beta  <- params[1:(K/2)]
+      gamma <- params[(K/2 + 1):K]
+
+      Xb    <- X %*% beta
+      Xg    <- X %*% gamma
+      Xbg   <- X %*% (beta + gamma)
+
+      # identification of beta
+      beta.coef <- c(
+        -logistic(Xb) + 
+        ifelse(Y == J + 1, 1, 0) + 
+        ifelse(T == 0, logistic(Xb), 0) + 
+        ifelse(T == 1 & Y %in% 1:J, choose(J, Y - 1) * exp(Xb)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
+       )
+
+      beta.foc <- colMeans(X*beta.coef)
+
+      # identification of gamma
+      gamma.coef <- c(
+        -J*logistic(Xg) + 
+        ifelse(Y == J + 1, J, 0) + 
+        ifelse(T == 0, Y, 0) + 
+        ifelse(T == 1 & Y %in% 1:J, (Y - 1) + choose(J, Y) * exp(Xg)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
+      )
+      
+      gamma.foc <- colMeans(X*gamma.coef)
+
+      # dim moment
+      if (robust == TRUE) {
+        diff.in.means <- mean(Y[T==1]) - mean(Y[T==0])
+        z.hat <- logistic(X %*% beta)
+        aux.vec <- z.hat - diff.in.means # N-vector
+        aux.mom <- mean(aux.vec)
+        cG <- c(beta.foc, gamma.foc, aux.mom) 
+      } else {
+        cG <- c(beta.foc, gamma.foc)
+      }
+
+      # jacobian
+      tmp1 <- -logistic(Xb)/(1 + exp(Xb)) + 
+        ifelse(T == 0, logistic(Xb)/(1 + exp(Xb)), 0) + 
+          ifelse(T == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
+      tmp2 <- -J*logistic(Xg)/(1+exp(Xg)) + 
+        ifelse(T == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
+      tmp3 <- -ifelse(T == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
+      tmp4 <- logistic(Xb)/(1+exp(Xb))
+
+      if (robust == TRUE) {
+        dcG <- 1/n * rbind(
+          cbind(sweepCross(M = X, x = tmp1), sweepCross(M = X, x = tmp3)), 
+          cbind(t(sweepCross(M = X, x = tmp3)), sweepCross(M = X, x = tmp2)), 
+          cbind(t(colSums(X*c(tmp4))), matrix(0, nc = K/2, nr = 1))
+        )
+      } else {
+        dcG <- 1/n * rbind(
+          cbind(sweepCross(M = X, x = tmp1), sweepCross(M = X, x = tmp3)), 
+          cbind(t(sweepCross(M = X, x = tmp3)), sweepCross(M = X, x = tmp2))
+        )
+      }
+
+      cW <- weightMatrix(params, J, Y, T, X, robust)
+
+      return.mat <- solve(t(dcG) %*% solve(cW) %*% dcG)
+
+      return(return.mat)
+
+    }
+
+    ictrobust <- function(formula, data, treat, J, robust) {
+      
+      mf <- model.frame(formula, data)
+      n  <- nrow(mf)
+
+      Y  <- model.response(mf)
+      X  <- model.matrix(formula, data)
+      T  <- data[row.names(mf), treat]
+      k  <- ncol(X)
+
+      try(nls.fit <- ictreg(formula, data = data, treat = treat, J = J, method = "nls"))
+      if (exists("nls.fit")) {
+        par0   <- c(nls.fit$par.treat, nls.fit$par.control)
+      } else {
+        par0   <- rep(0, k*2)
+      }
+
+      diag.dim <- 2*k + ifelse(robust, 1, 0)
+      step1 <- optim(par = par0, fn = MLGMM, gr = MLGMM.Grad, robust, 
+        J = 4, Y = Y, T = T, X = X, cW = diag(1, nc = diag.dim, nr = diag.dim), 
+        method = "L-BFGS-B", lower = -10, upper = 10, control = list(maxit = 5000))
+      par1  <- step1$par
+      cW1   <- weightMatrix(params = par1, J = 4, Y = Y, T = T, X = X, robust = robust)
+
+      step2 <- optim(par = par1, fn = MLGMM, gr = MLGMM.Grad, robust, 
+        J = 4, Y = Y, T = T, X = X, cW = cW1, 
+        method = "L-BFGS-B", lower = -10, upper = 10, control = list(maxit = 5000))
+      par2  <- step2$par
+      cW2   <- weightMatrix(params = par2, J = 4, Y = Y, T = T, X = X, robust = robust)
+
+      step3 <- optim(par = par2, fn = MLGMM, gr = MLGMM.Grad, robust, 
+        J = 4, Y = Y, T = T, X = X, cW = cW2, 
+        method = "L-BFGS-B", lower = -10, upper = 10, control = list(maxit = 5000))
+
+      vcov  <- MLGMM.var(params = step3$par, J = J, Y = Y, T = T, X = X, robust)/n
+
+      return(list(
+        par = step3$par, 
+        vcov = vcov, 
+        se = sqrt(diag(vcov)), 
+        converge = 1 - step3$convergence, 
+        J.stat = step3$value, 
+        p.val = 1 - pchisq(q = step3$value, df = 1),
+        est.mean = mean(logistic(X %*% step3$par[1:k])), 
+        diff.mean = mean(Y[T == 1]) - mean(Y[T == 0]), 
+        robust = robust, 
+        message = step3$message
+        )
+      )
+
+    }
+
+    ictrobust.out <- ictrobust(formula = formula, data = data, treat = treat, J = J, robust = robust)
+    if (ictrobust.out$converge != 1) warning("Optimization routine did not converge.")
+    ictrobust.par <- ictrobust.out$par
+    ictrobust.vcov <- ictrobust.out$vcov
+    ictrobust.se <- sqrt(diag(ictrobust.vcov))
+    par.treat.robust <- ictrobust.par[1:ncol(x.all)]
+    par.control.robust <- ictrobust.par[(ncol(x.all)+1):(ncol(x.all)*2)]
+    llik.robust <- loglik(params = ictrobust.par, J = J, Y = y.all, T = treat, X = x.all)   
+
+  }
+
   # auxiliary data functionality
   if (aux.check) {
 
@@ -2855,7 +3198,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     }
   }
   
-  if (method == "ml"){
+  if (method == "ml" & robust == FALSE) {
     
     if(design == "standard") {
       
@@ -2999,7 +3342,22 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
           return.object$weights <- w.all
     }
   }
+
+  if (robust) {
+
+    par.treat <- ictrobust.par[1:nPar]
+    par.control <- ictrobust.par[(nPar+1):(nPar*2)]
+    se.treat <- ictrobust.se[1:(nPar)]
+    se.control <- ictrobust.se[(nPar+1):(nPar*2)]
   
+    return.object <- list(par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, 
+      vcov=ictrobust.vcov, treat.labels = treatment.labels, control.label = control.label, 
+        llik=llik.robust, J=J, coef.names=coef.names, design = design, method = method, robust = robust, 
+          overdispersed=overdispersed, constrained=constrained, boundary = boundary, multi = multi, 
+            ceiling = ceiling, floor = floor, call = match.call(), data = data, x = x.all, y = y.all, treat = t)
+  
+  }      
+
   # auxiliary data functionality -- setting up return object
   return.object$aux <- aux.check 
 
