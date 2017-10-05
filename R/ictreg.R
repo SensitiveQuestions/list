@@ -2550,9 +2550,9 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       # dim moment
       if (robust == TRUE) {
-        diff.in.means <- mean(Y[T==1]) - mean(Y[T==0])
-        z.hat <- logistic(Xb)
-        aux.vec <- z.hat - diff.in.means # N-vector
+        n1 <- sum(T)
+        n0 <- n - n1
+        aux.vec <- ifelse(T == 1, logistic(Xb) - n/n1 * Y, logistic(Xb) + n/n0 * Y) # N-vector
         aux.mom <- mean(aux.vec)
         cG <- c(beta.foc, gamma.foc, aux.mom) 
       } else {
@@ -2599,9 +2599,9 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       # dim moment
       if (robust == TRUE) {
-        diff.in.means <- mean(Y[T==1]) - mean(Y[T==0])
-        z.hat <- logistic(Xb)
-        aux.vec <- z.hat - diff.in.means # N-vector
+        n1 <- sum(T)
+        n0 <- n - n1
+        aux.vec <- ifelse(T == 1, logistic(Xb) - n/n1 * Y, logistic(Xb) + n/n0 * Y) # N-vector
         aux.mom <- mean(aux.vec)
         cG <- c(beta.foc, gamma.foc, aux.mom) 
       } else {
@@ -2669,9 +2669,10 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       # dim moment
       if (robust == TRUE) {
-        diff.in.means <- mean(Y[T==1]) - mean(Y[T==0])
-        z.hat <- logistic(Xb)
-        aux.vec <- z.hat - diff.in.means # N-vector
+        n1 <- sum(T)
+        n0 <- n - n1
+        aux.vec <- ifelse(T == 1, logistic(Xb) - n/n1 * Y, logistic(Xb) + n/n0 * Y) # N-vector
+        aux.mom <- mean(aux.vec)
         Wtmp <- cbind(beta.mat, gamma.mat, aux.vec) # N by (2K + 1)
       } else {
         Wtmp <- cbind(beta.mat, gamma.mat)
@@ -2717,15 +2718,15 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       # dim moment
       if (robust == TRUE) {
-        diff.in.means <- mean(Y[T==1]) - mean(Y[T==0])
-        z.hat <- logistic(X %*% beta)
-        aux.vec <- z.hat - diff.in.means # N-vector
+        n1 <- sum(T)
+        n0 <- n - n1
+        aux.vec <- ifelse(T == 1, logistic(Xb) - n/n1 * Y, logistic(Xb) + n/n0 * Y) # N-vector
         aux.mom <- mean(aux.vec)
         cG <- c(beta.foc, gamma.foc, aux.mom) 
       } else {
         cG <- c(beta.foc, gamma.foc)
       }
-
+      
       # jacobian
       tmp1 <- -logistic(Xb)/(1 + exp(Xb)) + 
         ifelse(T == 0, logistic(Xb)/(1 + exp(Xb)), 0) + 
