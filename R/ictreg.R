@@ -2490,18 +2490,14 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
   if (robust) { 
 
-    coef.control.start <- par.control.nls.std
-    coef.treat.start <- par.treat.nls.std
-    coef.start <- c(coef.treat.start, coef.control.start)
-
     sweepCross <- function(M, x) t(M) %*% sweep(M, MAR = 1, STATS = x, "*")
 
     loglik <- function(params, J, Y, T, X) {
       
       n     <- length(Y)
       K     <- length(params)
-      beta  <- params[1:(K/2)]
-      gamma <- params[(K/2 + 1):K]
+      gamma <- params[1:(K/2)]
+      beta  <- params[(K/2 + 1):K]
 
       Xb    <- X %*% beta
       Xg    <- X %*% gamma
@@ -2550,9 +2546,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       # dim moment
       if (robust == TRUE) {
-        n1 <- sum(T)
-        n0 <- n - n1
-        aux.vec <- ifelse(T == 1, logistic(Xb) - n/n1 * Y, logistic(Xb) + n/n0 * Y) # N-vector
+        aux.vec <- (logistic(Xb) - mean(Y[T == 1]) + mean(Y[T == 0]))
         aux.mom <- mean(aux.vec)
         cG <- c(beta.foc, gamma.foc, aux.mom) 
       } else {
@@ -2560,7 +2554,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       }
 
       # gmm objective
-      gmm.objective <- as.numeric(t(cG) %*% solve(cW) %*% cG)
+      gmm.objective <- as.numeric(t(cG) %*% ginv(cW) %*% cG)
 
       return(gmm.objective)
 
@@ -2599,9 +2593,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       # dim moment
       if (robust == TRUE) {
-        n1 <- sum(T)
-        n0 <- n - n1
-        aux.vec <- ifelse(T == 1, logistic(Xb) - n/n1 * Y, logistic(Xb) + n/n0 * Y) # N-vector
+        aux.vec <- (logistic(Xb) - mean(Y[T == 1]) + mean(Y[T == 0]))
         aux.mom <- mean(aux.vec)
         cG <- c(beta.foc, gamma.foc, aux.mom) 
       } else {
@@ -2630,7 +2622,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         )
       }
 
-      return.vec <- c(t(cG) %*% (solve(cW) + t(solve(cW))) %*% dcG)
+      return.vec <- c(t(cG) %*% (ginv(cW) + t(ginv(cW))) %*% dcG)
       
       return(return.vec)
 
@@ -2669,10 +2661,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       # dim moment
       if (robust == TRUE) {
-        n1 <- sum(T)
-        n0 <- n - n1
-        aux.vec <- ifelse(T == 1, logistic(Xb) - n/n1 * Y, logistic(Xb) + n/n0 * Y) # N-vector
-        aux.mom <- mean(aux.vec)
+        aux.vec <- logistic(Xb) - mean(Y[T == 1]) + mean(Y[T == 0])
         Wtmp <- cbind(beta.mat, gamma.mat, aux.vec) # N by (2K + 1)
       } else {
         Wtmp <- cbind(beta.mat, gamma.mat)
@@ -2718,15 +2707,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       # dim moment
       if (robust == TRUE) {
-        n1 <- sum(T)
-        n0 <- n - n1
-        aux.vec <- ifelse(T == 1, logistic(Xb) - n/n1 * Y, logistic(Xb) + n/n0 * Y) # N-vector
+        aux.vec <- (logistic(Xb) - mean(Y[T == 1]) + mean(Y[T == 0]))
         aux.mom <- mean(aux.vec)
         cG <- c(beta.foc, gamma.foc, aux.mom) 
       } else {
         cG <- c(beta.foc, gamma.foc)
       }
-      
+
       # jacobian
       tmp1 <- -logistic(Xb)/(1 + exp(Xb)) + 
         ifelse(T == 0, logistic(Xb)/(1 + exp(Xb)), 0) + 
@@ -2751,7 +2738,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       cW <- weightMatrix(params, J, Y, T, X, robust)
 
-      return.mat <- solve(t(dcG) %*% solve(cW) %*% dcG)
+      return.mat <- ginv(t(dcG) %*% ginv(cW) %*% dcG)
 
       return(return.mat)
 
@@ -2771,24 +2758,24 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       if (exists("nls.fit")) {
         par0   <- c(nls.fit$par.treat, nls.fit$par.control)
       } else {
-        par0   <- rep(0, k*2)
+        par0   <- rep(0, 2*k)
       }
 
-      diag.dim <- 2*k + ifelse(robust, 1, 0)
+      cW0   <- weightMatrix(params = par0, J = J, Y = Y, T = T, X = X, robust = robust)  
       step1 <- optim(par = par0, fn = MLGMM, gr = MLGMM.Grad, robust, 
-        J = 4, Y = Y, T = T, X = X, cW = diag(1, nc = diag.dim, nr = diag.dim), 
+        J = J, Y = Y, T = T, X = X, cW = cW0, 
         method = "L-BFGS-B", lower = -10, upper = 10, control = list(maxit = 5000))
       par1  <- step1$par
-      cW1   <- weightMatrix(params = par1, J = 4, Y = Y, T = T, X = X, robust = robust)
+      cW1   <- weightMatrix(params = par1, J = J, Y = Y, T = T, X = X, robust = robust)
 
       step2 <- optim(par = par1, fn = MLGMM, gr = MLGMM.Grad, robust, 
-        J = 4, Y = Y, T = T, X = X, cW = cW1, 
+        J = J, Y = Y, T = T, X = X, cW = cW1, 
         method = "L-BFGS-B", lower = -10, upper = 10, control = list(maxit = 5000))
       par2  <- step2$par
-      cW2   <- weightMatrix(params = par2, J = 4, Y = Y, T = T, X = X, robust = robust)
+      cW2   <- weightMatrix(params = par2, J = J, Y = Y, T = T, X = X, robust = robust)
 
       step3 <- optim(par = par2, fn = MLGMM, gr = MLGMM.Grad, robust, 
-        J = 4, Y = Y, T = T, X = X, cW = cW2, 
+        J = J, Y = Y, T = T, X = X, cW = cW2, 
         method = "L-BFGS-B", lower = -10, upper = 10, control = list(maxit = 5000))
 
       vcov  <- MLGMM.var(params = step3$par, J = J, Y = Y, T = T, X = X, robust)/n
@@ -2798,8 +2785,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         vcov = vcov, 
         se = sqrt(diag(vcov)), 
         converge = 1 - step3$convergence, 
-        J.stat = step3$value, 
-        p.val = 1 - pchisq(q = step3$value, df = 1),
+        J.stat = ifelse(robust, n*step3$value, NA),
+        p.val = ifelse(robust, 1 - pchisq(q = step3$value, df = 2*k), NA),
         est.mean = mean(logistic(X %*% step3$par[1:k])), 
         diff.mean = mean(Y[T == 1]) - mean(Y[T == 0]), 
         robust = robust, 
@@ -2809,13 +2796,14 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
     }
 
+
     ictrobust.out <- ictrobust(formula = formula, data = data, treat = treat, J = J, robust = robust)
     if (ictrobust.out$converge != 1) warning("Optimization routine did not converge.")
     ictrobust.par <- ictrobust.out$par
     ictrobust.vcov <- ictrobust.out$vcov
     ictrobust.se <- sqrt(diag(ictrobust.vcov))
-    par.treat.robust <- ictrobust.par[1:ncol(x.all)]
-    par.control.robust <- ictrobust.par[(ncol(x.all)+1):(ncol(x.all)*2)]
+    par.control.robust <- ictrobust.par[1:ncol(x.all)]
+    par.treat.robust <- ictrobust.par[(ncol(x.all)+1):(ncol(x.all)*2)]
     llik.robust <- loglik(params = ictrobust.par, J = J, Y = y.all, T = treat, X = x.all)   
 
   }
@@ -3351,8 +3339,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     se.treat <- ictrobust.se[1:(nPar)]
     se.control <- ictrobust.se[(nPar+1):(nPar*2)]
   
+    # flipping the vcov matrix
+    ictrobust.vcov.flip <- ictrobust.vcov
+    ictrobust.vcov.flip[1:nPar, 1:nPar] <- ictrobust.vcov[(nPar+1):(nPar*2), (nPar+1):(nPar*2)]
+    ictrobust.vcov.flip[(nPar+1):(nPar*2), (nPar+1):(nPar*2)] <- ictrobust.vcov[1:nPar, 1:nPar]
+
     return.object <- list(par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, 
-      vcov=ictrobust.vcov, treat.labels = treatment.labels, control.label = control.label, 
+      vcov=ictrobust.vcov.flip, treat.labels = treatment.labels, control.label = control.label, 
         llik=llik.robust, J=J, coef.names=coef.names, design = design, method = method, robust = robust, 
           overdispersed=overdispersed, constrained=constrained, boundary = boundary, multi = multi, 
             ceiling = ceiling, floor = floor, call = match.call(), data = data, x = x.all, y = y.all, treat = t)
