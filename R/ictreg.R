@@ -2778,7 +2778,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         J = J, Y = Y, T = T, X = X, cW = cW2, 
         method = "L-BFGS-B", lower = -10, upper = 10, control = list(maxit = 5000))
 
-      vcov  <- MLGMM.var(params = step3$par, J = J, Y = Y, T = T, X = X, robust)/n
+      vcov  <- MLGMM.var(params = step2$par, J = J, Y = Y, T = T, X = X, robust = FALSE)/n
 
       return(list(
         par = step3$par, 
