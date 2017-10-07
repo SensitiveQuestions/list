@@ -580,8 +580,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       G2 <- -t(Gtmp) %*% Gtmp / n
       Gtmp <- c(J*logistic(x0 %*% gamma)/(1 + exp(x0 %*% gamma))) * x0
       G3 <- -t(Gtmp) %*% Gtmp / n
-      invG1 <- solve(G1)
-      invG3 <- solve(G3)
+      invG1 <- solve(G1, tol = 1e-20)
+      invG3 <- solve(G3, tol = 1e-20)
       invG <- rbind(cbind(invG1, - invG1 %*% G2 %*% invG3),
                     cbind(matrix(0, ncol = ncol(G1), nrow = nrow(G3)), invG3))
       
@@ -1051,12 +1051,12 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
             if (overdispersed==T) {
               MLEfit <- optim(par, obs.llik.std, method = "BFGS", J = J, y = y.all,
                               treat = t, x = x.all, wt = w.all, hessian = TRUE, control = list(maxit = 0))
-              vcov.mle <- solve(-MLEfit$hessian)
+              vcov.mle <- solve(-MLEfit$hessian, tol = 1e-20)
               se.mle <- sqrt(diag(vcov.mle))
             } else {
               MLEfit <- optim(par, obs.llik.binom.std, method = "BFGS", J = J, y = y.all,
                               treat = t, x = x.all, wt = w.all, hessian = TRUE, control = list(maxit = 0))
-              vcov.mle <- solve(-MLEfit$hessian)
+              vcov.mle <- solve(-MLEfit$hessian, tol = 1e-20)
               se.mle <- sqrt(diag(vcov.mle))
             }
             
@@ -1177,7 +1177,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                               y = y.all, treat = t, x = x.all, wt = w.all, const = TRUE,
                               hessian = TRUE, control = list(maxit = 0))
               
-              vcov.mle <- solve(-MLEfit$hessian)
+              vcov.mle <- solve(-MLEfit$hessian, tol = 1e-20)
               se.mle <- sqrt(diag(vcov.mle))
               
             } else {
@@ -1186,7 +1186,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                               y = y.all, treat = t,  x = x.all, wt = w.all, const = TRUE,
                               hessian = TRUE, control = list(maxit = 0))
               
-              vcov.mle <- solve(-MLEfit$hessian)
+              vcov.mle <- solve(-MLEfit$hessian, tol = 1e-20)
               se.mle <- sqrt(diag(vcov.mle))
               
             }
@@ -1498,7 +1498,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                           x = x.all, hessian = TRUE, control = list(maxit = 0),
                           multi = multi.condition)
           
-          vcov.mle <- solve(-MLEfit$hessian)
+          vcov.mle <- solve(-MLEfit$hessian, tol = 1e-20)
           
           se.mle <- sqrt(diag(vcov.mle))
   
@@ -2212,8 +2212,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         
       }
       
-      invH <- solve(H)
-      invM <- solve(M)
+      invH <- solve(H, tol = 1e-20)
+      invM <- solve(M, tol = 1e-20)
       
       invG <- rbind( cbind(invH, -invH %*% L %*% invM),
                     cbind(matrix(0, nrow(invM), ncol(invH)), invM)  ) 
@@ -2479,7 +2479,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       MLEfit <- optim(par, fn = obs.llik.modified, method = "BFGS", y = y.all, X = x.all,
                       treat = t, hessian = TRUE, control = list(maxit = 0))
       
-      vcov.mle <- solve(-MLEfit$hessian)
+      vcov.mle <- solve(-MLEfit$hessian, tol = 1e-20)
       se.mle <- sqrt(diag(vcov.mle))
       
     } # end ml for modified design
@@ -2857,7 +2857,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
           }
         }
         
-        efficientW <- solve(F)
+        efficientW <- solve(F, tol = 1e-20)
 
         if (matrixMethod == "efficient" | matrixMethod == "cue") {
           efficientW
@@ -3020,7 +3020,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
           aux.mom.var <- t(aux.mom) %*% aux.mom/n
           F <- adiag(F, aux.mom.var)
         }
-        W <- solve(F)
+        W <- solve(F, tol = 1e-20)
 
         as.numeric(t(M) %*% W %*% M)
 
@@ -3102,7 +3102,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         if (matrixMethod == "princomp") 
           vcov.aux <- ginv(t(G) %*% weightMatrix %*% G)/n
         else 
-          vcov.aux <- solve(t(G) %*% weightMatrix %*% G)/n
+          vcov.aux <- solve(t(G) %*% weightMatrix %*% G, tol = 1e-20)/n
         
         list(coef = coef, vcov = vcov.aux, val = fit1$value)
     
