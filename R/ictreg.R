@@ -306,7 +306,7 @@
 #' }
 #' 
 ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = "ml", weights, 
-                   h = NULL, group = NULL, matrixMethod = "efficient", robust = FALSE, 
+                   h = NULL, group = NULL, matrixMethod = "efficient", robust = FALSE, error = "none", 
                    overdispersed = FALSE, constrained = TRUE, floor = FALSE, ceiling = FALSE, 
                    ceiling.fit = "glm", floor.fit = "glm", ceiling.formula = ~ 1, floor.formula = ~ 1, 
                    fit.start = "lm", fit.nonsensitive = "nls", multi.condition = "none", maxIter = 5000, verbose = FALSE, ...){
@@ -321,7 +321,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     mf$treat <- mf$weights <- mf$constrained <- mf$overdispersed <- mf$floor <- 
     mf$ceiling <- mf$ceiling.fit <- mf$fit.nonsensitive <- mf$floor.fit <- 
     mf$multi.condition <- mf$floor.formula <- mf$ceiling.formula <- mf$h <-
-    mf$group <- mf$matrixMethod <- mf$robust <- NULL
+    mf$group <- mf$matrixMethod <- mf$robust <- mf$error <- NULL
   mf[[1]] <- as.name("model.frame")
   mf$na.action <- 'na.pass'
   mf <- eval.parent(mf)
@@ -2486,6 +2486,565 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     
   } # end modified design
   
+  # measurement error models
+  if (error == "top") {
+
+    ####################
+    # TOP CODING ERROR #
+    ####################
+    obs.llik.top <- function(all.pars, formula, data, treat, J) {
+
+      mf <- model.frame(formula, data)
+      n  <- nrow(mf)
+
+      Y  <- model.response(mf)
+      X  <- model.matrix(formula, data)
+      Tr <- data[row.names(mf), treat]
+      k  <- ncol(X)
+      beta <- all.pars[1:k]
+      gamma <- all.pars[(k+1):(2*k)]
+
+      log.odds <- all.pars[2*k + 1]
+      p0 <- logistic(log.odds)
+
+      Xb <- X %*% beta
+      Xg <- X %*% gamma
+
+      lliks <- ifelse(Y == J + 1, log(p0 + (1 - p0) * logistic(Xb) * logistic(Xg)^J), 
+        ifelse(Y == J & Tr == 0, log(p0 + (1 - p0) * logistic(Xg)^J),  
+          ifelse(Y == 0 & Tr == 1, log((1 - p0) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J), 
+        ifelse(Y %in% 1:J & Tr == 1, log(
+          (1 - p0) * (logistic(Xb) * choose(J, Y-1) * logistic(Xg)^(Y-1) * (1 - logistic(Xg))^(J-Y+1) + 
+            (1 - logistic(Xb)) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J-Y))), 
+          log((1 - p0) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J-Y))))))
+     
+     sum(lliks) 
+
+    }
+
+    topcodeE <- function(formula, data, treat, J, p0, params) {
+      
+      mf <- model.frame(formula, data)
+      n  <- nrow(mf)
+
+      Y  <- model.response(mf)
+      X  <- model.matrix(formula, data)
+      Tr <- data[row.names(mf), treat]
+      k  <- ncol(X)
+      beta <- params[1:k]
+      gamma <- params[(k+1):(2*k)]
+
+      Xb <- X %*% beta
+      Xg <- X %*% gamma
+
+      # probability of top coding error
+      xi <- ifelse(Y == J + 1, 
+        p0/(p0 * (1 - logistic(Xb) * logistic(Xg)^J) + logistic(Xb)*logistic(Xg)^J), 
+          ifelse(Tr == 0 & Y == J, 
+            p0/(p0 * (1 - logistic(Xg)^J) + logistic(Xg)^J), 
+              0
+            )
+        )
+
+      # probability of sensitive trait
+      eta <- ifelse(Tr == 1 & Y == 0, 0,
+        ifelse(Y == J + 1, 
+          ((1-p0) * logistic(Xb) * logistic(Xg)^J + p0 * logistic(Xb))/
+            (p0 + (1-p0)*logistic(Xb)*logistic(Xg)^J),
+          logistic(Xb) * choose(J, Y-1) * logistic(Xg)^(Y-1) * (1 - logistic(Xg))^(J-Y+1)/ 
+            (logistic(Xb) * choose(J, Y-1) * logistic(Xg)^(Y-1) * (1 - logistic(Xg))^(J-Y+1) + 
+              (1 - logistic(Xb)) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J - Y))
+          )
+        )
+
+      eta <- ifelse(Tr == 0, 0, eta)
+
+      # latent number of control items
+      yzeta0 <- ifelse(Tr == 0 & Y == J, 
+        J * logistic(Xg)^J/(p0 * (1-logistic(Xg)^J) + logistic(Xg)^J), 
+          ifelse(T == 0 & Y < J, Y, 0))
+
+      yzeta0y <- rep(0, n)
+      for (y in 1:(J - 1)) {
+        tmp <- ifelse(Tr == 0 & Y == J, 
+          y * p0 * choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J - y)/
+            (p0 * (1 - logistic(Xg)^J) + logistic(Xg)^J), 
+              ifelse(Tr == 0 & Y == y, y, 0))
+        yzeta0y <- yzeta0y + tmp
+      }
+
+      yzeta1J <- ifelse(Tr == 1 & Y == J + 1, 
+        J * ((1-p0) * logistic(Xb) * logistic(Xg)^J + p0*logistic(Xg)^J)/(p0 + (1-p0)*logistic(Xb)*logistic(Xg)^J), 
+          ifelse(Tr == 1 & Y == J, 
+        J * (1 - logistic(Xb)) * logistic(Xg)^J/
+          ((1 - logistic(Xb)) * logistic(Xg)^J + logistic(Xb) * J * logistic(Xg)^(J-1) * (1 - logistic(Xg))), 
+            0))
+
+      yzeta1y <- rep(0, n)
+      for (y in 1:(J - 1)) {
+        tmp <- ifelse(Tr == 1 & Y == y + 1, 
+          y * logistic(Xb)*choose(J, Y-1)*logistic(Xg)^(Y-1)*(1-logistic(Xg))^(J-Y+1)/
+          (logistic(Xb)*choose(J, Y-1)*logistic(Xg)^(Y-1)*(1-logistic(Xg))^(J-Y+1) + 
+            (1-logistic(Xb))*choose(J, Y)*logistic(Xg)^Y*(1-logistic(Xg))^(J-Y)),
+          ifelse(Tr == 1 & Y == y, 
+            y * (1-logistic(Xb))*choose(J, Y)*logistic(Xg)^Y*(1-logistic(Xg))^(J-Y)/
+          ((1-logistic(Xb))*choose(J, Y)*logistic(Xg)^Y*(1-logistic(Xg))^(J-Y) + 
+            logistic(Xb)*choose(J, Y-1)*logistic(Xg)^(Y-1)*(1-logistic(Xg))^(J-Y+1)), 
+          ifelse(Tr == 1 & Y == J + 1, 
+            (y * p0 * choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J - y))/
+              (p0 + (1-p0)*logistic(Xb)*logistic(Xg)^J), 
+                0)))
+        yzeta1y <- yzeta1y + tmp
+
+      }
+
+      yzeta <- yzeta0 + yzeta0y + yzeta1J + yzeta1y
+
+      return(list(xi = xi, eta = eta, yzeta = yzeta))
+      
+    }
+
+    topcodeM <- function(formula, data, treat, J, xi, eta, yzeta) {
+
+      mf <- model.frame(formula, data)
+      n  <- nrow(mf)
+
+      Y  <- model.response(mf)
+      X  <- model.matrix(formula, data)
+      Tr <- data[row.names(mf), treat]
+      k  <- ncol(X)
+
+      if (length(attr(attr(mf, "terms"), "term.labels")) == 0) {
+
+        betaX <- rbind(X[Tr == 1, ], X[Tr == 1, ])
+        betaY <- rep(0:1, each = sum(Tr))
+
+        beta.fit <- glm(betaY ~ 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
+          family = binomial("logit"), control = list(maxit = 100))
+
+        gammaX <- rbind(X, X)
+        gammaY <- rep(0:1, each = n)
+
+        gamma.fit <- glm(gammaY ~ 1, weights = c(J - yzeta, yzeta), 
+          family = binomial("logit"), control = list(maxit = 100))
+
+      } else {
+
+        betaX <- rbind(X[Tr == 1, ], X[Tr == 1, ])
+        betaY <- rep(0:1, each = sum(Tr))
+
+        beta.fit <- glm(betaY ~ betaX - 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
+          family = binomial("logit"), control = list(maxit = 100))
+
+        gammaX <- rbind(X, X)
+        gammaY <- rep(0:1, each = n)
+
+        gamma.fit <- glm(gammaY ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
+          family = binomial("logit"), control = list(maxit = 100))
+      }
+
+      return(list(beta.fit = beta.fit, gamma.fit = gamma.fit, 
+        pars = c(coef(beta.fit), coef(gamma.fit)), p0 = mean(xi)))
+
+    }
+
+    topcodeEM <- function(formula, data, treat, J, p0 = 0.05, params = NULL, eps = 1e-08, maxIter) {
+
+      mf <- model.frame(formula, data)
+      n  <- nrow(mf)
+
+      Y  <- model.response(mf)
+      X  <- model.matrix(formula, data)
+      Tr <- data[row.names(mf), treat]
+      k  <- ncol(X)
+
+      if (is.null(params)) {
+        params <- c(coef.treat.start, coef.control.start)
+      }
+
+      # if (is.null(params)) {
+      #   try(lm.fit <- ictreg(formula, data, treat, J, method = "lm"))
+      #   if(exists("lm.fit")) {
+      #     params <- c(lm.fit$par.treat, lm.fit$par.control)
+      #   } else {
+      #     params <- sample(x = c(-1, 1), size = 2*k, replace = TRUE)
+      #   }
+      # }
+
+      beta  <- params[1:k]
+      gamma <- params[(k+1):(2*k)]
+
+      Xb <- X %*% beta
+      Xg <- X %*% gamma
+
+      Estep <- topcodeE(formula, data, treat, J, p0, params)
+      Mstep <- topcodeM(formula, data, treat, J, 
+        eta = Estep$eta, yzeta = Estep$yzeta, xi = Estep$xi)
+
+      par.holder <- c(Mstep$pars, Mstep$p0)
+
+      iteration <- 1
+
+      while ((iteration == 1 | max(abs(par.holder - c(Mstep$par, Mstep$p0))) > eps) & 
+        iteration <= maxIter) {
+
+        par.holder <- c(Mstep$pars, Mstep$p0)
+
+        obs.llik0 <- obs.llik.top(all.pars = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0))), 
+          formula, data, treat, J)
+
+        Estep <- topcodeE(formula, data, treat, J, p0 = Mstep$p0, params = par.holder)
+        Mstep <- topcodeM(formula, data, treat, J, 
+          eta = Estep$eta, yzeta = Estep$yzeta, xi = Estep$xi)
+
+        obs.llik1 <- obs.llik.top(all.pars = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0))), 
+          formula, data, treat, J)
+
+        if(obs.llik1 < obs.llik0) warning("Observed-data likelihood is not monotonically increasing.")
+        iteration <- iteration + 1
+
+      }
+
+      if (iteration == maxIter) warning("Maximum number of iterations reached.")
+
+      optim.out <- optim(fn = obs.llik.top, hessian = TRUE, 
+        par = c(Mstep$pars, log(Mstep$p0/(1 - Mstep$p0))), 
+        formula = formula, data = data, treat = treat, J = J, 
+        control = list(fnscale = -1))
+
+      vcov <- vcov.flip <- solve(-optim.out$hessian)
+      std.errors <- sqrt(diag(vcov))
+      vcov.flip[(1:k), (1:k)] <- vcov[(k+1):(2*k), (k+1):(2*k)] 
+      vcov.flip[(k+1):(2*k), (k+1):(2*k)] <- vcov[(1:k), (1:k)]
+
+      return(
+        list(
+          par.treat   = Mstep$par[1:k], 
+          par.control = Mstep$par[(k+1):(2*k)],
+          se.treat    = std.errors[1:k],
+          se.control  = std.errors[(k+1):(2*k)],
+          vcov        = vcov.flip, 
+          p.est       = mean(Estep$xi),
+          p.ci        = c("lwr" = logistic(optim.out$par[2*k+1] - qnorm(0.975)*std.errors[2*k+1]),
+            "upr" = logistic(optim.out$par[2*k+1] + qnorm(0.975)*std.errors[2*k+1])), 
+          lp.est      = optim.out$par[2*k+1], 
+          lp.se       = std.errors[2*k+1], 
+          iterations  = iteration, 
+          obs.llik    = optim.out$value
+          )
+        )
+
+    }
+
+    topcode.out <- topcodeEM(formula = formula, data = data, treat = treat, J = J, maxIter = maxIter)
+    topcode.par.treat <- topcode.out$par.treat
+    topcode.par.control <- topcode.out$par.control
+    topcode.vcov <- topcode.out$vcov
+    topcode.se.treat <- topcode.out$se.treat
+    topcode.se.control <- topcode.out$se.control
+    llik.topcode <- topcode.out$obs.llik   
+    topcode.p <- topcode.out$p.est
+    topcode.p.ci <- topcode.out$p.ci
+    topcode.lp <- topcode.out$lp.est
+    topcode.lp.se <- topcode.out$lp.se
+    topcode.iter <- topcode.out$iterations
+
+
+  } 
+
+  if (error == "uniform") {
+
+    ########################
+    # UNIFORM CODING ERROR #
+    ########################
+    obs.llik.uniform <- function(all.pars, formula, data, treat, J) {
+
+      mf <- model.frame(formula, data)
+      n  <- nrow(mf)
+
+      Y  <- model.response(mf)
+      X  <- model.matrix(formula, data)
+      Tr <- data[row.names(mf), treat]
+      k  <- ncol(X)
+
+      beta <- all.pars[1:k]
+      gamma <- all.pars[(k+1):(2*k)]
+
+      Xb <- X %*% beta
+      Xg <- X %*% gamma
+
+      p0 <- logistic(all.pars[2*k + 1])
+      p1 <- logistic(all.pars[2*k + 2])
+
+      lliks <- ifelse(Y == J + 1, 
+        log((1 - p1) * logistic(Xb) * logistic(Xg)^J + p1/(J + 2)), 
+        ifelse(Y == 0 & Tr == 1, 
+          log((1 - p1) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J + p1/(J + 2)), 
+        ifelse(Y %in% 1:J & Tr == 1, 
+          log((1 - p1) * (logistic(Xb) * choose(J, Y-1) * logistic(Xg)^(Y-1) * (1 - logistic(Xg))^(J-Y+1) + 
+            (1 - logistic(Xb)) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J-Y)) + p1/(J + 2)), 
+        log((1 - p0) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J-Y) + p0/(J+1)))))
+
+      sum(lliks)
+
+    }
+
+    uniformE <- function(formula, data, treat, J, p0, p1, params) {
+
+      mf <- model.frame(formula, data)
+      n  <- nrow(mf)
+
+      Y  <- model.response(mf)
+      X  <- model.matrix(formula, data)
+      Tr <- data[row.names(mf), treat]
+      k  <- ncol(X)
+
+      beta <- params[1:k]
+      gamma <- params[(k+1):(2*k)]
+
+      Xb <- X %*% beta
+      Xg <- X %*% gamma
+
+      # probability of error
+      xi <- p1/(J + 2)/
+        (p1/(J + 2) + (1 - p1) * (logistic(Xb) * choose(J, Y - 1) * logistic(Xg)^(Y - 1) * (1 - logistic(Xg))^(J - Y + 1) + 
+            (1 - logistic(Xb)) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J - Y)))
+      xi[Y == J + 1] <- (p1/(J + 2)/(p1/(J + 2) + (1 - p1) * logistic(Xb) * logistic(Xg)^J))[Y == J + 1]
+      xi[Tr == 1 & Y == 0] <- (p1/(J + 2)/
+        (p1/(J + 2) + (1 - p1) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J))[Tr == 1 & Y == 0]
+      xi <- ifelse(Tr == 1, xi, 
+        p0/(J + 1)/(p0/(J + 1) + (1 - p0) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J - Y)))
+      
+      # probability of sensitive trait
+      eta <- ifelse(Y == J + 1, 
+         (p1/(J + 2) * logistic(Xb) + (1 - p1) * logistic(Xb) * logistic(Xg)^J)/
+          ((1 - p1) * logistic(Xb) * logistic(Xg)^J + p1/(J + 2)), 
+        ifelse(Tr == 1 & Y == 0, 
+          p1/(J + 2) * logistic(Xb)/
+           ((1 - p1) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J + p1/(J + 2)), 
+        ifelse(Tr == 1 & Y %in% 1:J, 
+          (p1/(J + 2) + (1 - p1) * choose(J, Y - 1) * logistic(Xg)^(Y - 1) * (1 - logistic(Xg))^(J - Y + 1)) * logistic(Xb)/
+            (p1/(J + 2) + (1 - p1) * (logistic(Xb) * choose(J, Y - 1) * logistic(Xg)^(Y - 1) * (1 - logistic(Xg))^(J - Y + 1) + 
+              (1 - logistic(Xb)) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J - Y))), 
+            0)
+          )
+        )
+
+      # expected values for control obs
+      yzeta0 <- Y * (p0/(J + 1) + (1 - p0)) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J - Y)/
+        (p0/(J + 1) + (1 - p0) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J - Y))
+      for (y in 0:J) {
+        yzeta0 <- yzeta0 + ifelse(Y == y, 0, y * 
+          p0/(J + 1) * choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J - y)/
+          (p0/(J + 1) + (1 - p0) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J - Y)))
+      }
+
+      # expected values for treated obs
+      yzetaJ1 <- J * p1/(J + 2) * logistic(Xg)^J/
+        ((1 - p1) * ((1 - logistic(Xb)) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J - Y) + 
+          logistic(Xb) * choose(J, Y - 1) * logistic(Xg)^(Y - 1) * (1 - logistic(Xg))^(J - Y + 1)) + 
+            p1/(J + 2))
+      yzetaJ1[Y == J + 1] <- (J * ((1 - p1) * logistic(Xb) + p1/(J + 2)) * logistic(Xg)^J/
+          (p1/(J + 2) + (1 - p1) * logistic(Xb) * logistic(Xg)^J))[Y == J + 1]
+      yzetaJ1[Tr == 1 & Y == J] <- (J * ((1 - p1) * (1 - logistic(Xb)) + p1/(J + 2)) * logistic(Xg)^J/
+          ((1 - p1) * ((1 - logistic(Xb)) * logistic(Xg)^J + 
+                logistic(Xb) * J * logistic(Xg)^(J - 1) * (1 - logistic(Xg))) + 
+                  p1/(J + 2)))[Tr == 1 & Y == J]
+      yzetaJ1[Tr == 1 & Y == 0] <- (J * p1/(J + 2) * logistic(Xg)^J/
+          (p1/(J + 2) + (1 - p1) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J))[Tr == 1 & Y == 0]
+
+      yzetay1 <- rep(0, n) 
+      for (y in 1:(J - 1)) {
+        tmp <- ifelse(Y == y + 1, 
+          y * (p1/(J + 2) + (1 - p1) * logistic(Xb)) * choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J - y)/
+              (p1/(J + 2) + (1 - p1) * (logistic(Xb) * choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J - y) + 
+                (1 - logistic(Xb)) * choose(J, y + 1) * logistic(Xg)^(y + 1) * (1 - logistic(Xg))^(J - y - 1))), 
+        ifelse(Y == y, 
+          y * (p1/(J + 2) + (1 - p1) * (1 - logistic(Xb))) * choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J - y)/
+              (p1/(J + 2) + (1 - p1) * (logistic(Xb) * choose(J, y - 1) * logistic(Xg)^(y - 1) * (1 - logistic(Xg))^(J - y + 1) + 
+                (1 - logistic(Xb)) * choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J - y))), 
+        ifelse(Y == 0, 
+          y * p1/(J + 2) * choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J - y)/
+              (p1/(J + 2) + (1 - p1) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J), 
+          y * p1/(J + 2) * choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J - y)/
+              (p1/(J + 2) + (1 - p1) * (
+                (1 - logistic(Xb)) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J - Y) + 
+                logistic(Xb) * choose(J, Y - 1) * logistic(Xg)^(Y - 1) * (1 - logistic(Xg))^(J - Y + 1)
+          )))))
+        yzetay1 <- yzetay1 + tmp
+      }
+
+      yzeta1 <- yzetaJ1 + yzetay1
+
+      yzeta <- ifelse(Tr == 0, yzeta0, yzeta1)
+
+      return(list(xi = xi, eta = eta, yzeta = yzeta))
+
+    }
+
+
+
+    uniformM <- function(formula, data, treat, J, xi, eta, yzeta) {
+
+      mf <- model.frame(formula, data)
+      n  <- nrow(mf)
+
+      Y  <- model.response(mf)
+      X  <- model.matrix(formula, data)
+      Tr <- data[row.names(mf), treat]
+      k  <- ncol(X)
+
+      if (length(attr(attr(mf, "terms"), "term.labels")) == 0) {
+
+        betaX <- rbind(X[Tr == 1, ], X[Tr == 1, ])
+        betaY <- rep(0:1, each = sum(Tr))
+
+        beta.fit <- glm(betaY ~ 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
+          family = binomial("logit"), control = list(maxit = 100))
+
+        gammaX <- rbind(X, X)
+        gammaY <- rep(0:1, each = n)
+
+        gamma.fit <- glm(gammaY ~ 1, weights = c(J - yzeta, yzeta), 
+          family = binomial("logit"), control = list(maxit = 100))
+
+      } else {
+
+        betaX <- rbind(X[Tr == 1, ], X[Tr == 1, ])
+        betaY <- rep(0:1, each = sum(Tr))
+
+        beta.fit <- glm(betaY ~ betaX - 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
+          family = binomial("logit"), control = list(maxit = 100))
+
+        gammaX <- rbind(X, X)
+        gammaY <- rep(0:1, each = n)
+
+        gamma.fit <- glm(gammaY ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
+          family = binomial("logit"), control = list(maxit = 100))
+      }
+
+      return(list(beta.fit = beta.fit, gamma.fit = gamma.fit, 
+        pars = c(coef(beta.fit), coef(gamma.fit)), p0 = mean(xi[Tr==0]), p1 = mean(xi[Tr==1])))
+
+    }
+
+
+    uniformEM <- function(formula, data, treat, J, p0 = 0.05, p1 = 0.05, params = NULL, eps = 1e-08, 
+      maxIter) {
+
+      mf <- model.frame(formula, data)
+      n  <- nrow(mf)
+
+      Y  <- model.response(mf)
+      X  <- model.matrix(formula, data)
+      Tr <- data[row.names(mf), treat]
+      k  <- ncol(X)
+
+      if (is.null(params)) {
+        params <- c(coef.treat.start, coef.control.start)
+      }
+      # if (is.null(params)) {
+      #   try(lm.fit <- ictreg(formula, data, treat, J, method = "lm"))
+      #   if(exists("lm.fit")) {
+      #     params <- c(lm.fit$par.treat, lm.fit$par.control)
+      #   } else {
+      #     params <- sample(x = c(-1, 1), size = 2*k, replace = TRUE)
+      #   }
+      # }
+
+      beta  <- params[1:k]
+      gamma <- params[(k+1):(2*k)]
+
+      Xb <- X %*% beta
+      Xg <- X %*% gamma
+
+      Estep <- uniformE(formula, data, treat, J, p0, p1, params)
+      Mstep <- uniformM(formula, data, treat, J, 
+        eta = Estep$eta, yzeta = Estep$yzeta, xi = Estep$xi)
+
+      par.holder <- c(Mstep$pars, Mstep$p0, Mstep$p1)
+
+      iteration <- 1
+
+      while ((iteration == 1 | max(abs(par.holder - c(Mstep$par, Mstep$p0, Mstep$p1))) > eps) & 
+        iteration <= maxIter) {
+
+        par.holder <- c(Mstep$pars, Mstep$p0, Mstep$p1)
+
+        obs.llik0 <- obs.llik.uniform(
+          all.pars = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0)), log(Mstep$p1/(1-Mstep$p1))), 
+          formula, data, treat, J)
+
+        Estep <- uniformE(formula, data, treat, J, 
+          p0 = Mstep$p0, p1 = Mstep$p1, params = Mstep$pars)
+        Mstep <- uniformM(formula, data, treat, J, 
+          eta = Estep$eta, yzeta = Estep$yzeta, xi = Estep$xi)
+
+        obs.llik1 <- obs.llik.uniform(
+          all.pars = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0)), log(Mstep$p1/(1-Mstep$p1))), 
+          formula, data, treat, J)
+
+        if(obs.llik1 < obs.llik0) warning("Observed-data likelihood is not monotonically increasing.")
+        iteration <- iteration + 1
+
+      }
+
+      if (iteration == maxIter) warning("Maximum number of iterations reached.")
+
+      optim.out <- optim(fn = obs.llik.uniform, hessian = TRUE, 
+        par = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0)), log(Mstep$p1/(1-Mstep$p1))), 
+        formula = formula, data = data, treat = treat, J = J, 
+        control = list(fnscale = -1))
+
+      vcov <- vcov.flip <- solve(-optim.out$hessian)
+      std.errors <- sqrt(diag(vcov))
+      vcov.flip[(1:k), (1:k)] <- vcov[(k+1):(2*k), (k+1):(2*k)] 
+      vcov.flip[(k+1):(2*k), (k+1):(2*k)] <- vcov[(1:k), (1:k)]
+
+      return(
+        list(
+          par.treat   = Mstep$par[1:k], 
+          par.control = Mstep$par[(k+1):(2*k)],
+          se.treat    = std.errors[1:k],
+          se.control  = std.errors[(k+1):(2*k)],
+          vcov        = vcov.flip, 
+          p0.est      = Mstep$p0,
+          p0.ci       = c("lwr" = logistic(optim.out$par[2*k+1] - qnorm(0.975)*std.errors[2*k+1]),
+            "upr" = logistic(optim.out$par[2*k+1] + qnorm(0.975)*std.errors[2*k+1])), 
+          p1.est      = Mstep$p1,
+          p1.ci       = c("lwr" = logistic(optim.out$par[2*k+2] - qnorm(0.975)*std.errors[2*k+2]),
+            "upr" = logistic(optim.out$par[2*k+2] + qnorm(0.975)*std.errors[2*k+2])), 
+          lp0.est     = optim.out$par[2*k+1], 
+          lp0.se      = std.errors[2*k+1], 
+          lp1.est     = optim.out$par[2*k+2], 
+          lp1.se      = std.errors[2*k+2], 
+          iterations  = iteration, 
+          obs.llik    = optim.out$value
+          )
+        )
+
+    }
+
+    uniform.out <- uniformEM(formula = formula, data = data, treat = treat, J = J, maxIter = maxIter)
+    uniform.par.treat <- uniform.out$par.treat
+    uniform.par.control <- uniform.out$par.control
+    uniform.vcov <- uniform.out$vcov
+    uniform.se.treat <- uniform.out$se.treat
+    uniform.se.control <- uniform.out$se.control
+    llik.uniform <- uniform.out$obs.llik   
+    uniform.p0 <- uniform.out$p0.est
+    uniform.p0.ci <- uniform.out$p0.ci
+    uniform.lp0 <- uniform.out$lp0.est
+    uniform.lp0.se <- uniform.out$lp0.se
+    uniform.p1 <- uniform.out$p1.est
+    uniform.p1.ci <- uniform.out$p1.ci
+    uniform.lp1 <- uniform.out$lp1.est
+    uniform.lp1.se <- uniform.out$lp1.se
+    uniform.iter <- uniform.out$iterations
+
+  }
+  # end of measurement error models 
+
   # robust ml functionality 
 
   if (robust) { 
@@ -2802,6 +3361,10 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     ictrobust.par <- ictrobust.out$par
     ictrobust.vcov <- ictrobust.out$vcov
     ictrobust.se <- sqrt(diag(ictrobust.vcov))
+
+    names(ictrobust.par) <- rep(names(x.all), 2)
+    names(ictrobust.se)  <- rep(names(x.all), 2)
+
     par.control.robust <- ictrobust.par[1:ncol(x.all)]
     par.treat.robust <- ictrobust.par[(ncol(x.all)+1):(ncol(x.all)*2)]
     llik.robust <- loglik(params = ictrobust.par, J = J, Y = y.all, T = treat, X = x.all)   
@@ -3352,6 +3915,46 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
   
   }      
 
+  # measurement error models -- setting up return objects
+  if (error == "top") {
+
+    par.treat <- topcode.par.treat
+    par.control <- topcode.par.control
+    se.treat <- topcode.se.treat
+    se.control <- topcode.se.control
+    p.est <- topcode.p
+
+    return.object <- list(par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, 
+      vcov=topcode.vcov, treat.labels = treatment.labels, control.label = control.label, 
+        llik=llik.topcode, J=J, coef.names=coef.names, design = design, method = method, robust = robust, 
+          overdispersed=overdispersed, constrained=constrained, boundary = boundary, multi = multi, 
+            ceiling = ceiling, floor = floor, call = match.call(), data = data, x = x.all, y = y.all, treat = t, 
+              p.est = topcode.p, p.ci = topcode.p.ci, lp.est = topcode.lp, lp.se = topcode.lp.se)
+  
+  }      
+
+  if (error == "uniform") {
+
+    par.treat <- uniform.par.treat
+    par.control <- uniform.par.control
+    se.treat <- uniform.se.treat
+    se.control <- uniform.se.control
+    p0.est <- uniform.p0
+    p1.est <- uniform.p1
+    p0.est <- uniform.p0
+    p1.est <- uniform.p1
+
+    return.object <- list(par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, 
+      vcov=uniform.vcov, treat.labels = treatment.labels, control.label = control.label, 
+        llik=llik.uniform, J=J, coef.names=coef.names, design = design, method = method, robust = robust, 
+          overdispersed=overdispersed, constrained=constrained, boundary = boundary, multi = multi, 
+            ceiling = ceiling, floor = floor, call = match.call(), data = data, x = x.all, y = y.all, treat = t, 
+      p0.est = uniform.p0, p0.ci = uniform.p0.ci, lp0.est = uniform.lp0, lp0.se = uniform.lp0.se, 
+        p1.est = uniform.p1, p1.ci = uniform.p1.ci, lp1.est = uniform.lp1, lp1.se = uniform.lp1.se)
+
+  
+  }      
+
   # auxiliary data functionality -- setting up return object
   return.object$aux <- aux.check 
 
@@ -3362,7 +3965,14 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     return.object$J.stat <- round(J.stat, 4)
     return.object$overid.p <- overid.p
   }
+
+
+  return.object$error <- error
   
+  if (error == "top") {
+    return.object$p.est <- p.est
+  }
+
   class(return.object) <- "ictreg"
   
   return.object
@@ -3401,6 +4011,15 @@ print.ictreg <- function(x, ...){
   # auxiliary data functionality -- print details
   if (x$aux) cat("Incorporating ", x$nh, " auxiliary moment(s). Weighting method: ", x$wm, ".\n", 
     "The overidentification test statistic was: ", x$J.stat, " (p < ", x$overid.p, ")", ".\n", sep = "")
+
+  # measurement error models -- print details
+  if (x$error == "top") cat("Estimated proportion of top-coded respondents: ", x$p.est, ". 95% CI: (", 
+    round(x$p.ci[1], 6), ", ", round(x$p.ci[2], 6), ").\n", sep = "")
+
+  if (x$error == "uniform") cat("Estimated proportion of respondents with uniform error (control): ", x$p0.est, ". 95% CI: (", 
+    round(x$p0.ci[1], 6), ", ", round(x$p0.ci[2], 6), ").\n", 
+    "Estimated proportion of respondents with uniform error (treated): ", x$p1.est, ". 95% CI: (", 
+    round(x$p1.ci[1], 6), ", ", round(x$p1.ci[2], 6), ").\n", sep = "")
 
   invisible(x)
   
@@ -4621,8 +5240,18 @@ print.summary.ictreg <- function(x, ...){
   cat(treat.print, sep ="")
   cat(" and the control group by '", x$control.label, "'.\n\n", sep = "")
   
+  # auxiliary data functionality
   if (x$aux) cat("Incorporating ", x$nh, " auxiliary moment(s). Weighting method: ", x$wm, ".\n", 
     "The overidentification test statistic was: ", x$J.stat, " (p < ", x$overid.p, ")", ".\n", sep = "")
+
+  # measurement error models
+  if (x$error == "top") cat("Estimated proportion of top-coded respondents: ", x$p.est, ". 95% CI: (", 
+    round(x$p.ci[1], 6), ", ", round(x$p.ci[2], 6), ").\n", sep = "")
+
+  if (x$error == "uniform") cat("Estimated proportion of respondents with uniform error (control): ", x$p0.est, ". 95% CI: (", 
+    round(x$p0.ci[1], 6), ", ", round(x$p0.ci[2], 6), ").\n", 
+    "Estimated proportion of respondents with uniform error (treated): ", x$p1.est, ". 95% CI: (", 
+    round(x$p1.ci[1], 6), ", ", round(x$p1.ci[2], 6), ").\n", sep = "")
 
   invisible(x)
   
