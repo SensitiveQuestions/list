@@ -2619,13 +2619,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         betaX <- rbind(X[Tr == 1, ], X[Tr == 1, ])
         betaY <- rep(0:1, each = sum(Tr))
 
-        beta.fit <- glm(betaY ~ 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
+        beta.fit <- glm(cbind(betaY, 1 - betaY) ~ 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
           family = binomial("logit"), control = list(maxit = 100))
 
         gammaX <- rbind(X, X)
         gammaY <- rep(0:1, each = n)
 
-        gamma.fit <- glm(gammaY ~ 1, weights = c(J - yzeta, yzeta), 
+        gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
           family = binomial("logit"), control = list(maxit = 100))
 
       } else {
@@ -2633,13 +2633,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         betaX <- rbind(X[Tr == 1, ], X[Tr == 1, ])
         betaY <- rep(0:1, each = sum(Tr))
 
-        beta.fit <- glm(betaY ~ betaX - 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
+        beta.fit <- glm(cbind(betaY, 1 - betaY) ~ betaX - 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
           family = binomial("logit"), control = list(maxit = 100))
 
         gammaX <- rbind(X, X)
         gammaY <- rep(0:1, each = n)
 
-        gamma.fit <- glm(gammaY ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
+        gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
           family = binomial("logit"), control = list(maxit = 100))
       }
 
@@ -2899,13 +2899,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         betaX <- rbind(X[Tr == 1, ], X[Tr == 1, ])
         betaY <- rep(0:1, each = sum(Tr))
 
-        beta.fit <- glm(betaY ~ 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
+        beta.fit <- glm(cbind(betaY, 1 - betaY) ~ 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
           family = binomial("logit"), control = list(maxit = 100))
 
         gammaX <- rbind(X, X)
         gammaY <- rep(0:1, each = n)
 
-        gamma.fit <- glm(gammaY ~ 1, weights = c(J - yzeta, yzeta), 
+        gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
           family = binomial("logit"), control = list(maxit = 100))
 
       } else {
@@ -2913,13 +2913,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         betaX <- rbind(X[Tr == 1, ], X[Tr == 1, ])
         betaY <- rep(0:1, each = sum(Tr))
 
-        beta.fit <- glm(betaY ~ betaX - 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
+        beta.fit <- glm(cbind(betaY, 1 - betaY) ~ betaX - 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
           family = binomial("logit"), control = list(maxit = 100))
 
         gammaX <- rbind(X, X)
         gammaY <- rep(0:1, each = n)
 
-        gamma.fit <- glm(gammaY ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
+        gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
           family = binomial("logit"), control = list(maxit = 100))
       }
 
@@ -3929,7 +3929,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         llik=llik.topcode, J=J, coef.names=coef.names, design = design, method = method, robust = robust, 
           overdispersed=overdispersed, constrained=constrained, boundary = boundary, multi = multi, 
             ceiling = ceiling, floor = floor, call = match.call(), data = data, x = x.all, y = y.all, treat = t, 
-              p.est = topcode.p, p.ci = topcode.p.ci, lp.est = topcode.lp, lp.se = topcode.lp.se)
+              p.est = topcode.p, p.ci = topcode.p.ci, lp.est = topcode.lp, lp.se = topcode.lp.se, iters = topcode.iter)
   
   }      
 
@@ -3950,7 +3950,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
           overdispersed=overdispersed, constrained=constrained, boundary = boundary, multi = multi, 
             ceiling = ceiling, floor = floor, call = match.call(), data = data, x = x.all, y = y.all, treat = t, 
       p0.est = uniform.p0, p0.ci = uniform.p0.ci, lp0.est = uniform.lp0, lp0.se = uniform.lp0.se, 
-        p1.est = uniform.p1, p1.ci = uniform.p1.ci, lp1.est = uniform.lp1, lp1.se = uniform.lp1.se)
+        p1.est = uniform.p1, p1.ci = uniform.p1.ci, lp1.est = uniform.lp1, lp1.se = uniform.lp1.se, iters = uniform.iter)
 
   
   }      
