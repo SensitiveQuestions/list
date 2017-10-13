@@ -2487,7 +2487,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
   } # end modified design
   
   # measurement error models
-  if (error == "top") {
+  if (error == "topcode") {
 
     ####################
     # TOP CODING ERROR #
@@ -2557,12 +2557,11 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
           )
         )
 
-      eta <- ifelse(Tr == 0, 0, eta)
+      # eta <- ifelse(Tr == 0, 0, eta)
 
       # latent number of control items
       yzeta0 <- ifelse(Tr == 0 & Y == J, 
-        J * logistic(Xg)^J/(p0 * (1-logistic(Xg)^J) + logistic(Xg)^J), 
-          ifelse(T == 0 & Y < J, Y, 0))
+        J * logistic(Xg)^J/(p0 * (1-logistic(Xg)^J) + logistic(Xg)^J), 0)
 
       yzeta0y <- rep(0, n)
       for (y in 1:(J - 1)) {
@@ -2662,20 +2661,15 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         params <- c(coef.treat.start, coef.control.start)
       }
 
-      # if (is.null(params)) {
-      #   try(lm.fit <- ictreg(formula, data, treat, J, method = "lm"))
-      #   if(exists("lm.fit")) {
-      #     params <- c(lm.fit$par.treat, lm.fit$par.control)
-      #   } else {
-      #     params <- sample(x = c(-1, 1), size = 2*k, replace = TRUE)
-      #   }
-      # }
-
       beta  <- params[1:k]
       gamma <- params[(k+1):(2*k)]
 
       Xb <- X %*% beta
       Xg <- X %*% gamma
+
+      Estep0 <- topcodeE(formula, data, treat, J, p0, params)
+      Mstep0 <- topcodeM(formula, data, treat, J, 
+        eta = Estep0$eta, yzeta = Estep0$yzeta, xi = Estep0$xi)
 
       Estep <- topcodeE(formula, data, treat, J, p0, params)
       Mstep <- topcodeM(formula, data, treat, J, 
@@ -2799,22 +2793,21 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       Tr <- data[row.names(mf), treat]
       k  <- ncol(X)
 
-      beta <- params[1:k]
+      beta  <- params[1:k]
       gamma <- params[(k+1):(2*k)]
 
       Xb <- X %*% beta
       Xg <- X %*% gamma
 
       # probability of error
-      xi <- p1/(J + 2)/
-        (p1/(J + 2) + (1 - p1) * (logistic(Xb) * choose(J, Y - 1) * logistic(Xg)^(Y - 1) * (1 - logistic(Xg))^(J - Y + 1) + 
-            (1 - logistic(Xb)) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J - Y)))
-      xi[Y == J + 1] <- (p1/(J + 2)/(p1/(J + 2) + (1 - p1) * logistic(Xb) * logistic(Xg)^J))[Y == J + 1]
-      xi[Tr == 1 & Y == 0] <- (p1/(J + 2)/
-        (p1/(J + 2) + (1 - p1) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J))[Tr == 1 & Y == 0]
-      xi <- ifelse(Tr == 1, xi, 
-        p0/(J + 1)/(p0/(J + 1) + (1 - p0) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J - Y)))
-      
+      xi <- ifelse(Y == J + 1, p1/(J+2)/(p1/(J+2) + (1-p1) * logistic(Xb) * logistic(Xg)^J), 
+        ifelse(Tr == 1 & Y == 0, p1/(J+2)/(p1/(J+2) + (1-p1) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J), 
+          ifelse(Tr == 1 & Y %in% 1:J, 
+            p1/(J+2)/(p1/(J+2) + (1-p1) * (logistic(Xb) * choose(J, Y-1) * logistic(Xg)^(Y-1) * 
+              (1 - logistic(Xg))^(J-Y+1) + (1 - logistic(Xb)) * choose(J, Y) * logistic(Xg)^Y * 
+                (1 - logistic(Xg))^(J-Y))), 
+            p0/(J+1)/(p0/(J+1) + (1-p0) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J-Y)))))
+
       # probability of sensitive trait
       eta <- ifelse(Y == J + 1, 
          (p1/(J + 2) * logistic(Xb) + (1 - p1) * logistic(Xb) * logistic(Xg)^J)/
@@ -2840,37 +2833,37 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       }
 
       # expected values for treated obs
-      yzetaJ1 <- J * p1/(J + 2) * logistic(Xg)^J/
-        ((1 - p1) * ((1 - logistic(Xb)) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J - Y) + 
-          logistic(Xb) * choose(J, Y - 1) * logistic(Xg)^(Y - 1) * (1 - logistic(Xg))^(J - Y + 1)) + 
-            p1/(J + 2))
-      yzetaJ1[Y == J + 1] <- (J * ((1 - p1) * logistic(Xb) + p1/(J + 2)) * logistic(Xg)^J/
-          (p1/(J + 2) + (1 - p1) * logistic(Xb) * logistic(Xg)^J))[Y == J + 1]
-      yzetaJ1[Tr == 1 & Y == J] <- (J * ((1 - p1) * (1 - logistic(Xb)) + p1/(J + 2)) * logistic(Xg)^J/
-          ((1 - p1) * ((1 - logistic(Xb)) * logistic(Xg)^J + 
-                logistic(Xb) * J * logistic(Xg)^(J - 1) * (1 - logistic(Xg))) + 
-                  p1/(J + 2)))[Tr == 1 & Y == J]
-      yzetaJ1[Tr == 1 & Y == 0] <- (J * p1/(J + 2) * logistic(Xg)^J/
-          (p1/(J + 2) + (1 - p1) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J))[Tr == 1 & Y == 0]
+      yzetaJ1 <- J * ifelse(Y == J + 1, ((1-p1) * logistic(Xb) * logistic(Xg)^J + p1/(J+2) * logistic(Xg)^J)/
+        (p1/(J+2) + (1-p1) * logistic(Xb) * logistic(Xg)^J), 
+          ifelse(Tr == 1 & Y == J, ((1-p1) * (1 - logistic(Xb)) * logistic(Xg)^J + p1/(J+2) * logistic(Xg)^J)/
+            (p1/(J+2) + (1-p1) * (logistic(Xb) * J * logistic(Xg)^(J-1) * (1 - logistic(Xg)) + 
+              (1 - logistic(Xb)) * logistic(Xg)^J)), 
+          ifelse(Tr == 1 & Y == 0, (p1/(J+2) * logistic(Xg)^J)/ 
+            (p1/(J+2) + (1-p1) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J), 
+            ifelse(Tr == 1 & Y %in% 1:(J-1), p1/(J+2) * logistic(Xg)^J/
+        (p1/(J+2) + (1-p1) * ((1 - logistic(Xb)) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J - Y) + 
+          logistic(Xb) * choose(J, Y-1) * logistic(Xg)^(Y-1) * (1 - logistic(Xg))^(J-Y+1))), 
+              0))))
 
       yzetay1 <- rep(0, n) 
       for (y in 1:(J - 1)) {
-        tmp <- ifelse(Y == y + 1, 
+        tmp <- ifelse(Tr == 1 & Y == y + 1, 
           y * (p1/(J + 2) + (1 - p1) * logistic(Xb)) * choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J - y)/
               (p1/(J + 2) + (1 - p1) * (logistic(Xb) * choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J - y) + 
                 (1 - logistic(Xb)) * choose(J, y + 1) * logistic(Xg)^(y + 1) * (1 - logistic(Xg))^(J - y - 1))), 
-        ifelse(Y == y, 
+        ifelse(Tr == 1 & Y == y, 
           y * (p1/(J + 2) + (1 - p1) * (1 - logistic(Xb))) * choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J - y)/
               (p1/(J + 2) + (1 - p1) * (logistic(Xb) * choose(J, y - 1) * logistic(Xg)^(y - 1) * (1 - logistic(Xg))^(J - y + 1) + 
                 (1 - logistic(Xb)) * choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J - y))), 
-        ifelse(Y == 0, 
+        ifelse(Tr == 1 & Y == 0, 
           y * p1/(J + 2) * choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J - y)/
               (p1/(J + 2) + (1 - p1) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J), 
+        ifelse(Tr == 0, 0, 
           y * p1/(J + 2) * choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J - y)/
               (p1/(J + 2) + (1 - p1) * (
                 (1 - logistic(Xb)) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J - Y) + 
                 logistic(Xb) * choose(J, Y - 1) * logistic(Xg)^(Y - 1) * (1 - logistic(Xg))^(J - Y + 1)
-          )))))
+          ))))))
         yzetay1 <- yzetay1 + tmp
       }
 
@@ -2894,6 +2887,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       Tr <- data[row.names(mf), treat]
       k  <- ncol(X)
 
+      # intercept-only models
       if (length(attr(attr(mf, "terms"), "term.labels")) == 0) {
 
         betaX <- rbind(X[Tr == 1, ], X[Tr == 1, ])
@@ -2908,6 +2902,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
           family = binomial("logit"), control = list(maxit = 100))
 
+      # models with covariates
       } else {
 
         betaX <- rbind(X[Tr == 1, ], X[Tr == 1, ])
@@ -2943,20 +2938,16 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       if (is.null(params)) {
         params <- c(coef.treat.start, coef.control.start)
       }
-      # if (is.null(params)) {
-      #   try(lm.fit <- ictreg(formula, data, treat, J, method = "lm"))
-      #   if(exists("lm.fit")) {
-      #     params <- c(lm.fit$par.treat, lm.fit$par.control)
-      #   } else {
-      #     params <- sample(x = c(-1, 1), size = 2*k, replace = TRUE)
-      #   }
-      # }
 
       beta  <- params[1:k]
       gamma <- params[(k+1):(2*k)]
 
       Xb <- X %*% beta
       Xg <- X %*% gamma
+
+      Estep0 <- uniformE(formula, data, treat, J, p0, p1, params)
+      Mstep0 <- uniformM(formula, data, treat, J, 
+        eta = Estep0$eta, yzeta = Estep0$yzeta, xi = Estep0$xi)
 
       Estep <- uniformE(formula, data, treat, J, p0, p1, params)
       Mstep <- uniformM(formula, data, treat, J, 
@@ -2984,7 +2975,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
           all.pars = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0)), log(Mstep$p1/(1-Mstep$p1))), 
           formula, data, treat, J)
 
-        if(obs.llik1 < obs.llik0) warning("Observed-data likelihood is not monotonically increasing.")
+        if (obs.llik1 < obs.llik0) warning("Observed-data likelihood is not monotonically increasing.")
         iteration <- iteration + 1
 
       }
@@ -3916,7 +3907,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
   }      
 
   # measurement error models -- setting up return objects
-  if (error == "top") {
+  if (error == "topcode") {
 
     par.treat <- topcode.par.treat
     par.control <- topcode.par.control
@@ -3969,7 +3960,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
   return.object$error <- error
   
-  if (error == "top") {
+  if (error == "topcode") {
     return.object$p.est <- p.est
   }
 
@@ -4013,7 +4004,7 @@ print.ictreg <- function(x, ...){
     "The overidentification test statistic was: ", x$J.stat, " (p < ", x$overid.p, ")", ".\n", sep = "")
 
   # measurement error models -- print details
-  if (x$error == "top") cat("Estimated proportion of top-coded respondents: ", x$p.est, ". 95% CI: (", 
+  if (x$error == "topcode") cat("Estimated proportion of top-coded respondents: ", x$p.est, ". 95% CI: (", 
     round(x$p.ci[1], 6), ", ", round(x$p.ci[2], 6), ").\n", sep = "")
 
   if (x$error == "uniform") cat("Estimated proportion of respondents with uniform error (control): ", x$p0.est, ". 95% CI: (", 
@@ -5245,7 +5236,7 @@ print.summary.ictreg <- function(x, ...){
     "The overidentification test statistic was: ", x$J.stat, " (p < ", x$overid.p, ")", ".\n", sep = "")
 
   # measurement error models
-  if (x$error == "top") cat("Estimated proportion of top-coded respondents: ", x$p.est, ". 95% CI: (", 
+  if (x$error == "topcode") cat("Estimated proportion of top-coded respondents: ", x$p.est, ". 95% CI: (", 
     round(x$p.ci[1], 6), ", ", round(x$p.ci[2], 6), ").\n", sep = "")
 
   if (x$error == "uniform") cat("Estimated proportion of respondents with uniform error (control): ", x$p0.est, ". 95% CI: (", 
