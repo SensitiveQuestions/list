@@ -2619,13 +2619,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         betaY <- rep(0:1, each = sum(Tr))
 
         beta.fit <- glm(cbind(betaY, 1 - betaY) ~ 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
-          family = binomial("logit"), control = list(maxit = 100))
+          family = binomial("logit"), control = list(maxit = 5000))
 
         gammaX <- rbind(X, X)
         gammaY <- rep(0:1, each = n)
 
         gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
-          family = binomial("logit"), control = list(maxit = 100))
+          family = binomial("logit"), control = list(maxit = 5000))
 
       } else {
 
@@ -2633,13 +2633,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         betaY <- rep(0:1, each = sum(Tr))
 
         beta.fit <- glm(cbind(betaY, 1 - betaY) ~ betaX - 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
-          family = binomial("logit"), control = list(maxit = 100))
+          family = binomial("logit"), control = list(maxit = 5000))
 
         gammaX <- rbind(X, X)
         gammaY <- rep(0:1, each = n)
 
         gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
-          family = binomial("logit"), control = list(maxit = 100))
+          family = binomial("logit"), control = list(maxit = 5000))
       }
 
       return(list(beta.fit = beta.fit, gamma.fit = gamma.fit, 
@@ -2687,14 +2687,14 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         obs.llik0 <- obs.llik.top(all.pars = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0))), 
           formula, data, treat, J)
 
-        Estep <- topcodeE(formula, data, treat, J, p0 = Mstep$p0, params = par.holder)
+        Estep <- topcodeE(formula, data, treat, J, p0 = Mstep$p0, params = Mstep$pars)
         Mstep <- topcodeM(formula, data, treat, J, 
           eta = Estep$eta, yzeta = Estep$yzeta, xi = Estep$xi)
 
         obs.llik1 <- obs.llik.top(all.pars = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0))), 
           formula, data, treat, J)
 
-        if(obs.llik1 < obs.llik0) warning("Observed-data likelihood is not monotonically increasing.")
+        if(signif(obs.llik1) < signif(obs.llik0)) warning("Observed-data likelihood is not monotonically increasing.")
         iteration <- iteration + 1
 
       }
@@ -2975,7 +2975,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
           all.pars = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0)), log(Mstep$p1/(1-Mstep$p1))), 
           formula, data, treat, J)
 
-        if (obs.llik1 < obs.llik0) warning("Observed-data likelihood is not monotonically increasing.")
+        if (signif(obs.llik1) < signif(obs.llik0)) warning("Observed-data likelihood is not monotonically increasing.")
         iteration <- iteration + 1
 
       }
