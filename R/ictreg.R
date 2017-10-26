@@ -553,157 +553,239 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     
   } else if (design=="standard" & method != "lm") {
     
-    ##
-    # Run two-step estimator
-    
-    vcov.twostep.std <- function(treat.fit, control.fit, J, y, treat, x) {
-	
-      n <- length(y)
-      y1 <- y[treat == 1]
-      y0 <- y[treat == 0]
-      x1 <- x[treat == 1, , drop = FALSE]
-      x0 <- x[treat == 0, , drop = FALSE]
-      delta <- coef(treat.fit)
-      gamma <- coef(control.fit)
+    if (error == "none") {
       
-      m1 <- c((y1 - J*logistic(x1 %*% gamma) - logistic(x1 %*% delta)) *
-              logistic(x1 %*% delta)/(1+exp(x1 %*% delta))) * x1
-      m0 <- c((y0 - J*logistic(x0 %*% gamma)) * J *
-              logistic(x0 %*% gamma)/(1+exp(x0 %*% gamma))) * x0
-      Em1 <- t(m1) %*% m1 / n
-      Em0 <- t(m0) %*% m0 / n
-      F <- adiag(Em1, Em0)
-      Gtmp <- c(logistic(x1 %*% delta)/(1 + exp(x1 %*% delta))) * x1
-      G1 <- -t(Gtmp) %*% Gtmp / n  
-      Gtmp <- c(sqrt(J*logistic(x1 %*% delta)*logistic(x1 %*% gamma)/
-                     ((1 + exp(x1 %*% delta))*(1 + exp(x1 %*% gamma))))) * x1
-      G2 <- -t(Gtmp) %*% Gtmp / n
-      Gtmp <- c(J*logistic(x0 %*% gamma)/(1 + exp(x0 %*% gamma))) * x0
-      G3 <- -t(Gtmp) %*% Gtmp / n
-      invG1 <- solve(G1, tol = 1e-20)
-      invG3 <- solve(G3, tol = 1e-20)
-      invG <- rbind(cbind(invG1, - invG1 %*% G2 %*% invG3),
-                    cbind(matrix(0, ncol = ncol(G1), nrow = nrow(G3)), invG3))
+      ##
+      # Run two-step estimator
       
-      return(invG %*% F %*% t(invG) / n)
-      
-    }
-    
-    ## fit to the control group
-    fit.glm.control <- glm(cbind(y.control, J-y.control) ~ x.control - 1,
-                           family = binomial(logit), weights = w.control)
-    
-    coef.glm.control <- coef(fit.glm.control)
-    names(coef.glm.control) <- paste("beta", 1:length(coef.glm.control), sep = "")
-
-    if(fit.start == "nls") {
-      if(is.null(ictreg.call$control)){
-        fit.control <- nls( as.formula(paste("I(y.control/J) ~ logistic(x.control %*% c(",
-                                             paste(paste("beta", 1:length(coef.glm.control),
-                                                         sep=""), collapse= ","), "))")) ,
-                           start = coef.glm.control, weights = w.control, control =
-                           nls.control(maxiter=maxIter, warnOnly=TRUE), ... = ...)
-      } else {
-        fit.control <- nls( as.formula(paste("I(y.control/J) ~ logistic(x.control %*% c(",
-                                             paste(paste("beta", 1:length(coef.glm.control),
-                                                         sep=""), collapse= ","), "))")) ,
-                           weights = w.control,
-                           start = coef.glm.control, ... = ...)
+      vcov.twostep.std <- function(treat.fit, control.fit, J, y, treat, x) {
+        
+        n <- length(y)
+        y1 <- y[treat == 1]
+        y0 <- y[treat == 0]
+        x1 <- x[treat == 1, , drop = FALSE]
+        x0 <- x[treat == 0, , drop = FALSE]
+        delta <- coef(treat.fit)
+        gamma <- coef(control.fit)
+        
+        m1 <- c((y1 - J*logistic(x1 %*% gamma) - logistic(x1 %*% delta)) *
+                  logistic(x1 %*% delta)/(1+exp(x1 %*% delta))) * x1
+        m0 <- c((y0 - J*logistic(x0 %*% gamma)) * J *
+                  logistic(x0 %*% gamma)/(1+exp(x0 %*% gamma))) * x0
+        Em1 <- t(m1) %*% m1 / n
+        Em0 <- t(m0) %*% m0 / n
+        F <- adiag(Em1, Em0)
+        Gtmp <- c(logistic(x1 %*% delta)/(1 + exp(x1 %*% delta))) * x1
+        G1 <- -t(Gtmp) %*% Gtmp / n  
+        Gtmp <- c(sqrt(J*logistic(x1 %*% delta)*logistic(x1 %*% gamma)/
+                         ((1 + exp(x1 %*% delta))*(1 + exp(x1 %*% gamma))))) * x1
+        G2 <- -t(Gtmp) %*% Gtmp / n
+        Gtmp <- c(J*logistic(x0 %*% gamma)/(1 + exp(x0 %*% gamma))) * x0
+        G3 <- -t(Gtmp) %*% Gtmp / n
+        invG1 <- solve(G1, tol = 1e-20)
+        invG3 <- solve(G3, tol = 1e-20)
+        invG <- rbind(cbind(invG1, - invG1 %*% G2 %*% invG3),
+                      cbind(matrix(0, ncol = ncol(G1), nrow = nrow(G3)), invG3))
+        
+        return(invG %*% F %*% t(invG) / n)
+        
       }
       
-      fit.control.coef <- summary(fit.control)$parameters[,1]
+      ## fit to the control group
+      fit.glm.control <- glm(cbind(y.control, J-y.control) ~ x.control - 1,
+                             family = binomial(logit), weights = w.control)
       
-    } else if (fit.start == "glm") {
-      fit.control <- fit.glm.control
-      fit.control.coef <- coef(fit.glm.control)
-    } else if (fit.start == "lm") {
-      fit.control <- lm(y.control ~ x.control - 1, weights = w.control)
-      fit.control.coef <- coef(fit.glm.control)
-    }
-    
-    fit.treat <- vcov.nls <- se.twostep <- par.treat.nls.std <- list()
-
-    for(m in 1:length(treatment.values)){
-
-      curr.treat <- t[t!=0] == treatment.values[m]
-
-      x.treatment.curr <- x.treatment[curr.treat, , drop = F]
-      w.treatment.curr <- w.treatment[curr.treat]
-
-      ## calculate the adjusted outcome    
-      y.treatment.pred <- y.treatment[curr.treat] - logistic(x.treatment.curr
-                                                             %*% fit.control.coef)*J
+      coef.glm.control <- coef(fit.glm.control)
+      names(coef.glm.control) <- paste("beta", 1:length(coef.glm.control), sep = "")
       
-      ## fit to the treated		
-      y.treatment.pred.temp <- ifelse(y.treatment.pred>1, 1, y.treatment.pred)
-      y.treatment.pred.temp <- ifelse(y.treatment.pred.temp<0, 0, y.treatment.pred.temp)
-      
-      alpha <- mean(y.treatment.pred.temp)
-      
-      y.treatment.start <- ifelse(y.treatment.pred.temp >
-                                  quantile(y.treatment.pred.temp, alpha), 1, 0)
-      
-      try(fit.glm.treat <- glm(cbind(y.treatment.start, 1 - y.treatment.start) ~ x.treatment.curr - 1,
-                               family = binomial(logit), weights = w.treatment.curr), silent = F)
-      try(coef.glm.treat <- coef(fit.glm.treat), silent = T)
-      try(names(coef.glm.treat) <- paste("beta", 1:length(coef.glm.treat), sep = ""), silent = T)
-
       if(fit.start == "nls") {
-        if(exists("coef.glm.treat")) {
-          if (is.null(ictreg.call$control)) {
-            fit.treat[[m]] <- nls( as.formula(paste("y.treatment.pred ~ logistic(x.treatment.curr %*% c(",
-                                                    paste(paste("beta", 1:length(coef.glm.treat),
-                                                                sep=""), collapse= ","), "))")) ,
-                                  start = coef.glm.treat, weights = w.treatment.curr, control =
-                                  nls.control(maxiter = maxIter, warnOnly = TRUE), ... = ...)
-          } else {
-            fit.treat[[m]] <- nls( as.formula(paste("y.treatment.pred ~ logistic(x.treatment.curr %*% c(",
-                                                    paste(paste("beta", 1:length(coef.glm.treat),
-                                                                sep=""), collapse= ","), "))")) ,
-                                  start = coef.glm.treat, weights = w.treatment.curr, ... = ...)
-          }
+        if(is.null(ictreg.call$control)){
+          fit.control <- nls( as.formula(paste("I(y.control/J) ~ logistic(x.control %*% c(",
+                                               paste(paste("beta", 1:length(coef.glm.control),
+                                                           sep=""), collapse= ","), "))")) ,
+                              start = coef.glm.control, weights = w.control, control =
+                                nls.control(maxiter=maxIter, warnOnly=TRUE), ... = ...)
         } else {
-          if (is.null(ictreg.call$control)) {
-            fit.treat[[m]] <- nls( as.formula(paste("y.treatment.pred ~ logistic(x.treatment.curr %*% c(",
-                                                    paste(paste("beta", 1:length(coef.glm.treat),
-                                                                sep=""), collapse= ","), "))")),
-                                  weights = w.treatment.curr,
-                                  control = nls.control(maxiter = maxIter, warnOnly = TRUE),
-                                  ... = ...)
-          } else {
-            fit.treat[[m]] <- nls( as.formula(paste("y.treatment.pred ~ logistic(x.treatment.curr %*% c(",
-                                                    paste(paste("beta", 1:length(coef.glm.treat),
-                                                                sep=""), collapse= ","), "))")) ,
-                                  weights = w.treatment.curr,
-                                  ... = ...)
-          }
+          fit.control <- nls( as.formula(paste("I(y.control/J) ~ logistic(x.control %*% c(",
+                                               paste(paste("beta", 1:length(coef.glm.control),
+                                                           sep=""), collapse= ","), "))")) ,
+                              weights = w.control,
+                              start = coef.glm.control, ... = ...)
         }
         
+        fit.control.coef <- summary(fit.control)$parameters[,1]
+        
       } else if (fit.start == "glm") {
-        fit.treat[[m]] <- fit.glm.treat
+        fit.control <- fit.glm.control
+        fit.control.coef <- coef(fit.glm.control)
       } else if (fit.start == "lm") {
-        fit.treat[[m]] <- lm(y.treatment.pred ~ x.treatment.curr - 1, weights = w.treatment.curr)
+        fit.control <- lm(y.control ~ x.control - 1, weights = w.control)
+        fit.control.coef <- coef(fit.glm.control)
       }
-
-      sample.curr <- t==0 | t==treatment.values[m]
       
-      vcov.nls[[m]] <- vcov.twostep.std(fit.treat[[m]], fit.control, J,
-                               y.all[sample.curr], t[sample.curr]>0, x.all[sample.curr, , drop = FALSE])
-
-      se.twostep[[m]] <- sqrt(diag(vcov.nls[[m]]))
-      par.treat.nls.std[[m]] <- coef(fit.treat[[m]])
+      fit.treat <- vcov.nls <- se.twostep <- par.treat.nls.std <- list()
+      
+      for(m in 1:length(treatment.values)){
+        
+        curr.treat <- t[t!=0] == treatment.values[m]
+        
+        x.treatment.curr <- x.treatment[curr.treat, , drop = F]
+        w.treatment.curr <- w.treatment[curr.treat]
+        
+        ## calculate the adjusted outcome    
+        y.treatment.pred <- y.treatment[curr.treat] - logistic(x.treatment.curr
+                                                               %*% fit.control.coef)*J
+        
+        ## fit to the treated		
+        y.treatment.pred.temp <- ifelse(y.treatment.pred>1, 1, y.treatment.pred)
+        y.treatment.pred.temp <- ifelse(y.treatment.pred.temp<0, 0, y.treatment.pred.temp)
+        
+        alpha <- mean(y.treatment.pred.temp)
+        
+        y.treatment.start <- ifelse(y.treatment.pred.temp >
+                                      quantile(y.treatment.pred.temp, alpha), 1, 0)
+        
+        try(fit.glm.treat <- glm(cbind(y.treatment.start, 1 - y.treatment.start) ~ x.treatment.curr - 1,
+                                 family = binomial(logit), weights = w.treatment.curr), silent = F)
+        try(coef.glm.treat <- coef(fit.glm.treat), silent = T)
+        try(names(coef.glm.treat) <- paste("beta", 1:length(coef.glm.treat), sep = ""), silent = T)
+        
+        if(fit.start == "nls") {
+          if(exists("coef.glm.treat")) {
+            if (is.null(ictreg.call$control)) {
+              fit.treat[[m]] <- nls( as.formula(paste("y.treatment.pred ~ logistic(x.treatment.curr %*% c(",
+                                                      paste(paste("beta", 1:length(coef.glm.treat),
+                                                                  sep=""), collapse= ","), "))")) ,
+                                     start = coef.glm.treat, weights = w.treatment.curr, control =
+                                       nls.control(maxiter = maxIter, warnOnly = TRUE), ... = ...)
+            } else {
+              fit.treat[[m]] <- nls( as.formula(paste("y.treatment.pred ~ logistic(x.treatment.curr %*% c(",
+                                                      paste(paste("beta", 1:length(coef.glm.treat),
+                                                                  sep=""), collapse= ","), "))")) ,
+                                     start = coef.glm.treat, weights = w.treatment.curr, ... = ...)
+            }
+          } else {
+            if (is.null(ictreg.call$control)) {
+              fit.treat[[m]] <- nls( as.formula(paste("y.treatment.pred ~ logistic(x.treatment.curr %*% c(",
+                                                      paste(paste("beta", 1:length(coef.glm.treat),
+                                                                  sep=""), collapse= ","), "))")),
+                                     weights = w.treatment.curr,
+                                     control = nls.control(maxiter = maxIter, warnOnly = TRUE),
+                                     ... = ...)
+            } else {
+              fit.treat[[m]] <- nls( as.formula(paste("y.treatment.pred ~ logistic(x.treatment.curr %*% c(",
+                                                      paste(paste("beta", 1:length(coef.glm.treat),
+                                                                  sep=""), collapse= ","), "))")) ,
+                                     weights = w.treatment.curr,
+                                     ... = ...)
+            }
+          }
+          
+        } else if (fit.start == "glm") {
+          fit.treat[[m]] <- fit.glm.treat
+        } else if (fit.start == "lm") {
+          fit.treat[[m]] <- lm(y.treatment.pred ~ x.treatment.curr - 1, weights = w.treatment.curr)
+        }
+        
+        sample.curr <- t==0 | t==treatment.values[m]
+        
+        vcov.nls[[m]] <- vcov.twostep.std(fit.treat[[m]], fit.control, J,
+                                          y.all[sample.curr], t[sample.curr]>0, x.all[sample.curr, , drop = FALSE])
+        
+        se.twostep[[m]] <- sqrt(diag(vcov.nls[[m]]))
+        par.treat.nls.std[[m]] <- coef(fit.treat[[m]])
+        
+      }
+      
+      if(multi == FALSE) {
+        fit.treat <- fit.treat[[1]]
+        vcov.nls <- vcov.nls[[1]]
+        se.twostep <- se.twostep[[1]]
+        par.treat.nls.std <- par.treat.nls.std[[m]]
+      }
+      
+      par.control.nls.std <- coef(fit.control)
+      
+    } else if (error == "topcode") {
+      ## NLS top-coded error model
+      
+      #\l[Y_i - pJ - T_i\{ p + (1-p) \E(Z_i \mid X_i) \}- (1-p) \E(Y_i^\ast \mid X_i) \r]^2
+      
+      sse_nls_topcoded <- function(par, J, y, treat, x){
+        pstar <- par[1]
+        p <- exp(pstar) / (1 + exp(pstar))
+        
+        k <- ncol(x)
+        coef.h <- par[2:(k + 1)]
+        coef.g <- par[(k + 2):(2 * k + 1)]
+        gX <- logistic(x %*% coef.g)
+        hX <- logistic(x %*% coef.h)
+        
+        sse <- sum((y - p * J - treat * (p + (1 - p) * gX) - (1 - p) * hX) ^ 2)
+        
+        return(sse)
+      }
+      
+      NLSfit <- optim(par = par, fn = sse_nls_topcoded, method = "BFGS", J = J, y = y.all,
+                      treat = t, x = x.all, wt = w.all, hessian = TRUE, control = list(maxit = maxIter))
+      
+      k <- ncol(x.all)
+      
+      vcov.nls - solve(-NLSfit$hessian, tol = 1e-20)
+      se.nls <- sqrt(diag(vcov.nls))
+      
+      par.treat <- NLSfit$par[(k + 3):(2 * k + 2)]
+      par.control <- NLSfit$par[3:(k + 2)]
+      se.treat <- se.nls[3:(k + 2)]
+      se.control <- se.nls[(k + 3):(2 * k + 2)]
+      
+      p <- exp(NLSfit$par[1]) / (1 + exp(NLSfit$par[1]))
+      
+    } else if (error == "uniform") {
+      
+      ## NLS uniform error model
+      
+      #\frac{p_0 (1-T_i) J}{2} + T_i \l\{\frac{p_1 (J+1)}{2} +
+      #    (1-p_1)\E(Z_i \mid X_i)\r\}  \nonumber \\
+      # + \{(1-T_i)(1 - p_0) + T_i(1-p_1)\} \E(Y_i^\ast \mid X_i)
+      
+      # For the parameter p, we use the logit transformation by defining a new parameter p* = log {p / (1-p)}.  Then, substitute p = exp(p*) / { 1 + exp(p*)} into equation 11.
+      
+      sse_nls_uniform <- function(par, J, y, treat, x){
+        p0star <- par[1]
+        p1star <- par[2]
+        p0 <- exp(p0star) / (1 + exp(p0star))
+        p1 <- exp(p1star) / (1 + exp(p1star))
+        
+        k <- ncol(x)
+        coef.h <- par[3:(k + 2)]
+        coef.g <- par[(k + 3):(2 * k + 2)]
+        gX <- logistic(x %*% coef.g)
+        hX <- logistic(x %*% coef.h)
+        
+        sse <- sum((y - ((p0 * (1 - treat) * J) / 2 + treat * ((p1 * (J + 1)) / 2 + (1 - p1) * gX) +
+                      ((1 - treat) * (1 - p0) + treat * (1 - p1)) * hX)) ^ 2)
+        
+        return(sse)
+      }
+      
+      NLSfit <- optim(par = par, fn = sse_nls_uniform, method = "BFGS", J = J, y = y.all,
+                      treat = t, x = x.all, hessian = TRUE, control = list(maxit = maxIter))
+      
+      k <- ncol(x.all)
+      vcov.nls - solve(-NLSfit$hessian, tol = 1e-20)
+      se.nls <- sqrt(diag(vcov.nls))
+      
+      par.treat <- NLSfit$par[(k + 3):(2 * k + 2)]
+      par.control <- NLSfit$par[3:(k + 2)]
+      se.treat <- se.nls[3:(k + 2)]
+      se.control <- se.nls[(k + 3):(2 * k + 2)]
+      
+      p0 <- exp(NLSfit$par[1]) / (1 + exp(NLSfit$par[1]))
+      p1 <- exp(NLSfit$par[2]) / (1 + exp(NLSfit$par[2]))
       
     }
-
-    if(multi == FALSE) {
-      fit.treat <- fit.treat[[1]]
-      vcov.nls <- vcov.nls[[1]]
-      se.twostep <- se.twostep[[1]]
-      par.treat.nls.std <- par.treat.nls.std[[m]]
-    }
-    
-    par.control.nls.std <- coef(fit.control)
-
+      
     if(method=="ml" & robust == FALSE) {
       
       if(boundary == FALSE) {
@@ -2488,7 +2570,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
   
   # measurement error models
   if (error == "topcode") {
-
+    
     ####################
     # TOP CODING ERROR #
     ####################
@@ -3669,75 +3751,129 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
   ## Set up return object
   
   if (method == "nls") {
-
-    if (multi == FALSE) {
+    
+    if (error == "topcoded") {
+      return.object <-
+        list(
+          par.treat = par.treat,
+          se.treat = se.treat,
+          par.control = par.control,
+          se.control = se.control,
+          vcov = vcov.nls,
+          p = p,
+          coef.names = coef.names,
+          J = J,
+          design = design,
+          method = method,
+          fit.start = fit.start,
+          overdispersed = overdispersed,
+          boundary = boundary,
+          multi = multi,
+          error = error,
+          data = data,
+          x = x.all,
+          y = y.all,
+          treat = t,
+          call = match.call()
+        )
+    } else if (error == "uniform"){
+      return.object <-
+        list(
+          par.treat = par.treat,
+          se.treat = se.treat,
+          par.control = par.control,
+          se.control = se.control,
+          vcov = vcov.nls,
+          p0 = p0,
+          p1 = p1,
+          coef.names = coef.names,
+          J = J,
+          design = design,
+          method = method,
+          fit.start = fit.start,
+          overdispersed = overdispersed,
+          boundary = boundary,
+          multi = multi,
+          error = error,
+          data = data,
+          x = x.all,
+          y = y.all,
+          treat = t,
+          call = match.call()
+        )
       
-      if(design=="standard")
+    } else {
+      
+      if (multi == FALSE) {
+        
+        if(design=="standard")
+          par.treat <- par.treat.nls.std
+        if(design=="modified")
+          par.treat <- par.treat.nls.mod
+        se.treat <- se.twostep[1:(length(par.treat))]
+        
+        if(design=="standard")
+          par.control <- par.control.nls.std
+        if(design=="modified")
+          par.control <- par.control.nls.mod
+        se.control <- se.twostep[(length(par.treat)+1):(length(se.twostep))]
+        
+        names(par.treat) <- names(se.treat) <- coef.names
+        
+        if (design=="standard")
+          names(par.control) <- names(se.control) <- coef.names
+        if (design=="modified")
+          names(par.control) <- names(se.control) <- rep(coef.names, J)
+        
+        sum.fit.treat <- summary(fit.treat)
+        
+        resid.se <- sum.fit.treat$sigma
+        resid.df <- sum.fit.treat$df[2]
+        
+        if(design=="standard") {
+          return.object <- list(par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, vcov=vcov.nls, resid.se=resid.se, resid.df=resid.df, coef.names=coef.names,  J=J, design = design, method = method, fit.start = fit.start, overdispersed=overdispersed, boundary = boundary, multi = multi, data = data, x = x.all, y = y.all, treat = t, call = match.call())
+          if(weighted == TRUE)
+            return.object$weights <- w.all
+          
+        } else if (design=="modified") {
+          return.object <- list(par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, vcov=vcov.twostep, resid.se=resid.se, resid.df=resid.df, coef.names=coef.names, J=J, design = design, method = method, fit.nonsensitive = fit.nonsensitive, data = data, x = x.all, y = y.all, treat = t, boundary = FALSE, multi = FALSE, call = match.call())
+          if(weighted == TRUE)
+            return.object$weights <- w.all
+          
+        }
+        
+      } else if (multi == TRUE) {
+        
         par.treat <- par.treat.nls.std
-      if(design=="modified")
-        par.treat <- par.treat.nls.mod
-      se.treat <- se.twostep[1:(length(par.treat))]
-      
-      if(design=="standard")
+        
+        se.treat <- list()
+        for (m in 1:length(treatment.values))
+          se.treat[[m]] <- se.twostep[[m]][1:(length(par.treat[[m]]))]
+        
         par.control <- par.control.nls.std
-      if(design=="modified")
-        par.control <- par.control.nls.mod
-      se.control <- se.twostep[(length(par.treat)+1):(length(se.twostep))]
-      
-      names(par.treat) <- names(se.treat) <- coef.names
-      
-      if (design=="standard")
+        se.control <- se.twostep[[1]][(length(par.treat[[1]])+1):(length(se.twostep[[1]]))]
+        
+        for (m in 1:length(treatment.values)) {
+          names(par.treat[[m]]) <- coef.names
+          names(se.treat[[m]]) <- coef.names
+        }
+        
         names(par.control) <- names(se.control) <- coef.names
-      if (design=="modified")
-        names(par.control) <- names(se.control) <- rep(coef.names, J)
-      
-      sum.fit.treat <- summary(fit.treat)
-      
-      resid.se <- sum.fit.treat$sigma
-      resid.df <- sum.fit.treat$df[2]
-      
-      if(design=="standard") {
-        return.object <- list(par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, vcov=vcov.nls, resid.se=resid.se, resid.df=resid.df, coef.names=coef.names,  J=J, design = design, method = method, fit.start = fit.start, overdispersed=overdispersed, boundary = boundary, multi = multi, data = data, x = x.all, y = y.all, treat = t, call = match.call())
+        
+        
+        resid.se <- resid.df <- rep(NA, length(treatment.values))
+        for (m in 1:length(treatment.values)) {
+          sum.fit.treat <- summary(fit.treat[[m]])
+          resid.se[m] <- sum.fit.treat$sigma
+          resid.df[m] <- sum.fit.treat$df[2]
+        }
+        
+        return.object <- list(par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, vcov=vcov.nls, treat.values = treatment.values, treat.labels = treatment.labels, control.label = control.label, resid.se=resid.se, resid.df=resid.df, J=J,  coef.names=coef.names, design = design, method = method, overdispersed=overdispersed, boundary = boundary, multi = multi, data = data, x = x.all, y = y.all, treat = t, call = match.call())
         if(weighted == TRUE)
-            return.object$weights <- w.all
-
-      } else if (design=="modified") {
-        return.object <- list(par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, vcov=vcov.twostep, resid.se=resid.se, resid.df=resid.df, coef.names=coef.names, J=J, design = design, method = method, fit.nonsensitive = fit.nonsensitive, data = data, x = x.all, y = y.all, treat = t, boundary = FALSE, multi = FALSE, call = match.call())
-        if(weighted == TRUE)
-            return.object$weights <- w.all
+          return.object$weights <- w.all
         
       }
       
-    } else if (multi == TRUE) {
-
-      par.treat <- par.treat.nls.std
-      
-      se.treat <- list()
-      for (m in 1:length(treatment.values))
-        se.treat[[m]] <- se.twostep[[m]][1:(length(par.treat[[m]]))]
-      
-      par.control <- par.control.nls.std
-      se.control <- se.twostep[[1]][(length(par.treat[[1]])+1):(length(se.twostep[[1]]))]
-      
-      for (m in 1:length(treatment.values)) {
-        names(par.treat[[m]]) <- coef.names
-        names(se.treat[[m]]) <- coef.names
-      }
-      
-      names(par.control) <- names(se.control) <- coef.names
-
-      
-      resid.se <- resid.df <- rep(NA, length(treatment.values))
-      for (m in 1:length(treatment.values)) {
-        sum.fit.treat <- summary(fit.treat[[m]])
-        resid.se[m] <- sum.fit.treat$sigma
-        resid.df[m] <- sum.fit.treat$df[2]
-      }
-      
-      return.object <- list(par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, vcov=vcov.nls, treat.values = treatment.values, treat.labels = treatment.labels, control.label = control.label, resid.se=resid.se, resid.df=resid.df, J=J,  coef.names=coef.names, design = design, method = method, overdispersed=overdispersed, boundary = boundary, multi = multi, data = data, x = x.all, y = y.all, treat = t, call = match.call())
-      if(weighted == TRUE)
-          return.object$weights <- w.all
-
     }
   }
   
