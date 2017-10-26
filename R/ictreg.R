@@ -726,12 +726,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         return(sse)
       }
       
-      NLSfit <- optim(par = par, fn = sse_nls_topcoded, method = "BFGS", J = J, y = y.all,
-                      treat = t, x = x.all, wt = w.all, hessian = TRUE, control = list(maxit = maxIter))
-      
       k <- ncol(x.all)
       
-      vcov.nls - solve(-NLSfit$hessian, tol = 1e-20)
+      NLSfit <- optim(par = runif(k*2 + 2), 
+                      fn = sse_nls_topcoded, method = "BFGS", J = J, y = y.all,
+                      treat = t, x = x.all, wt = w.all, hessian = TRUE, control = list(maxit = maxIter))
+      
+      vcov.nls <- solve(-NLSfit$hessian, tol = 1e-20)
       se.nls <- sqrt(diag(vcov.nls))
       
       par.treat <- NLSfit$par[(k + 3):(2 * k + 2)]
@@ -739,7 +740,9 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       se.treat <- se.nls[3:(k + 2)]
       se.control <- se.nls[(k + 3):(2 * k + 2)]
       
-      p <- exp(NLSfit$par[1]) / (1 + exp(NLSfit$par[1]))
+      p.est <- logistic(NLSfit$par[1])
+      p.ci <- c("lwr" = logistic(NLSfit$par[1] - qnorm(.975)*se.nls[1]),
+                "upr" = logistic(NLSfit$par[1] + qnorm(.975)*se.nls[1]))
       
     } else if (error == "uniform") {
       
@@ -769,11 +772,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         return(sse)
       }
       
-      NLSfit <- optim(par = par, fn = sse_nls_uniform, method = "BFGS", J = J, y = y.all,
+      k <- ncol(x.all)
+      
+      NLSfit <- optim(par = runif(k*2 + 2), 
+                      fn = sse_nls_uniform, method = "BFGS", J = J, y = y.all,
                       treat = t, x = x.all, hessian = TRUE, control = list(maxit = maxIter))
       
-      k <- ncol(x.all)
-      vcov.nls - solve(-NLSfit$hessian, tol = 1e-20)
+      vcov.nls <- solve(-NLSfit$hessian, tol = 1e-20)
       se.nls <- sqrt(diag(vcov.nls))
       
       par.treat <- NLSfit$par[(k + 3):(2 * k + 2)]
@@ -781,8 +786,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       se.treat <- se.nls[3:(k + 2)]
       se.control <- se.nls[(k + 3):(2 * k + 2)]
       
-      p0 <- exp(NLSfit$par[1]) / (1 + exp(NLSfit$par[1]))
-      p1 <- exp(NLSfit$par[2]) / (1 + exp(NLSfit$par[2]))
+      p0.est <- logistic(NLSfit$par[1])
+      p0.ci <- c("lwr" = logistic(NLSfit$par[1] - qnorm(.975)*se.nls[1]),
+                "upr" = logistic(NLSfit$par[1] + qnorm(.975)*se.nls[1]))
+      
+      p1.est <- logistic(NLSfit$par[2])
+      p1.ci <- c("lwr" = logistic(NLSfit$par[2] - qnorm(.975)*se.nls[2]),
+                "upr" = logistic(NLSfit$par[2] + qnorm(.975)*se.nls[2]))
       
     }
       
@@ -2569,7 +2579,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
   } # end modified design
   
   # measurement error models
-  if (error == "topcode") {
+  if (error == "topcode" & method == "ml") {
     
     ####################
     # TOP CODING ERROR #
@@ -2828,7 +2838,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
   } 
 
-  if (error == "uniform") {
+  if (error == "uniform" & method == "ml") {
 
     ########################
     # UNIFORM CODING ERROR #
@@ -3760,7 +3770,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
           par.control = par.control,
           se.control = se.control,
           vcov = vcov.nls,
-          p = p,
+          p.est = p.est,
+          p.ci = p.ci,
           coef.names = coef.names,
           J = J,
           design = design,
@@ -3784,8 +3795,10 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
           par.control = par.control,
           se.control = se.control,
           vcov = vcov.nls,
-          p0 = p0,
-          p1 = p1,
+          p0.est = p0.est,
+          p0.ci = p0.ci,
+          p1.est = p1.est,
+          p1.ci = p1.ci,
           coef.names = coef.names,
           J = J,
           design = design,
@@ -4060,7 +4073,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
   
   }      
 
-  if (error == "uniform") {
+  if (error == "uniform" & method == "ml") {
 
     par.treat <- uniform.par.treat
     par.control <- uniform.par.control
