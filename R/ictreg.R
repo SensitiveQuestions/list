@@ -707,6 +707,9 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       par.control.nls.std <- coef(fit.control)
       
     } else if (error == "topcode") {
+      
+      test <- 5
+      
       ## NLS top-coded error model
       
       #\l[Y_i - pJ - T_i\{ p + (1-p) \E(Z_i \mid X_i) \}- (1-p) \E(Y_i^\ast \mid X_i) \r]^2
@@ -721,30 +724,36 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         gX <- logistic(x %*% coef.g)
         hX <- logistic(x %*% coef.h)
         
-        sse <- sum((y - p * J - treat * (p + (1 - p) * gX) - (1 - p) * hX) ^ 2)
+        sse <- sum((y - p * J - 
+                      treat * (p + (1 - p) * mean(gX)) - 
+                      (1 - p) * J * mean(hX)) ^ 2)
         
         return(sse)
       }
       
       k <- ncol(x.all)
       
-      NLSfit <- optim(par = runif(k*2 + 2), 
+      start <- runif(k*2 + 1)
+      
+      NLSfit <- optim(par = start, 
                       fn = sse_nls_topcoded, method = "BFGS", J = J, y = y.all,
-                      treat = t, x = x.all, wt = w.all, hessian = TRUE, control = list(maxit = maxIter))
+                      treat = t, x = x.all, hessian = TRUE, control = list(maxit = maxIter))
       
       vcov.nls <- solve(-NLSfit$hessian, tol = 1e-20)
       se.nls <- sqrt(diag(vcov.nls))
       
       par.treat <- NLSfit$par[(k + 3):(2 * k + 2)]
       par.control <- NLSfit$par[3:(k + 2)]
-      se.treat <- se.nls[3:(k + 2)]
-      se.control <- se.nls[(k + 3):(2 * k + 2)]
+      se.treat <- se.nls[(k + 3):(2 * k + 2)]
+      se.control <- se.nls[3:(k + 2)]
       
       p.est <- logistic(NLSfit$par[1])
       p.ci <- c("lwr" = logistic(NLSfit$par[1] - qnorm(.975)*se.nls[1]),
                 "upr" = logistic(NLSfit$par[1] + qnorm(.975)*se.nls[1]))
       
     } else if (error == "uniform") {
+      
+      test <- 5
       
       ## NLS uniform error model
       
@@ -766,15 +775,20 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         gX <- logistic(x %*% coef.g)
         hX <- logistic(x %*% coef.h)
         
-        sse <- sum((y - ((p0 * (1 - treat) * J) / 2 + treat * ((p1 * (J + 1)) / 2 + (1 - p1) * gX) +
-                      ((1 - treat) * (1 - p0) + treat * (1 - p1)) * hX)) ^ 2)
+        sse <- sum((y - ((p0 * (1 - treat) * J) / 2 + 
+                           treat * ((p1 * (J + 1)) / 2 + 
+                                      (1 - p1) * mean(gX)) +
+                      ((1 - treat) * (1 - p0) + 
+                         treat * (1 - p1)) * J * mean(hX))) ^ 2)
         
         return(sse)
       }
       
       k <- ncol(x.all)
       
-      NLSfit <- optim(par = runif(k*2 + 2), 
+      start <- runif(k*2 + 2)
+      
+      NLSfit <- optim(par = start, 
                       fn = sse_nls_uniform, method = "BFGS", J = J, y = y.all,
                       treat = t, x = x.all, hessian = TRUE, control = list(maxit = maxIter))
       
@@ -783,8 +797,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       
       par.treat <- NLSfit$par[(k + 3):(2 * k + 2)]
       par.control <- NLSfit$par[3:(k + 2)]
-      se.treat <- se.nls[3:(k + 2)]
-      se.control <- se.nls[(k + 3):(2 * k + 2)]
+      se.treat <- se.nls[(k + 3):(2 * k + 2)]
+      se.control <- se.nls[3:(k + 2)]
       
       p0.est <- logistic(NLSfit$par[1])
       p0.ci <- c("lwr" = logistic(NLSfit$par[1] - qnorm(.975)*se.nls[1]),
@@ -3762,7 +3776,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
   
   if (method == "nls") {
     
-    if (error == "topcoded") {
+    if (error == "topcode") {
       return.object <-
         list(
           par.treat = par.treat,
