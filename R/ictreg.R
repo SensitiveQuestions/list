@@ -742,10 +742,10 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       vcov.nls <- solve(-NLSfit$hessian, tol = 1e-20)
       se.nls <- sqrt(diag(vcov.nls))
       
-      par.treat <- NLSfit$par[(k + 3):(2 * k + 2)]
-      par.control <- NLSfit$par[3:(k + 2)]
-      se.treat <- se.nls[(k + 3):(2 * k + 2)]
-      se.control <- se.nls[3:(k + 2)]
+      par.treat <- NLSfit$par[(k + 2):(2 * k + 1)]
+      par.control <- NLSfit$par[2:(k + 1)]
+      se.treat <- se.nls[(k + 2):(2 * k + 1)]
+      se.control <- se.nls[2:(k + 1)]
       
       p.est <- logistic(NLSfit$par[1])
       p.ci <- c("lwr" = logistic(NLSfit$par[1] - qnorm(.975)*se.nls[1]),
@@ -4070,7 +4070,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
   }      
 
   # measurement error models -- setting up return objects
-  if (error == "topcode") {
+  if (error == "topcode" & method == "ml") {
 
     par.treat <- topcode.par.treat
     par.control <- topcode.par.control
