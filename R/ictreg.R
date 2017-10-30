@@ -735,7 +735,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                       fn = sse_nls_topcoded, J = J, y = y.all,
                       treat = t, x = x.all, hessian = TRUE, control = list(maxit = maxIter))
       
-      vcov.nls <- solve(-NLSfit$hessian, tol = 1e-20)
+      vcov.nls <- solve(NLSfit$hessian, tol = 1e-20)
       se.nls <- sqrt(diag(vcov.nls))
       
       par.treat <- NLSfit$par[(k + 2):(2 * k + 1)]
@@ -786,7 +786,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                       fn = sse_nls_uniform, J = J, y = y.all,
                       treat = t, x = x.all, hessian = TRUE, control = list(maxit = maxIter))
       
-      vcov.nls <- solve(-NLSfit$hessian, tol = 1e-20)
+      vcov.nls <- solve(NLSfit$hessian, tol = 1e-20)
       se.nls <- sqrt(diag(vcov.nls))
       
       par.treat <- NLSfit$par[(k + 3):(2 * k + 2)]
