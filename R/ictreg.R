@@ -723,20 +723,18 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         coef.g <- par[(k + 2):(2 * k + 1)]
         gX <- logistic(x %*% coef.g)
         hX <- logistic(x %*% coef.h)
-        
-        sse <- sum((y - p * J - 
-                      treat * (p + (1 - p) * mean(gX)) - 
-                      (1 - p) * J * mean(hX)) ^ 2)
+
+        sse <- sum((y - (p * J + treat * (p + (1 - p) * gX) + (1 - p) * J * hX)) ^ 2)
         
         return(sse)
       }
       
       k <- ncol(x.all)
       
-      start <- runif(k*2 + 1)
+      start <- runif(k*2 + 1, min = -.5, max = .5)
       
       NLSfit <- optim(par = start, 
-                      fn = sse_nls_topcoded, method = "BFGS", J = J, y = y.all,
+                      fn = sse_nls_topcoded, J = J, y = y.all,
                       treat = t, x = x.all, hessian = TRUE, control = list(maxit = maxIter))
       
       vcov.nls <- solve(-NLSfit$hessian, tol = 1e-20)
@@ -786,10 +784,10 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       
       k <- ncol(x.all)
       
-      start <- runif(k*2 + 2)
+      start <- c(0, 0, 1, 0, 1) #runif(k*2 + 2)
       
       NLSfit <- optim(par = start, 
-                      fn = sse_nls_uniform, method = "BFGS", J = J, y = y.all,
+                      fn = sse_nls_uniform, J = J, y = y.all,
                       treat = t, x = x.all, hessian = TRUE, control = list(maxit = maxIter))
       
       vcov.nls <- solve(-NLSfit$hessian, tol = 1e-20)
