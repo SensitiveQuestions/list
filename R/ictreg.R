@@ -749,8 +749,6 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       
     } else if (error == "uniform") {
       
-      test <- 5
-      
       ## NLS uniform error model
       
       #\frac{p_0 (1-T_i) J}{2} + T_i \l\{\frac{p_1 (J+1)}{2} +
@@ -771,12 +769,6 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         gX <- logistic(x %*% coef.g)
         hX <- logistic(x %*% coef.h)
         
-        # sse <- sum((y - ((p0 * (1 - treat) * J) / 2 + 
-        #                    treat * ((p1 * (J + 1)) / 2 + 
-        #                               (1 - p1) * mean(gX)) +
-        #               ((1 - treat) * (1 - p0) + 
-        #                  treat * (1 - p1)) * J * mean(hX))) ^ 2)
-        
         sse <- sum((y - ((p0 * (1 - treat) * J) / 2 + 
                     treat * ((p1 * (J + 1)) / 2 + 
                                (1 - p1) * gX) +
@@ -788,7 +780,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       
       k <- ncol(x.all)
       
-      start <- c(0, 0, 0, 1, 0, 1) #runif(k*2 + 2)
+      start <- runif(k*2 + 2, min = -.5, max = .5)
       
       NLSfit <- optim(par = start, 
                       fn = sse_nls_uniform, J = J, y = y.all,
