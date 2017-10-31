@@ -3104,7 +3104,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       }
 
       # gmm objective
-      gmm.objective <- as.numeric(t(cG) %*% ginv(cW) %*% cG)
+      gmm.objective <- as.numeric(t(cG) %*% solve(cW, tol = 1e-20) %*% cG)
 
       return(gmm.objective)
 
@@ -3172,7 +3172,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         )
       }
 
-      return.vec <- c(t(cG) %*% (ginv(cW) + t(ginv(cW))) %*% dcG)
+      return.vec <- c(t(cG) %*% (solve(cW, tol = 1e-20) + t(solve(cW, tol = 1e-20))) %*% dcG)
       
       return(return.vec)
 
@@ -3288,7 +3288,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       cW <- weightMatrix(params, J, Y, T, X, robust)
 
-      return.mat <- ginv(t(dcG) %*% ginv(cW) %*% dcG)
+      return.mat <- solve(t(dcG) %*% solve(cW, tol = 1e-20) %*% dcG, tol = 1e-20)
 
       return(return.mat)
 
@@ -3314,19 +3314,19 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       cW0   <- weightMatrix(params = par0, J = J, Y = Y, T = T, X = X, robust = robust)  
       step1 <- optim(par = par0, fn = MLGMM, gr = MLGMM.Grad, robust, 
         J = J, Y = Y, T = T, X = X, cW = cW0, 
-        method = "L-BFGS-B", lower = -10, upper = 10, control = list(maxit = 5000))
+        method = "BFGS", control = list(maxit = 5000))
       par1  <- step1$par
       cW1   <- weightMatrix(params = par1, J = J, Y = Y, T = T, X = X, robust = robust)
 
       step2 <- optim(par = par1, fn = MLGMM, gr = MLGMM.Grad, robust, 
         J = J, Y = Y, T = T, X = X, cW = cW1, 
-        method = "L-BFGS-B", lower = -10, upper = 10, control = list(maxit = 5000))
+        method = "BFGS", control = list(maxit = 5000))
       par2  <- step2$par
       cW2   <- weightMatrix(params = par2, J = J, Y = Y, T = T, X = X, robust = robust)
 
       step3 <- optim(par = par2, fn = MLGMM, gr = MLGMM.Grad, robust, 
         J = J, Y = Y, T = T, X = X, cW = cW2, 
-        method = "L-BFGS-B", lower = -10, upper = 10, control = list(maxit = 5000))
+        method = "BFGS", control = list(maxit = 5000))
 
       vcov  <- MLGMM.var(params = step2$par, J = J, Y = Y, T = T, X = X, robust = FALSE)/n
 
