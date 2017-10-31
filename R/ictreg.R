@@ -553,7 +553,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     
   } else if (design=="standard" & method != "lm") {
     
-    if (error == "none") {
+    if (!(method == "nls" & error != "none")) {
       
       ##
       # Run two-step estimator
@@ -706,7 +706,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       
       par.control.nls.std <- coef(fit.control)
       
-    } else if (error == "topcode") {
+    } else if (error == "topcode" & method == "nls") {
       
       ## NLS top-coded error model
       
@@ -747,7 +747,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       p.ci <- c("lwr" = logistic(NLSfit$par[1] - qnorm(.975)*se.nls[1]),
                 "upr" = logistic(NLSfit$par[1] + qnorm(.975)*se.nls[1]))
       
-    } else if (error == "uniform") {
+    } else if (error == "uniform" & method == "nls") {
       
       ## NLS uniform error model
       
