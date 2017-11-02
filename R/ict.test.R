@@ -207,8 +207,8 @@ ict.test <- function(y, treat, J = NA, alpha = 0.05, n.draws = 250000, gms = TRU
     }
     
     tb <- round(rbind(cbind(pi.y1.tb, sd.tb[1:(J+1)]), cbind(pi.y0.tb, sd.tb[(J+2):((J+1)*2)])), 4)
-    rownames(tb) <- c(paste("pi(y = ", 0:J, ", t = 1)", sep = ""),
-                      paste("pi(y = ", 0:J, ", t = 0)", sep = ""))
+    rownames(tb) <- c(paste("pi(Y_i(0) = ", 0:J, ", Z_i = 1)", sep = ""),
+                      paste("pi(Y_i(0) = ", 0:J, ", Z_i = 0)", sep = ""))
     colnames(tb) <- c("est.", "s.e.")
     
     
@@ -398,7 +398,7 @@ print.ict.test <- function(x, ...){
     
     print(x$pi.table)
     
-    cat("\n")
+    cat("\n Y_i(0) is the (latent) count of 'yes' responses to the control items. Z_i is the (latent) binary response to the sensitive item.\n\n")
       
   }
      
