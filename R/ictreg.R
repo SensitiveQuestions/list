@@ -439,12 +439,12 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       stop("Weighted list experiment regression is not supported (yet) for the multi-item design.")
   }
 
-  # robust ml functionality -- check conditions
+  # robust functionality -- check conditions
   if (robust) {
     if (multi.condition != "none") 
       stop("The robust ML functionality is not yet supported for multiple sensitive item designs.")
-    if (method != "ml")
-      stop("You must specify method as 'ml' to use the robust ML functionality.")
+    if (method != "ml" & method != "nls")
+      stop("You must specify method as 'ml' or 'nls' to use the robust ML functionality.")
   }
 
   # auxiliary data functionality -- check conditions
@@ -3136,9 +3136,230 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
   }
   # end of measurement error models 
 
-  # robust ml functionality 
+  # robust nls functionality 
+  if (robust & method == "nls") { 
 
-  if (robust) { 
+    # gradient matrix
+    Gmat <- function(delta, gamma, J, y, treat, x) {
+      
+      n <- length(y)
+      y1 <- y[treat == 1]
+      y0 <- y[treat == 0]
+      x1 <- x[treat == 1, , drop = FALSE]
+      x0 <- x[treat == 0, , drop = FALSE]
+      
+      Gtmp <- c(logistic(x1 %*% delta)/(1 + exp(x1 %*% delta))) * x1
+      G1 <- -t(Gtmp) %*% Gtmp / n  
+      Gtmp <- c(sqrt(J*logistic(x1 %*% delta)*logistic(x1 %*% gamma)/
+                       ((1 + exp(x1 %*% delta))*(1 + exp(x1 %*% gamma))))) * x1
+      G2 <- -t(Gtmp) %*% Gtmp / n
+      Gtmp <- c(J*logistic(x0 %*% gamma)/(1 + exp(x0 %*% gamma))) * x0
+      G3 <- -t(Gtmp) %*% Gtmp / n
+      G <- rbind(cbind(G1, G2),
+            cbind(matrix(0, ncol = ncol(G1), nrow = nrow(G3)), G3))
+      
+      return(G)
+      
+    }
+
+    # nls objective fn and gradient
+    NLSGMM <- function(pars, J, y, treat, x, W) {
+        
+      n <- length(y)
+      
+      y1 <- y[treat == 1]
+      y0 <- y[treat == 0]
+      x1 <- x[treat == 1, , drop = FALSE]
+      x0 <- x[treat == 0, , drop = FALSE]
+
+      dim <- mean(y[treat == 1]) - mean(y[treat == 0])
+
+      delta <- pars[1:ncol(x)]
+      gamma <- pars[(ncol(x) + 1):(2 * ncol(x))]
+
+      # NLS moments
+      m1 <- c((y1 - J * logistic(x1 %*% gamma) - logistic(x1 %*% delta)) * 
+        logistic(x1 %*% delta)/(1 + exp(x1 %*% delta))) * x1
+      m0 <- c((y0 - J * logistic(x0 %*% gamma)) * 
+        J * logistic(x0 %*% gamma)/(1 + exp(x0 %*% gamma))) * x0
+
+      # dim moment
+      m.dim <- dim - logistic(x %*% delta)
+
+      M <- c(colSums(m1), colSums(m0), mean(m.dim))/n
+      as.numeric(t(M) %*% W %*% M)
+
+    }
+
+    NLSGMM.Grad <- function(pars, J, y, treat, x, W) {
+        
+      n <- length(y)
+
+      y1 <- y[treat == 1]
+      y0 <- y[treat == 0]
+      x1 <- x[treat == 1, , drop = FALSE]
+      x0 <- x[treat == 0, , drop = FALSE]
+      delta <- pars[1:ncol(x)]
+      gamma <- pars[(ncol(x) + 1):(2 * ncol(x))]
+      dim <- mean(y[treat == 1]) - mean(y[treat == 0])
+
+      # NLS moments
+      m1 <- c((y1 - J * logistic(x1 %*% gamma) - logistic(x1 %*% delta)) * 
+        logistic(x1 %*% delta)/(1 + exp(x1 %*% delta))) * x1
+      m0 <- c((y0 - J * logistic(x0 %*% gamma)) * 
+        J * logistic(x0 %*% gamma)/(1 + exp(x0 %*% gamma))) * x0
+
+      # DIM moment
+      m.dim <- dim - logistic(x %*% delta)
+      dm.dim <- -colMeans(c(logistic(x %*% delta)/(1 + exp(x %*% delta))) * x)
+
+      # NLS Jacobian
+      G <- Gmat(delta, gamma, J, y, treat, x)
+      # complete moment vector
+      M <- c(colSums(m1), colSums(m0), mean(m.dim))/n
+      # complete Jacobian
+      G <- rbind(G, c(dm.dim, rep(0, length(gamma))))
+
+      t(M) %*% (W + t(W)) %*% G
+
+    }
+
+    # weight matrix
+    weightMatrix <- function(pars, J, y, treat, x) {
+       
+      n <- length(y)
+
+      y1 <- y[treat == 1]
+      y0 <- y[treat == 0]
+      x1 <- x[treat == 1, , drop = FALSE]
+      x0 <- x[treat == 0, , drop = FALSE]
+
+      delta <- pars[1:ncol(x)]
+      gamma <- pars[(ncol(x) + 1):(ncol(x) * 2)]
+
+      m1 <- c((y1 - J * logistic(x1 %*% gamma) - logistic(x1 %*% delta)) * 
+        logistic(x1 %*% delta)/(1 + exp(x1 %*% delta))) * x1
+      m0 <- c((y0 - J * logistic(x0 %*% gamma)) * 
+        J * logistic(x0 %*% gamma)/(1 + exp(x0 %*% gamma))) * x0
+      Em1 <- t(m1) %*% m1/n
+      Em0 <- t(m0) %*% m0/n
+      F <- adiag(Em1, Em0, 1/n)
+
+      return(solve(F))
+
+    }
+
+    NLSGMM.var <- function(pars, J, y, treat, x, W) {
+        
+      n <- length(y)
+      
+      y1 <- y[treat == 1]
+      y0 <- y[treat == 0]
+      x1 <- x[treat == 1, , drop = FALSE]
+      x0 <- x[treat == 0, , drop = FALSE]
+
+      dim <- mean(y[treat == 1]) - mean(y[treat == 0])
+
+      delta <- pars[1:ncol(x)]
+      gamma <- pars[(ncol(x) + 1):(2 * ncol(x))]
+
+      # NLS moments
+      m1 <- c((y1 - J * logistic(x1 %*% gamma) - logistic(x1 %*% delta)) * 
+        logistic(x1 %*% delta)/(1 + exp(x1 %*% delta))) * x1
+      m0 <- c((y0 - J * logistic(x0 %*% gamma)) * 
+        J * logistic(x0 %*% gamma)/(1 + exp(x0 %*% gamma))) * x0
+
+      # dim moment
+      m.dim <- dim - logistic(x %*% delta)
+      dm.dim <- -colMeans(c(logistic(x %*% delta)/(1 + exp(x %*% delta))) * x)
+
+      Em1 <- t(m1) %*% m1/n
+      Em0 <- t(m0) %*% m0/n
+      Em.dim <- t(m.dim) %*% m.dim/n
+
+      F <- adiag(Em1, Em0, Em.dim)
+      G <- Gmat(delta, gamma, J, y, treat, x)
+      G <- rbind(G, c(dm.dim, rep(0, length(gamma))))
+
+      V <- solve(t(G) %*% W %*% G, tol = 1e-20) %*% 
+        t(G) %*% W %*% F %*% t(W) %*% G %*% 
+          solve(t(G) %*% t(W) %*% G, tol = 1e-20)
+
+      return(V/n)
+
+    }
+
+    ictrobust <- function(formula, data, treat, J, robust) {
+      
+      mf <- model.frame(formula, data)
+      n  <- nrow(mf)
+
+      Y  <- model.response(mf)
+      X  <- model.matrix(formula, data)
+      T  <- data[row.names(mf), treat]
+      k  <- ncol(X)
+
+      try(nls.fit <- ictreg(formula, data = data, treat = treat, J = J, method = "nls"))
+      if (exists("nls.fit")) {
+        par0   <- c(nls.fit$par.treat, nls.fit$par.control)
+      } else {
+        par0   <- rep(0, 2*k)
+      }
+
+      cW0   <- weightMatrix(pars = par0, J = J, y = Y, treat = T, x = X)  
+      step1 <- optim(par = par0, fn = NLSGMM, gr = NLSGMM.Grad,
+        J = J, y = Y, treat = T, x = X, W = cW0, 
+        method = "BFGS", control = list(maxit = 5000))
+      par1  <- step1$par
+      cW1   <- weightMatrix(pars = par1, J = J, y = Y, treat = T, x = X)
+
+      step2 <- optim(par = par1, fn = NLSGMM, gr = NLSGMM.Grad,
+        J = J, y= Y, treat = T, x = X, W = cW1, 
+        method = "BFGS", control = list(maxit = 5000))
+      par2  <- step2$par
+      cW2   <- weightMatrix(pars = par2, J = J, y = Y, treat = T, x = X)
+
+      step3 <- optim(par = par1, fn = NLSGMM, gr = NLSGMM.Grad,
+        J = J, y= Y, treat = T, x = X, W = cW2, 
+        method = "BFGS", control = list(maxit = 5000))
+      par2  <- step3$par
+      cW3   <- weightMatrix(pars = par2, J = J, y = Y, treat = T, x = X)
+
+      vcov  <- NLSGMM.var(par2, J = J, y= Y, treat = T, x = X, W = cW3)
+
+      return(list(
+        par = step3$par, 
+        vcov = vcov, 
+        se = sqrt(diag(vcov)), 
+        converge = 1 - step3$convergence, 
+        J.stat = ifelse(robust, n*step3$value, NA),
+        p.val = ifelse(robust, 1 - pchisq(q = step3$value, df = 2*k), NA),
+        est.mean = mean(logistic(X %*% step3$par[1:k])), 
+        diff.mean = mean(Y[T == 1]) - mean(Y[T == 0]), 
+        robust = robust, 
+        message = step3$message
+        )
+      )
+
+    }
+
+
+    ictrobust.out <- ictrobust(formula = formula, data = data, treat = treat, J = J, robust = robust)
+    if (ictrobust.out$converge != 1) warning("Optimization routine did not converge.")
+    ictrobust.par <- ictrobust.out$par
+    ictrobust.vcov <- ictrobust.out$vcov
+    ictrobust.se <- sqrt(diag(ictrobust.vcov))
+
+    names(ictrobust.par) <- rep(names(x.all), 2)
+    names(ictrobust.se)  <- rep(names(x.all), 2)
+
+    par.control.robust <- ictrobust.par[1:ncol(x.all)]
+    par.treat.robust <- ictrobust.par[(ncol(x.all)+1):(ncol(x.all)*2)]
+    
+  }
+
+  # robust ml functionality 
+  if (robust & method == "ml") { 
 
     sweepCross <- function(M, x) t(M) %*% sweep(M, MAR = 1, STATS = x, "*")
 
@@ -3259,7 +3480,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       tmp3 <- -ifelse(T == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
       tmp4 <- logistic(Xb)/(1+exp(Xb))
 
-      if (robust == TRUE) {
+      if (robust) {
         dcG <- 1/n * rbind(
           cbind(sweepCross(M = X, x = tmp1), sweepCross(M = X, x = tmp3)), 
           cbind(t(sweepCross(M = X, x = tmp3)), sweepCross(M = X, x = tmp2)), 
@@ -3312,7 +3533,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       # dim moment
       if (robust == TRUE) {
         aux.vec <- logistic(Xb) - mean(Y[T == 1]) + mean(Y[T == 0])
-        Wtmp <- cbind(beta.mat, gamma.mat, aux.vec) # N by (2K + 1)
+        Wtmp <- cbind(beta.mat, gamma.mat, 1/n) # N by (2K + 1)
       } else {
         Wtmp <- cbind(beta.mat, gamma.mat)
       }
@@ -3356,7 +3577,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       gamma.foc <- colMeans(X*gamma.coef)
 
       # dim moment
-      if (robust == TRUE) {
+      if (robust) {
         aux.vec <- (logistic(Xb) - mean(Y[T == 1]) + mean(Y[T == 0]))
         aux.mom <- mean(aux.vec)
         cG <- c(beta.foc, gamma.foc, aux.mom) 
@@ -3364,6 +3585,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         cG <- c(beta.foc, gamma.foc)
       }
 
+      # vcov of moments
+      Em1 <- crossprod(X*beta.coef)/n
+      Em0 <- crossprod(X*gamma.coef)/n
+      Em.dim <- crossprod(aux.vec)/n
+
+      F <- adiag(Em1, Em0, Em.dim)
+           
       # jacobian
       tmp1 <- -logistic(Xb)/(1 + exp(Xb)) + 
         ifelse(T == 0, logistic(Xb)/(1 + exp(Xb)), 0) + 
@@ -3373,7 +3601,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       tmp3 <- -ifelse(T == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
       tmp4 <- logistic(Xb)/(1+exp(Xb))
 
-      if (robust == TRUE) {
+      if (robust) {
         dcG <- 1/n * rbind(
           cbind(sweepCross(M = X, x = tmp1), sweepCross(M = X, x = tmp3)), 
           cbind(t(sweepCross(M = X, x = tmp3)), sweepCross(M = X, x = tmp2)), 
@@ -3388,7 +3616,9 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       cW <- weightMatrix(params, J, Y, T, X, robust)
 
-      return.mat <- solve(t(dcG) %*% solve(cW, tol = 1e-20) %*% dcG, tol = 1e-20)
+      return.mat <- solve(t(dcG) %*% solve(cW, tol = 1e-20) %*% dcG, tol = 1e-20) %*% 
+        t(dcG) %*% solve(cW, tol = 1e-20) %*% F %*% t(solve(cW, tol = 1e-20)) %*% dcG %*% 
+          solve(t(dcG) %*% t(solve(cW, tol = 1e-20)) %*% dcG, tol = 1e-20)
 
       return(return.mat)
 
@@ -3428,7 +3658,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         J = J, Y = Y, T = T, X = X, cW = cW2, 
         method = "BFGS", control = list(maxit = 5000))
 
-      vcov  <- MLGMM.var(params = step2$par, J = J, Y = Y, T = T, X = X, robust = FALSE)/n
+      vcov  <- MLGMM.var(params = step2$par, J = J, Y = Y, T = T, X = X, robust = TRUE)/n
 
       return(list(
         par = step3$par, 
@@ -3898,7 +4128,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     }
   }
   
-  if (method == "ml" & robust == FALSE) {
+  if (method == "ml" & !robust) {
     
     if(design == "standard") {
       
@@ -4057,10 +4287,16 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
     return.object <- list(par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, 
       vcov=ictrobust.vcov.flip, treat.labels = treatment.labels, control.label = control.label, 
-        llik=llik.robust, J=J, coef.names=coef.names, design = design, method = method, robust = robust, 
+        J=J, coef.names=coef.names, design = design, method = method, robust = robust, 
           overdispersed=overdispersed, constrained=constrained, boundary = boundary, multi = multi, 
             ceiling = ceiling, floor = floor, call = match.call(), data = data, x = x.all, y = y.all, treat = t)
   
+    if (method == "ml") return.object$llik <- llik.robust
+      else {
+        resid <- y.treatment - logistic(x.treatment %*% par.treat)
+        return.object$resid.df <- nrow(x.treatment) - length(par.treat)
+        return.object$resid.se <- 1/return.object$resid.df * sum(resid^2)
+      }
   }      
 
   # measurement error models -- setting up return objects
