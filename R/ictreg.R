@@ -443,7 +443,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
   if (robust) {
     if (multi.condition != "none") 
       stop("The robust ML functionality is not yet supported for multiple sensitive item designs.")
-    if (method != "ml" & method != "nls")
+    if (!(method == "ml" | method == "nls"))
       stop("You must specify method as 'ml' or 'nls' to use the robust ML functionality.")
   }
 
@@ -3137,7 +3137,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
   # end of measurement error models 
 
   # robust nls functionality 
-  if (robust & method == "nls") { 
+  if (method == "nls" & robust) { 
 
     # gradient matrix
     Gmat <- function(delta, gamma, J, y, treat, x) {
@@ -3243,7 +3243,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         J * logistic(x0 %*% gamma)/(1 + exp(x0 %*% gamma))) * x0
       Em1 <- t(m1) %*% m1/n
       Em0 <- t(m0) %*% m0/n
-      F <- adiag(Em1, Em0, 1/n)
+      F <- adiag(Em1, Em0, 1/(n^2))
 
       return(solve(F))
 
@@ -3289,7 +3289,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
     }
 
-    ictrobust <- function(formula, data, treat, J, robust) {
+    ictrobust <- function(formula, data, treat, J, robust, par0) {
       
       mf <- model.frame(formula, data)
       n  <- nrow(mf)
@@ -3298,13 +3298,6 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       X  <- model.matrix(formula, data)
       T  <- data[row.names(mf), treat]
       k  <- ncol(X)
-
-      try(nls.fit <- ictreg(formula, data = data, treat = treat, J = J, method = "nls"))
-      if (exists("nls.fit")) {
-        par0   <- c(nls.fit$par.treat, nls.fit$par.control)
-      } else {
-        par0   <- rep(0, 2*k)
-      }
 
       cW0   <- weightMatrix(pars = par0, J = J, y = Y, treat = T, x = X)  
       step1 <- optim(par = par0, fn = NLSGMM, gr = NLSGMM.Grad,
@@ -3319,17 +3312,19 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       par2  <- step2$par
       cW2   <- weightMatrix(pars = par2, J = J, y = Y, treat = T, x = X)
 
-      step3 <- optim(par = par1, fn = NLSGMM, gr = NLSGMM.Grad,
+      step3 <- optim(par = par2, fn = NLSGMM, gr = NLSGMM.Grad,
         J = J, y= Y, treat = T, x = X, W = cW2, 
         method = "BFGS", control = list(maxit = 5000))
-      par2  <- step3$par
-      cW3   <- weightMatrix(pars = par2, J = J, y = Y, treat = T, x = X)
+      par3  <- step3$par
+      cW3   <- weightMatrix(pars = par3, J = J, y = Y, treat = T, x = X)
 
-      vcov  <- NLSGMM.var(par2, J = J, y= Y, treat = T, x = X, W = cW3)
+      vcov <- vcov.flip <- NLSGMM.var(par3, J = J, y= Y, treat = T, x = X, W = cW3)
+      vcov.flip[(1:k), (1:k)] <- vcov[(k+1):(2*k), (k+1):(2*k)] 
+      vcov.flip[(k+1):(2*k), (k+1):(2*k)] <- vcov[(1:k), (1:k)]
 
       return(list(
         par = step3$par, 
-        vcov = vcov, 
+        vcov = vcov.flip, 
         se = sqrt(diag(vcov)), 
         converge = 1 - step3$convergence, 
         J.stat = ifelse(robust, n*step3$value, NA),
@@ -3344,7 +3339,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     }
 
 
-    ictrobust.out <- ictrobust(formula = formula, data = data, treat = treat, J = J, robust = robust)
+    ictrobust.out <- ictrobust(formula = formula, data = data, treat = treat, J = J, 
+      robust = robust, par0 = c(par.treat.nls.std, par.control.nls.std))
     if (ictrobust.out$converge != 1) warning("Optimization routine did not converge.")
     ictrobust.par <- ictrobust.out$par
     ictrobust.vcov <- ictrobust.out$vcov
@@ -3533,7 +3529,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       # dim moment
       if (robust == TRUE) {
         aux.vec <- logistic(Xb) - mean(Y[T == 1]) + mean(Y[T == 0])
-        Wtmp <- cbind(beta.mat, gamma.mat, 1/n) # N by (2K + 1)
+        Wtmp <- cbind(beta.mat, gamma.mat, 1/(n^2)) # N by (2K + 1)
       } else {
         Wtmp <- cbind(beta.mat, gamma.mat)
       }
@@ -3624,7 +3620,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
     }
 
-    ictrobust <- function(formula, data, treat, J, robust) {
+    ictrobust <- function(formula, data, treat, J, robust, par0) {
       
       mf <- model.frame(formula, data)
       n  <- nrow(mf)
@@ -3633,13 +3629,6 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       X  <- model.matrix(formula, data)
       T  <- data[row.names(mf), treat]
       k  <- ncol(X)
-
-      try(nls.fit <- ictreg(formula, data = data, treat = treat, J = J, method = "nls"))
-      if (exists("nls.fit")) {
-        par0   <- c(nls.fit$par.treat, nls.fit$par.control)
-      } else {
-        par0   <- rep(0, 2*k)
-      }
 
       cW0   <- weightMatrix(params = par0, J = J, Y = Y, T = T, X = X, robust = robust)  
       step1 <- optim(par = par0, fn = MLGMM, gr = MLGMM.Grad, robust, 
@@ -3658,7 +3647,9 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         J = J, Y = Y, T = T, X = X, cW = cW2, 
         method = "BFGS", control = list(maxit = 5000))
 
-      vcov  <- MLGMM.var(params = step2$par, J = J, Y = Y, T = T, X = X, robust = TRUE)/n
+      vcov <- vcov.flip <- MLGMM.var(params = step2$par, J = J, Y = Y, T = T, X = X, robust = TRUE)/n
+      vcov.flip[(1:k), (1:k)] <- vcov[(k+1):(2*k), (k+1):(2*k)] 
+      vcov.flip[(k+1):(2*k), (k+1):(2*k)] <- vcov[(1:k), (1:k)]
 
       return(list(
         par = step3$par, 
@@ -3677,7 +3668,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     }
 
 
-    ictrobust.out <- ictrobust(formula = formula, data = data, treat = treat, J = J, robust = robust)
+    ictrobust.out <- ictrobust(formula = formula, data = data, treat = treat, J = J, 
+      robust = robust, par0 = c(par.treat.nls.std, par.control.nls.std))
     if (ictrobust.out$converge != 1) warning("Optimization routine did not converge.")
     ictrobust.par <- ictrobust.out$par
     ictrobust.vcov <- ictrobust.out$vcov
