@@ -3529,7 +3529,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       # weight matrix
       cW <- (t(Wtmp) %*% Wtmp)/n # 2k by 2k
-      if (robust) cW <- adiag(cW, n)
+      if (robust) cW <- adiag(cW, n^2)
 
       return(cW)
 
