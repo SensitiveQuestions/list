@@ -4265,20 +4265,15 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     }
   }
 
-  if (robust) {
+  if ((method == "nls" | method == "ml") & robust) {
 
     par.treat <- ictrobust.par[1:nPar]
     par.control <- ictrobust.par[(nPar+1):(nPar*2)]
-    se.treat <- ictrobust.se[1:(nPar)]
-    se.control <- ictrobust.se[(nPar+1):(nPar*2)]
+    se.treat <- sqrt(diag(ictrobust.vcov))[1:(nPar)]
+    se.control <- sqrt(diag(ictrobust.vcov))[(nPar+1):(nPar*2)]
   
-    # flipping the vcov matrix
-    ictrobust.vcov.flip <- ictrobust.vcov
-    ictrobust.vcov.flip[1:nPar, 1:nPar] <- ictrobust.vcov[(nPar+1):(nPar*2), (nPar+1):(nPar*2)]
-    ictrobust.vcov.flip[(nPar+1):(nPar*2), (nPar+1):(nPar*2)] <- ictrobust.vcov[1:nPar, 1:nPar]
-
     return.object <- list(par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, 
-      vcov=ictrobust.vcov.flip, treat.labels = treatment.labels, control.label = control.label, 
+      vcov=ictrobust.vcov, treat.labels = treatment.labels, control.label = control.label, 
         J=J, coef.names=coef.names, design = design, method = method, robust = robust, 
           overdispersed=overdispersed, constrained=constrained, boundary = boundary, multi = multi, 
             ceiling = ceiling, floor = floor, call = match.call(), data = data, x = x.all, y = y.all, treat = t)
