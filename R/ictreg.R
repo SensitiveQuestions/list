@@ -3421,7 +3421,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       }
 
       # gmm objective
-      gmm.objective <- as.numeric(t(cG) %*% solve(cW, tol = 1e-20) %*% cG)
+      gmm.objective <- as.numeric(t(cG) %*% ginv(cW) %*% cG)
 
       return(gmm.objective)
 
@@ -3489,7 +3489,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         )
       }
 
-      return.vec <- c(t(cG) %*% (solve(cW, tol = 1e-20) + t(solve(cW, tol = 1e-20))) %*% dcG)
+      return.vec <- c(t(cG) %*% (ginv(cW) + t(ginv(cW))) %*% dcG)
       
       return(return.vec)
 
@@ -3525,17 +3525,11 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       )
       
       gamma.mat <- X*gamma.coef
-
-      # dim moment
-      if (robust == TRUE) {
-        aux.vec <- logistic(Xb) - mean(Y[T == 1]) + mean(Y[T == 0])
-        Wtmp <- cbind(beta.mat, gamma.mat, 1/(n^2)) # N by (2K + 1)
-      } else {
-        Wtmp <- cbind(beta.mat, gamma.mat)
-      }
+      Wtmp <- cbind(beta.mat, gamma.mat)
 
       # weight matrix
-      cW <- (t(Wtmp) %*% Wtmp)/n # (2K + 1) by (2K + 1)
+      cW <- (t(Wtmp) %*% Wtmp)/n # 2k by 2k
+      if (robust) cW <- adiag(cW, n)
 
       return(cW)
 
@@ -3612,9 +3606,9 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       cW <- weightMatrix(params, J, Y, T, X, robust)
 
-      return.mat <- solve(t(dcG) %*% solve(cW, tol = 1e-20) %*% dcG, tol = 1e-20) %*% 
-        t(dcG) %*% solve(cW, tol = 1e-20) %*% F %*% t(solve(cW, tol = 1e-20)) %*% dcG %*% 
-          solve(t(dcG) %*% t(solve(cW, tol = 1e-20)) %*% dcG, tol = 1e-20)
+      return.mat <- ginv(t(dcG) %*% ginv(cW) %*% dcG) %*% 
+        t(dcG) %*% ginv(cW) %*% F %*% t(ginv(cW)) %*% dcG %*% 
+          ginv(t(dcG) %*% t(ginv(cW)) %*% dcG)
 
       return(return.mat)
 
@@ -3647,13 +3641,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         J = J, Y = Y, T = T, X = X, cW = cW2, 
         method = "BFGS", control = list(maxit = 5000))
 
-      vcov <- vcov.flip <- MLGMM.var(params = step2$par, J = J, Y = Y, T = T, X = X, robust = TRUE)/n
+      vcov <- vcov.flip <- MLGMM.var(params = step3$par, J = J, Y = Y, T = T, X = X, robust = TRUE)/n
       vcov.flip[(1:k), (1:k)] <- vcov[(k+1):(2*k), (k+1):(2*k)] 
       vcov.flip[(k+1):(2*k), (k+1):(2*k)] <- vcov[(1:k), (1:k)]
 
       return(list(
         par = step3$par, 
-        vcov = vcov, 
+        vcov = vcov.flip, 
         se = sqrt(diag(vcov)), 
         converge = 1 - step3$convergence, 
         J.stat = ifelse(robust, n*step3$value, NA),
@@ -4269,12 +4263,14 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
     par.treat <- ictrobust.par[1:nPar]
     par.control <- ictrobust.par[(nPar+1):(nPar*2)]
-    se.treat <- sqrt(diag(ictrobust.vcov))[1:(nPar)]
-    se.control <- sqrt(diag(ictrobust.vcov))[(nPar+1):(nPar*2)]
-  
+    se.control <- sqrt(diag(ictrobust.vcov))[1:(nPar)]
+    se.treat <- sqrt(diag(ictrobust.vcov))[(nPar+1):(nPar*2)]
+    dim  <- mean(y.all[t==1]) - mean(y.all[t==0])
+    dim.se <- sqrt(sd(y.all[t==1])^2/sum(t) + sd(y.all[t==0])^2/sum(1-t))
+
     return.object <- list(par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, 
       vcov=ictrobust.vcov, treat.labels = treatment.labels, control.label = control.label, 
-        J=J, coef.names=coef.names, design = design, method = method, robust = robust, 
+        J=J, coef.names=coef.names, design = design, method = method, robust = robust, dim = dim, dim.se = dim.se, 
           overdispersed=overdispersed, constrained=constrained, boundary = boundary, multi = multi, 
             ceiling = ceiling, floor = floor, call = match.call(), data = data, x = x.all, y = y.all, treat = t)
   
@@ -4840,6 +4836,13 @@ predict.ictreg <- function(object, newdata, newdata.diff, direct.glm, se.fit = F
     
   }
   
+  # adjustment for robust
+  if (object$robust) {
+    return.object <- list()
+    return.object$fit <- object$dim
+    return.object$se.fit <- object$dim.se
+  }
+
   class(return.object) <- "predict.ictreg"
   
   return.object
