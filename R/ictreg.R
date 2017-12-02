@@ -3139,7 +3139,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
   # robust nls functionality 
   if (method == "nls" & robust) { 
 
-    # gradient matrix
+    # gradient matrix of NLS moments
     Gmat <- function(delta, gamma, J, y, treat, x) {
       
       n <- length(y)
@@ -3172,8 +3172,6 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       x1 <- x[treat == 1, , drop = FALSE]
       x0 <- x[treat == 0, , drop = FALSE]
 
-      dim <- mean(y[treat == 1]) - mean(y[treat == 0])
-
       delta <- pars[1:ncol(x)]
       gamma <- pars[(ncol(x) + 1):(2 * ncol(x))]
 
@@ -3183,10 +3181,11 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       m0 <- c((y0 - J * logistic(x0 %*% gamma)) * 
         J * logistic(x0 %*% gamma)/(1 + exp(x0 %*% gamma))) * x0
 
-      # dim moment
+      # dim moment      
+      dim <- mean(y1) - mean(y0)
       m.dim <- dim - logistic(x %*% delta)
 
-      M <- c(colSums(m1), colSums(m0), mean(m.dim))/n
+      M <- c(colSums(m1), colSums(m0), sum(m.dim))/n
       as.numeric(t(M) %*% W %*% M)
 
     }
@@ -3201,7 +3200,6 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       x0 <- x[treat == 0, , drop = FALSE]
       delta <- pars[1:ncol(x)]
       gamma <- pars[(ncol(x) + 1):(2 * ncol(x))]
-      dim <- mean(y[treat == 1]) - mean(y[treat == 0])
 
       # NLS moments
       m1 <- c((y1 - J * logistic(x1 %*% gamma) - logistic(x1 %*% delta)) * 
@@ -3210,13 +3208,14 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         J * logistic(x0 %*% gamma)/(1 + exp(x0 %*% gamma))) * x0
 
       # DIM moment
+      dim <- mean(y1) - mean(y0)
       m.dim <- dim - logistic(x %*% delta)
       dm.dim <- -colMeans(c(logistic(x %*% delta)/(1 + exp(x %*% delta))) * x)
 
       # NLS Jacobian
       G <- Gmat(delta, gamma, J, y, treat, x)
       # complete moment vector
-      M <- c(colSums(m1), colSums(m0), mean(m.dim))/n
+      M <- c(colSums(m1), colSums(m0), sum(m.dim)) / n
       # complete Jacobian
       G <- rbind(G, c(dm.dim, rep(0, length(gamma))))
 
@@ -3228,22 +3227,25 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     weightMatrix <- function(pars, J, y, treat, x) {
        
       n <- length(y)
+      n1 <- sum(treat)
+      n0 <- sum(1 - treat)
+      k  <- ncol(x)
 
       y1 <- y[treat == 1]
       y0 <- y[treat == 0]
       x1 <- x[treat == 1, , drop = FALSE]
       x0 <- x[treat == 0, , drop = FALSE]
 
-      delta <- pars[1:ncol(x)]
-      gamma <- pars[(ncol(x) + 1):(ncol(x) * 2)]
+      delta <- pars[1:k]
+      gamma <- pars[(k + 1):(k * 2)]
 
-      m1 <- c((y1 - J * logistic(x1 %*% gamma) - logistic(x1 %*% delta)) * 
-        logistic(x1 %*% delta)/(1 + exp(x1 %*% delta))) * x1
-      m0 <- c((y0 - J * logistic(x0 %*% gamma)) * 
-        J * logistic(x0 %*% gamma)/(1 + exp(x0 %*% gamma))) * x0
-      Em1 <- t(m1) %*% m1/n
-      Em0 <- t(m0) %*% m0/n
-      F <- adiag(Em1, Em0, 1/(n^2))
+      m1 <- c((y - J * logistic(x %*% gamma) - logistic(x %*% delta)) * 
+        logistic(x %*% delta)/( + exp(x %*% delta))) * treat * x
+      m0 <- c((y - J * logistic(x %*% gamma)) * 
+        J * logistic(x %*% gamma)/(1 + exp(x %*% gamma))) * (1-treat) * x
+      m.dim <- -logistic(x %*% delta) + n/n1 * treat * y - n/n0 * (1-treat) * y
+      
+      F <- crossprod(cbind(m1, m0, m.dim))/n
 
       return(solve(F))
 
@@ -3252,7 +3254,10 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     NLSGMM.var <- function(pars, J, y, treat, x, W) {
         
       n <- length(y)
-      
+      n1 <- sum(treat)
+      n0 <- sum(1 - treat)
+      k  <- ncol(x)
+
       y1 <- y[treat == 1]
       y0 <- y[treat == 0]
       x1 <- x[treat == 1, , drop = FALSE]
@@ -3263,27 +3268,19 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       delta <- pars[1:ncol(x)]
       gamma <- pars[(ncol(x) + 1):(2 * ncol(x))]
 
-      # NLS moments
-      m1 <- c((y1 - J * logistic(x1 %*% gamma) - logistic(x1 %*% delta)) * 
-        logistic(x1 %*% delta)/(1 + exp(x1 %*% delta))) * x1
-      m0 <- c((y0 - J * logistic(x0 %*% gamma)) * 
-        J * logistic(x0 %*% gamma)/(1 + exp(x0 %*% gamma))) * x0
+      m1 <- c((y - J * logistic(x %*% gamma) - logistic(x %*% delta)) * 
+        logistic(x %*% delta)/( + exp(x %*% delta))) * treat * x
+      m0 <- c((y - J * logistic(x %*% gamma)) * 
+        J * logistic(x %*% gamma)/(1 + exp(x %*% gamma))) * (1-treat) * x
+      m.dim <- -logistic(x %*% delta) + n/n1 * treat * y - n/n0 * (1-treat) * y
 
-      # dim moment
-      m.dim <- dim - logistic(x %*% delta)
-      dm.dim <- -colMeans(c(logistic(x %*% delta)/(1 + exp(x %*% delta))) * x)
+      dm.dim <- colMeans(-c(logistic(x %*% delta)/(1 + exp(x %*% delta))) * x)
+      F      <- crossprod(cbind(m1, m0, m.dim))/n
 
-      Em1 <- t(m1) %*% m1/n
-      Em0 <- t(m0) %*% m0/n
-      Em.dim <- t(m.dim) %*% m.dim/n
-
-      F <- adiag(Em1, Em0, Em.dim)
       G <- Gmat(delta, gamma, J, y, treat, x)
       G <- rbind(G, c(dm.dim, rep(0, length(gamma))))
 
-      V <- solve(t(G) %*% W %*% G, tol = 1e-20) %*% 
-        t(G) %*% W %*% F %*% t(W) %*% G %*% 
-          solve(t(G) %*% t(W) %*% G, tol = 1e-20)
+      V <- solve(t(G) %*% solve(F, tol = 1e-20) %*% G, tol = 1e-20)
 
       return(V/n)
 
@@ -3318,13 +3315,11 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       par3  <- step3$par
       cW3   <- weightMatrix(pars = par3, J = J, y = Y, treat = T, x = X)
 
-      vcov <- vcov.flip <- NLSGMM.var(par3, J = J, y= Y, treat = T, x = X, W = cW3)
-      vcov.flip[(1:k), (1:k)] <- vcov[(k+1):(2*k), (k+1):(2*k)] 
-      vcov.flip[(k+1):(2*k), (k+1):(2*k)] <- vcov[(1:k), (1:k)]
+      vcov <- NLSGMM.var(par3, J = J, y= Y, treat = T, x = X, W = cW3)
 
       return(list(
         par = step3$par, 
-        vcov = vcov.flip, 
+        vcov = vcov, 
         se = sqrt(diag(vcov)), 
         converge = 1 - step3$convergence, 
         J.stat = ifelse(robust, n*step3$value, NA),
@@ -3421,7 +3416,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       }
 
       # gmm objective
-      gmm.objective <- as.numeric(t(cG) %*% ginv(cW) %*% cG)
+      gmm.objective <- as.numeric(t(cG) %*% solve(cW, tol = 1e-20) %*% cG)
 
       return(gmm.objective)
 
@@ -3489,7 +3484,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         )
       }
 
-      return.vec <- c(t(cG) %*% (ginv(cW) + t(ginv(cW))) %*% dcG)
+      return.vec <- c(t(cG) %*% (solve(cW, tol = 1e-20) + t(solve(cW, tol = 1e-20))) %*% dcG)
       
       return(return.vec)
 
@@ -3498,6 +3493,9 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     weightMatrix <- function(params, J, Y, T, X, robust) {
       
       n     <- length(Y)
+      n1    <- sum(T == 1)
+      n0    <- sum(T == 0)
+
       K     <- length(params)
       beta  <- params[1:(K/2)]
       gamma <- params[(K/2 + 1):K]
@@ -3525,12 +3523,14 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       )
       
       gamma.mat <- X*gamma.coef
-      Wtmp <- cbind(beta.mat, gamma.mat)
+
+      # additional moment
+      m.dim <- logistic(Xb) - n/n1 * T * Y + n/n0 * (1-T) * Y
+      Wtmp  <- cbind(beta.mat, gamma.mat, m.dim)
 
       # weight matrix
-      cW <- (t(Wtmp) %*% Wtmp)/n # 2k by 2k
-      if (robust) cW <- adiag(cW, n^2)
-
+      cW <- (t(Wtmp) %*% Wtmp)/n
+    
       return(cW)
 
     }
@@ -3538,6 +3538,9 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     MLGMM.var <- function(params, J, Y, T, X, robust) {
       
       n     <- length(Y)
+      n1    <- sum(T == 1)
+      n0    <- sum(T == 0)
+
       K     <- length(params)
       beta  <- params[1:(K/2)]
       gamma <- params[(K/2 + 1):K]
@@ -3575,12 +3578,12 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         cG <- c(beta.foc, gamma.foc)
       }
 
-      # vcov of moments
-      Em1 <- crossprod(X*beta.coef)/n
-      Em0 <- crossprod(X*gamma.coef)/n
-      Em.dim <- crossprod(aux.vec)/n
+      # # vcov of moments
+      # Em1 <- crossprod(X*beta.coef)/n
+      # Em0 <- crossprod(X*gamma.coef)/n
+      # Em.dim <- crossprod(aux.vec)/n
 
-      F <- adiag(Em1, Em0, Em.dim)
+      # F <- adiag(Em1, Em0, Em.dim)
            
       # jacobian
       tmp1 <- -logistic(Xb)/(1 + exp(Xb)) + 
@@ -3606,9 +3609,9 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       cW <- weightMatrix(params, J, Y, T, X, robust)
 
-      return.mat <- ginv(t(dcG) %*% ginv(cW) %*% dcG) %*% 
-        t(dcG) %*% ginv(cW) %*% F %*% t(ginv(cW)) %*% dcG %*% 
-          ginv(t(dcG) %*% t(ginv(cW)) %*% dcG)
+      return.mat <- ginv(t(dcG) %*% ginv(cW) %*% dcG) # %*% 
+        # t(dcG) %*% ginv(cW) %*% F %*% t(ginv(cW)) %*% dcG %*% 
+          # ginv(t(dcG) %*% t(ginv(cW)) %*% dcG)
 
       return(return.mat)
 
@@ -3641,13 +3644,11 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         J = J, Y = Y, T = T, X = X, cW = cW2, 
         method = "BFGS", control = list(maxit = 5000))
 
-      vcov <- vcov.flip <- MLGMM.var(params = step3$par, J = J, Y = Y, T = T, X = X, robust = TRUE)/n
-      vcov.flip[(1:k), (1:k)] <- vcov[(k+1):(2*k), (k+1):(2*k)] 
-      vcov.flip[(k+1):(2*k), (k+1):(2*k)] <- vcov[(1:k), (1:k)]
+      vcov <- MLGMM.var(params = step3$par, J = J, Y = Y, T = T, X = X, robust = TRUE)/n
 
       return(list(
         par = step3$par, 
-        vcov = vcov.flip, 
+        vcov = vcov, 
         se = sqrt(diag(vcov)), 
         converge = 1 - step3$convergence, 
         J.stat = ifelse(robust, n*step3$value, NA),
@@ -4263,8 +4264,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
     par.treat <- ictrobust.par[1:nPar]
     par.control <- ictrobust.par[(nPar+1):(nPar*2)]
-    se.control <- sqrt(diag(ictrobust.vcov))[1:(nPar)]
-    se.treat <- sqrt(diag(ictrobust.vcov))[(nPar+1):(nPar*2)]
+    se.treat <- sqrt(diag(ictrobust.vcov))[1:(nPar)]
+    se.control <- sqrt(diag(ictrobust.vcov))[(nPar+1):(nPar*2)]
     dim  <- mean(y.all[t==1]) - mean(y.all[t==0])
     dim.se <- sqrt(sd(y.all[t==1])^2/sum(t) + sd(y.all[t==0])^2/sum(1-t))
 
@@ -4321,6 +4322,9 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
   
   }      
+
+  # robust functionality 
+  return.object$robust <- robust
 
   # auxiliary data functionality -- setting up return object
   return.object$aux <- aux.check 
@@ -4835,13 +4839,6 @@ predict.ictreg <- function(object, newdata, newdata.diff, direct.glm, se.fit = F
     attr(return.object, "concat") <- TRUE
     
   }
-  
-  # adjustment for robust
-  if (object$robust) {
-    return.object <- list()
-    return.object$fit <- object$dim
-    return.object$se.fit <- object$dim.se
-  }
 
   class(return.object) <- "predict.ictreg"
   
@@ -4937,7 +4934,7 @@ vcov.ictreg <- function(object, ...){
     object$constrained <- F
   
   if (object$method == "lm" | (object$method=="ml" & object$constrained==T &
-     object$boundary == F & object$multi == F)) {
+     object$boundary == F & object$multi == F & object$robust == F)) {
     vcov <- rbind( cbind( vcov[(nPar+1):(nPar*2), (nPar+1):(nPar*2)],
                          vcov[(nPar+1):(nPar*2), 1:nPar]  ),
                   cbind(vcov[1:nPar, (nPar+1):(nPar*2)] ,vcov[1:nPar, 1:nPar])  )
