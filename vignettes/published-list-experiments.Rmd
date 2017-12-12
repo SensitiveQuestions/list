@@ -7,5 +7,6 @@ nocite: '@*'
 
 Below is a list compiled by Graeme Blair, Alex Coppock, and Margaret Moor of all published list experiments. If your published list experiment is not included, please email Margaret at margaret.moor@yale.edu.
 
-# Bibliography
+
+
 
