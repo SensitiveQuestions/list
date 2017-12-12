@@ -3245,7 +3245,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         J * logistic(x %*% gamma)/(1 + exp(x %*% gamma))) * (1-treat) * x
       m.dim <- -logistic(x %*% delta) + n/n1 * treat * y - n/n0 * (1-treat) * y
       
-      F <- crossprod(cbind(m1, m0, m.dim/sqrt(n)))/n
+      F <- crossprod(cbind(m1, m0, m.dim/n))/n
 
       return(solve(F))
 
