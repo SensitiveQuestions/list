@@ -444,7 +444,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     if (multi.condition != "none") 
       stop("The robust ML functionality is not yet supported for multiple sensitive item designs.")
     if (!(method == "ml" | method == "nls"))
-      stop("You must specify method as 'ml' or 'nls' to use the robust ML functionality.")
+      stop("You must specify method as 'ml' or 'nls' to use the robust functionality.")
   }
 
   # auxiliary data functionality -- check conditions
@@ -456,7 +456,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     if (method != "nls")
       stop("The auxiliary data functionality is currently supported only for the nonlinear least squares method.")
     if (robust)
-      stop("The auxiliary data functionality is not yet compatible with the robust ML functionality.")
+      stop("The auxiliary data functionality is not yet compatible with the robust functionality.")
   }
 
   n <- nrow(x.treatment) + nrow(x.control)
@@ -3245,7 +3245,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         J * logistic(x %*% gamma)/(1 + exp(x %*% gamma))) * (1-treat) * x
       m.dim <- -logistic(x %*% delta) + n/n1 * treat * y - n/n0 * (1-treat) * y
       
-      F <- crossprod(cbind(m1, m0, m.dim))/n
+      F <- crossprod(cbind(m1, m0, m.dim/sqrt(n)))/n
 
       return(solve(F))
 
@@ -3526,7 +3526,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       # additional moment
       m.dim <- logistic(Xb) - n/n1 * T * Y + n/n0 * (1-T) * Y
-      Wtmp  <- cbind(beta.mat, gamma.mat, m.dim)
+      Wtmp  <- cbind(beta.mat, gamma.mat, m.dim/n)
 
       # weight matrix
       cW <- (t(Wtmp) %*% Wtmp)/n
@@ -3569,21 +3569,10 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       
       gamma.foc <- colMeans(X*gamma.coef)
 
-      # dim moment
-      if (robust) {
-        aux.vec <- (logistic(Xb) - mean(Y[T == 1]) + mean(Y[T == 0]))
-        aux.mom <- mean(aux.vec)
-        cG <- c(beta.foc, gamma.foc, aux.mom) 
-      } else {
-        cG <- c(beta.foc, gamma.foc)
-      }
-
-      # # vcov of moments
-      # Em1 <- crossprod(X*beta.coef)/n
-      # Em0 <- crossprod(X*gamma.coef)/n
-      # Em.dim <- crossprod(aux.vec)/n
-
-      # F <- adiag(Em1, Em0, Em.dim)
+      # vcov of moments
+      m.dim <- logistic(Xb) - n/n1 * T * Y + n/n0 * (1-T) * Y
+      F <- crossprod(cbind(X*beta.coef, X*gamma.coef, m.dim))/n
+    
            
       # jacobian
       tmp1 <- -logistic(Xb)/(1 + exp(Xb)) + 
@@ -3607,9 +3596,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         )
       }
 
-      cW <- weightMatrix(params, J, Y, T, X, robust)
-
-      return.mat <- ginv(t(dcG) %*% ginv(cW) %*% dcG) # %*% 
+      return.mat <- solve(t(dcG) %*% solve(F, tol = 1e-20) %*% dcG, tol = 1e-20) # %*% 
         # t(dcG) %*% ginv(cW) %*% F %*% t(ginv(cW)) %*% dcG %*% 
           # ginv(t(dcG) %*% t(ginv(cW)) %*% dcG)
 
