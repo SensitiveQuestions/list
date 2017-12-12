@@ -23,7 +23,8 @@
 <link href="../pkgdown.css" rel="stylesheet">
 <script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
-
+  
+  
 <!-- mathjax -->
 <script src='https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 
@@ -50,8 +51,23 @@
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-        <li>
-  <a href="../articles/">How-To's</a>
+        <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    How-To's
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/getting-started.html">Getting started</a>
+    </li>
+    <li>
+      <a href="../articles/combined-list.html">Combining List Experiments with Direct Questions</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="../articles/published-list-experiments.html">Examples of List Experiments</a>
 </li>
 <li>
   <a href="../reference/">Reference</a>
@@ -157,7 +173,7 @@ status.</p>
 
     <p>Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
 List Experiments."  Political Analysis, Vol. 20, No 1 (Winter). available at
-<a href = 'http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
+<a href='http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
@@ -179,15 +195,17 @@ assumption of no design effect</p>
 #&gt; Test for List Experiment Design Effects
 #&gt; 
 #&gt; Estimated population proportions 
-#&gt;                     est.   s.e.
-#&gt; pi(y = 0, t = 1) -0.0019 0.0070
-#&gt; pi(y = 1, t = 1)  0.0882 0.0229
-#&gt; pi(y = 2, t = 1)  0.1696 0.0287
-#&gt; pi(y = 3, t = 1)  0.2388 0.0177
-#&gt; pi(y = 0, t = 0)  0.0155 0.0051
-#&gt; pi(y = 1, t = 0)  0.1359 0.0155
-#&gt; pi(y = 2, t = 0)  0.2073 0.0271
-#&gt; pi(y = 3, t = 0)  0.1466 0.0267
+#&gt;                            est.   s.e.
+#&gt; pi(Y_i(0) = 0, Z_i = 1) -0.0019 0.0070
+#&gt; pi(Y_i(0) = 1, Z_i = 1)  0.0882 0.0229
+#&gt; pi(Y_i(0) = 2, Z_i = 1)  0.1696 0.0287
+#&gt; pi(Y_i(0) = 3, Z_i = 1)  0.2388 0.0177
+#&gt; pi(Y_i(0) = 0, Z_i = 0)  0.0155 0.0051
+#&gt; pi(Y_i(0) = 1, Z_i = 0)  0.1359 0.0155
+#&gt; pi(Y_i(0) = 2, Z_i = 0)  0.2073 0.0271
+#&gt; pi(Y_i(0) = 3, Z_i = 0)  0.1466 0.0267
+#&gt; 
+#&gt;  Y_i(0) is the (latent) count of 'yes' responses to the control items. Z_i is the (latent) binary response to the sensitive item.
 #&gt; 
 #&gt; Bonferroni-corrected p-value
 #&gt; If this value is below alpha, you reject the null hypothesis of no design effect. If it is above alpha, you fail to reject the null.
@@ -200,15 +218,17 @@ assumption of no design effect</p>
 #&gt; Test for List Experiment Design Effects
 #&gt; 
 #&gt; Estimated population proportions 
-#&gt;                     est.   s.e.
-#&gt; pi(y = 0, t = 1) -0.0169 0.0084
-#&gt; pi(y = 1, t = 1)  0.0101 0.0243
-#&gt; pi(y = 2, t = 1)  0.0200 0.0281
-#&gt; pi(y = 3, t = 1)  0.0545 0.0091
-#&gt; pi(y = 0, t = 0)  0.0304 0.0069
-#&gt; pi(y = 1, t = 0)  0.2140 0.0174
-#&gt; pi(y = 2, t = 0)  0.3569 0.0263
-#&gt; pi(y = 3, t = 0)  0.3309 0.0220
+#&gt;                            est.   s.e.
+#&gt; pi(Y_i(0) = 0, Z_i = 1) -0.0169 0.0084
+#&gt; pi(Y_i(0) = 1, Z_i = 1)  0.0101 0.0243
+#&gt; pi(Y_i(0) = 2, Z_i = 1)  0.0200 0.0281
+#&gt; pi(Y_i(0) = 3, Z_i = 1)  0.0545 0.0091
+#&gt; pi(Y_i(0) = 0, Z_i = 0)  0.0304 0.0069
+#&gt; pi(Y_i(0) = 1, Z_i = 0)  0.2140 0.0174
+#&gt; pi(Y_i(0) = 2, Z_i = 0)  0.3569 0.0263
+#&gt; pi(Y_i(0) = 3, Z_i = 0)  0.3309 0.0220
+#&gt; 
+#&gt;  Y_i(0) is the (latent) count of 'yes' responses to the control items. Z_i is the (latent) binary response to the sensitive item.
 #&gt; 
 #&gt; Bonferroni-corrected p-value
 #&gt; If this value is below alpha, you reject the null hypothesis of no design effect. If it is above alpha, you fail to reject the null.

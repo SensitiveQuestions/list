@@ -23,7 +23,8 @@
 <link href="../pkgdown.css" rel="stylesheet">
 <script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
-
+  
+  
 <!-- mathjax -->
 <script src='https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 
@@ -50,8 +51,23 @@
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-        <li>
-  <a href="../articles/">How-To's</a>
+        <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    How-To's
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/getting-started.html">Getting started</a>
+    </li>
+    <li>
+      <a href="../articles/combined-list.html">Combining List Experiments with Direct Questions</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="../articles/published-list-experiments.html">Examples of List Experiments</a>
 </li>
 <li>
   <a href="../reference/">Reference</a>
@@ -198,11 +214,11 @@ social desirability bias in Blair and Imai (2010).</p>
 
     <p>Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
 List Experiments."  Political Analysis, Vol. 20, No 1 (Winter). available at
-<a href = 'http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
+<a href='http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
 <p>Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item Count
 Technique.'' Journal of the American Statistical Association, Vol. 106, No.
 494 (June), pp. 407-416. available at
-<a href = 'http://imai.princeton.edu/research/list.html'>http://imai.princeton.edu/research/list.html</a></p>
+<a href='http://imai.princeton.edu/research/list.html'>http://imai.princeton.edu/research/list.html</a></p>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
@@ -216,103 +232,102 @@ Technique.'' Journal of the American Statistical Association, Vol. 106, No.
 <span class='no'>race.south</span> <span class='kw'>&lt;-</span> <span class='no'>race.nonsouth</span> <span class='kw'>&lt;-</span> <span class='no'>race</span>
 
 <span class='no'>race.south</span>[, <span class='st'>"south"</span>] <span class='kw'>&lt;-</span> <span class='fl'>1</span>
-<span class='no'>race.nonsouth</span>[, <span class='st'>"south"</span>] <span class='kw'>&lt;-</span> <span class='fl'>0</span>
+<span class='no'>race.nonsouth</span>[, <span class='st'>"south"</span>] <span class='kw'>&lt;-</span> <span class='fl'>0</span></div><span class='co'># NOT RUN {</span>
+<span class='co'># Fit EM algorithm ML model with constraint with no covariates</span>
 
-<span class='fu'>not_run</span>({
+<span class='no'>ml.results.south.nocov</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='fl'>1</span>,
+   <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>[<span class='no'>race</span>$<span class='no'>south</span> <span class='kw'>==</span> <span class='fl'>1</span>, ], <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ml"</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
+   <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>overdispersed</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='no'>ml.results.nonsouth.nocov</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='fl'>1</span>,
+   <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>[<span class='no'>race</span>$<span class='no'>south</span> <span class='kw'>==</span> <span class='fl'>0</span>, ], <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ml"</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
+   <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>overdispersed</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-  <span class='co'># Fit EM algorithm ML model with constraint with no covariates</span>
+<span class='co'># Calculate average predictions for respondents in the South </span>
+<span class='co'># and the the North of the US for the MLE no covariates </span>
+<span class='co'># model, replicating the estimates presented in Figure 1, </span>
+<span class='co'># Imai (2010)</span>
 
-  <span class='no'>ml.results.south.nocov</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='fl'>1</span>,
-     <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>[<span class='no'>race</span>$<span class='no'>south</span> <span class='kw'>==</span> <span class='fl'>1</span>, ], <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ml"</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
-     <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>overdispersed</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
-  <span class='no'>ml.results.nonsouth.nocov</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='fl'>1</span>,
-     <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>[<span class='no'>race</span>$<span class='no'>south</span> <span class='kw'>==</span> <span class='fl'>0</span>, ], <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ml"</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
-     <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>overdispersed</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='no'>avg.pred.south.nocov</span> <span class='kw'>&lt;-</span> <span class='fu'>predict</span>(<span class='no'>ml.results.south.nocov</span>,
+   <span class='kw'>newdata</span> <span class='kw'>=</span> <span class='fu'>as.data.frame</span>(<span class='fu'>matrix</span>(<span class='fl'>1</span>, <span class='fl'>1</span>, <span class='fl'>1</span>)), <span class='kw'>se.fit</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+   <span class='kw'>avg</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='no'>avg.pred.nonsouth.nocov</span> <span class='kw'>&lt;-</span> <span class='fu'>predict</span>(<span class='no'>ml.results.nonsouth.nocov</span>,
+   <span class='kw'>newdata</span> <span class='kw'>=</span> <span class='fu'>as.data.frame</span>(<span class='fu'>matrix</span>(<span class='fl'>1</span>, <span class='fl'>1</span>, <span class='fl'>1</span>)), <span class='kw'>se.fit</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+   <span class='kw'>avg</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-  <span class='co'># Calculate average predictions for respondents in the South </span>
-  <span class='co'># and the the North of the US for the MLE no covariates </span>
-  <span class='co'># model, replicating the estimates presented in Figure 1, </span>
-  <span class='co'># Imai (2010)</span>
+<span class='co'># Fit linear regression</span>
 
-  <span class='no'>avg.pred.south.nocov</span> <span class='kw'>&lt;-</span> <span class='fu'>predict</span>(<span class='no'>ml.results.south.nocov</span>,
-     <span class='kw'>newdata</span> <span class='kw'>=</span> <span class='fu'>as.data.frame</span>(<span class='fu'>matrix</span>(<span class='fl'>1</span>, <span class='fl'>1</span>, <span class='fl'>1</span>)), <span class='kw'>se.fit</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-     <span class='kw'>avg</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
-  <span class='no'>avg.pred.nonsouth.nocov</span> <span class='kw'>&lt;-</span> <span class='fu'>predict</span>(<span class='no'>ml.results.nonsouth.nocov</span>,
-     <span class='kw'>newdata</span> <span class='kw'>=</span> <span class='fu'>as.data.frame</span>(<span class='fu'>matrix</span>(<span class='fl'>1</span>, <span class='fl'>1</span>, <span class='fl'>1</span>)), <span class='kw'>se.fit</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-     <span class='kw'>avg</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='no'>lm.results</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>south</span> + <span class='no'>age</span> + <span class='no'>male</span> + <span class='no'>college</span>,
+   <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>, <span class='kw'>J</span><span class='kw'>=</span><span class='fl'>3</span>, <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"lm"</span>)
 
-  <span class='co'># Fit linear regression</span>
+<span class='co'># Calculate average predictions for respondents in the </span>
+<span class='co'># South and the the North of the US for the lm model, </span>
+<span class='co'># replicating the estimates presented in Figure 1, Imai (2010)</span>
 
-  <span class='no'>lm.results</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>south</span> + <span class='no'>age</span> + <span class='no'>male</span> + <span class='no'>college</span>,
-     <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>, <span class='kw'>J</span><span class='kw'>=</span><span class='fl'>3</span>, <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"lm"</span>)
+<span class='no'>avg.pred.south.lm</span> <span class='kw'>&lt;-</span> <span class='fu'>predict</span>(<span class='no'>lm.results</span>, <span class='kw'>newdata</span> <span class='kw'>=</span> <span class='no'>race.south</span>,
+   <span class='kw'>se.fit</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>avg</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-  <span class='co'># Calculate average predictions for respondents in the </span>
-  <span class='co'># South and the the North of the US for the lm model, </span>
-  <span class='co'># replicating the estimates presented in Figure 1, Imai (2010)</span>
+<span class='no'>avg.pred.nonsouth.lm</span> <span class='kw'>&lt;-</span> <span class='fu'>predict</span>(<span class='no'>lm.results</span>, <span class='kw'>newdata</span> <span class='kw'>=</span> <span class='no'>race.nonsouth</span>,
+   <span class='kw'>se.fit</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>avg</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-  <span class='no'>avg.pred.south.lm</span> <span class='kw'>&lt;-</span> <span class='fu'>predict</span>(<span class='no'>lm.results</span>, <span class='kw'>newdata</span> <span class='kw'>=</span> <span class='no'>race.south</span>,
-     <span class='kw'>se.fit</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>avg</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='co'># Fit two-step non-linear least squares regression</span>
 
-  <span class='no'>avg.pred.nonsouth.lm</span> <span class='kw'>&lt;-</span> <span class='fu'>predict</span>(<span class='no'>lm.results</span>, <span class='kw'>newdata</span> <span class='kw'>=</span> <span class='no'>race.nonsouth</span>,
-     <span class='kw'>se.fit</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>avg</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='no'>nls.results</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>south</span> + <span class='no'>age</span> + <span class='no'>male</span> + <span class='no'>college</span>,
+   <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>, <span class='kw'>J</span><span class='kw'>=</span><span class='fl'>3</span>, <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"nls"</span>)
 
-  <span class='co'># Fit two-step non-linear least squares regression</span>
+<span class='co'># Calculate average predictions for respondents in the South </span>
+<span class='co'># and the the North of the US for the NLS model, replicating</span>
+<span class='co'># the estimates presented in Figure 1, Imai (2010)</span>
 
-  <span class='no'>nls.results</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>south</span> + <span class='no'>age</span> + <span class='no'>male</span> + <span class='no'>college</span>,
-     <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>, <span class='kw'>J</span><span class='kw'>=</span><span class='fl'>3</span>, <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"nls"</span>)
+<span class='no'>avg.pred.nls</span> <span class='kw'>&lt;-</span> <span class='fu'>predict</span>(<span class='no'>nls.results</span>, <span class='kw'>newdata</span> <span class='kw'>=</span> <span class='no'>race.south</span>,
+   <span class='kw'>newdata.diff</span> <span class='kw'>=</span> <span class='no'>race.nonsouth</span>, <span class='kw'>se.fit</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>avg</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-  <span class='co'># Calculate average predictions for respondents in the South </span>
-  <span class='co'># and the the North of the US for the NLS model, replicating</span>
-  <span class='co'># the estimates presented in Figure 1, Imai (2010)</span>
+<span class='co'># Fit EM algorithm ML model with constraint</span>
 
-  <span class='no'>avg.pred.nls</span> <span class='kw'>&lt;-</span> <span class='fu'>predict</span>(<span class='no'>nls.results</span>, <span class='kw'>newdata</span> <span class='kw'>=</span> <span class='no'>race.south</span>,
-     <span class='kw'>newdata.diff</span> <span class='kw'>=</span> <span class='no'>race.nonsouth</span>, <span class='kw'>se.fit</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>avg</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='no'>ml.constrained.results</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>south</span> + <span class='no'>age</span> + <span class='no'>male</span> + <span class='no'>college</span>,
+   <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>, <span class='kw'>J</span><span class='kw'>=</span><span class='fl'>3</span>, <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ml"</span>,
+   <span class='kw'>overdispersed</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-  <span class='co'># Fit EM algorithm ML model with constraint</span>
+<span class='co'># Calculate average predictions for respondents in the South </span>
+<span class='co'># and the the North of the US for the MLE model, replicating the </span>
+<span class='co'># estimates presented in Figure 1, Imai (2010)</span>
 
-  <span class='no'>ml.constrained.results</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>south</span> + <span class='no'>age</span> + <span class='no'>male</span> + <span class='no'>college</span>,
-     <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>, <span class='kw'>J</span><span class='kw'>=</span><span class='fl'>3</span>, <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ml"</span>,
-     <span class='kw'>overdispersed</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='no'>avg.pred.diff.mle</span> <span class='kw'>&lt;-</span> <span class='fu'>predict</span>(<span class='no'>ml.constrained.results</span>,
+   <span class='kw'>newdata</span> <span class='kw'>=</span> <span class='no'>race.south</span>, <span class='kw'>newdata.diff</span> <span class='kw'>=</span> <span class='no'>race.nonsouth</span>,
+   <span class='kw'>se.fit</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>avg</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-  <span class='co'># Calculate average predictions for respondents in the South </span>
-  <span class='co'># and the the North of the US for the MLE model, replicating the </span>
-  <span class='co'># estimates presented in Figure 1, Imai (2010)</span>
+<span class='co'># Calculate average predictions from the item count technique</span>
+<span class='co'># regression and from a direct sensitive item modeled with</span>
+<span class='co'># a logit.</span>
 
-  <span class='no'>avg.pred.diff.mle</span> <span class='kw'>&lt;-</span> <span class='fu'>predict</span>(<span class='no'>ml.constrained.results</span>,
-     <span class='kw'>newdata</span> <span class='kw'>=</span> <span class='no'>race.south</span>, <span class='kw'>newdata.diff</span> <span class='kw'>=</span> <span class='no'>race.nonsouth</span>,
-     <span class='kw'>se.fit</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>avg</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='co'># Estimate logit for direct sensitive question</span>
 
-  <span class='co'># Calculate average predictions from the item count technique</span>
-  <span class='co'># regression and from a direct sensitive item modeled with</span>
-  <span class='co'># a logit.</span>
+<span class='fu'>data</span>(<span class='no'>mis</span>)
 
-  <span class='co'># Estimate logit for direct sensitive question</span>
+<span class='no'>mis.list</span> <span class='kw'>&lt;-</span> <span class='fu'>subset</span>(<span class='no'>mis</span>, <span class='no'>list.data</span> <span class='kw'>==</span> <span class='fl'>1</span>)
 
-  <span class='fu'>data</span>(<span class='no'>mis</span>)
+<span class='no'>mis.sens</span> <span class='kw'>&lt;-</span> <span class='fu'>subset</span>(<span class='no'>mis</span>, <span class='no'>sens.data</span> <span class='kw'>==</span> <span class='fl'>1</span>)
 
-  <span class='no'>mis.list</span> <span class='kw'>&lt;-</span> <span class='fu'>subset</span>(<span class='no'>mis</span>, <span class='no'>list.data</span> <span class='kw'>==</span> <span class='fl'>1</span>)
+<span class='co'># Fit EM algorithm ML model</span>
 
-  <span class='no'>mis.sens</span> <span class='kw'>&lt;-</span> <span class='fu'>subset</span>(<span class='no'>mis</span>, <span class='no'>sens.data</span> <span class='kw'>==</span> <span class='fl'>1</span>)
+<span class='no'>fit.list</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>age</span> + <span class='no'>college</span> + <span class='no'>male</span> + <span class='no'>south</span>,
+   <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>4</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>mis.list</span>, <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ml"</span>)
 
-  <span class='co'># Fit EM algorithm ML model</span>
+<span class='co'># Fit logistic regression with directly-asked sensitive question</span>
 
-  <span class='no'>fit.list</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>age</span> + <span class='no'>college</span> + <span class='no'>male</span> + <span class='no'>south</span>,
-     <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>4</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>mis.list</span>, <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ml"</span>)
+<span class='no'>fit.sens</span> <span class='kw'>&lt;-</span> <span class='fu'>glm</span>(<span class='no'>sensitive</span> ~ <span class='no'>age</span> + <span class='no'>college</span> + <span class='no'>male</span> + <span class='no'>south</span>,
+   <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>mis.sens</span>, <span class='kw'>family</span> <span class='kw'>=</span> <span class='fu'>binomial</span>(<span class='st'>"logit"</span>))
 
-  <span class='co'># Fit logistic regression with directly-asked sensitive question</span>
+<span class='co'># Predict difference between response to sensitive item</span>
+<span class='co'># under the direct and indirect questions (the list experiment).</span>
+<span class='co'># This is an estimate of the revealed social desirability bias</span>
+<span class='co'># of respondents. See Blair and Imai (2010).</span>
 
-  <span class='no'>fit.sens</span> <span class='kw'>&lt;-</span> <span class='fu'>glm</span>(<span class='no'>sensitive</span> ~ <span class='no'>age</span> + <span class='no'>college</span> + <span class='no'>male</span> + <span class='no'>south</span>,
-     <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>mis.sens</span>, <span class='kw'>family</span> <span class='kw'>=</span> <span class='fu'>binomial</span>(<span class='st'>"logit"</span>))
+<span class='no'>avg.pred.social.desirability</span> <span class='kw'>&lt;-</span> <span class='fu'>predict</span>(<span class='no'>fit.list</span>,
+   <span class='kw'>direct.glm</span> <span class='kw'>=</span> <span class='no'>fit.sens</span>, <span class='kw'>se.fit</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-  <span class='co'># Predict difference between response to sensitive item</span>
-  <span class='co'># under the direct and indirect questions (the list experiment).</span>
-  <span class='co'># This is an estimate of the revealed social desirability bias</span>
-  <span class='co'># of respondents. See Blair and Imai (2010).</span>
+<span class='co'># }</span><div class='input'>
 
-  <span class='no'>avg.pred.social.desirability</span> <span class='kw'>&lt;-</span> <span class='fu'>predict</span>(<span class='no'>fit.list</span>,
-     <span class='kw'>direct.glm</span> <span class='kw'>=</span> <span class='no'>fit.sens</span>, <span class='kw'>se.fit</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
-
-})</div></pre>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>

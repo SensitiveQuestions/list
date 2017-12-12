@@ -23,7 +23,8 @@
 <link href="../pkgdown.css" rel="stylesheet">
 <script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
-
+  
+  
 <!-- mathjax -->
 <script src='https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 
@@ -50,8 +51,23 @@
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-        <li>
-  <a href="../articles/">How-To's</a>
+        <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    How-To's
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/getting-started.html">Getting started</a>
+    </li>
+    <li>
+      <a href="../articles/combined-list.html">Combining List Experiments with Direct Questions</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="../articles/published-list-experiments.html">Examples of List Experiments</a>
 </li>
 <li>
   <a href="../reference/">Reference</a>
@@ -256,7 +272,7 @@ missingness.</p>
     <p>Imai, Kosuke, Bethany Park, and Kenneth F. Greene. (2014)
 ``Using the Predicted Responses from List Experiments as Explanatory
 Variables in Regression Models.'' available at
-<a href = 'http://imai.princeton.edu/research/files/listExp.pdf'>http://imai.princeton.edu/research/files/listExp.pdf</a></p>
+<a href='http://imai.princeton.edu/research/files/listExp.pdf'>http://imai.princeton.edu/research/files/listExp.pdf</a></p>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
@@ -264,61 +280,59 @@ Variables in Regression Models.'' available at
 
 <span class='fu'>data</span>(<span class='no'>mexico</span>)
 <span class='no'>loyal</span> <span class='kw'>&lt;-</span> <span class='no'>mexico</span>[<span class='no'>mexico</span>$<span class='no'>mex.loyal</span> <span class='kw'>==</span> <span class='fl'>1</span>,]
-<span class='no'>notloyal</span> <span class='kw'>&lt;-</span> <span class='no'>mexico</span>[<span class='no'>mexico</span>$<span class='no'>mex.loyal</span> <span class='kw'>==</span> <span class='fl'>0</span>,]
+<span class='no'>notloyal</span> <span class='kw'>&lt;-</span> <span class='no'>mexico</span>[<span class='no'>mexico</span>$<span class='no'>mex.loyal</span> <span class='kw'>==</span> <span class='fl'>0</span>,]</div><span class='co'># NOT RUN {</span>
+<span class='co'>## Logistic outcome regression</span>
+<span class='co'>## (effect of vote-selling on turnout)</span>
+<span class='co'>## This replicates Table 4 in Imai et al. 2014</span>
 
-<span class='fu'>not_run</span>({
-
-  <span class='co'>## Logistic outcome regression</span>
-  <span class='co'>## (effect of vote-selling on turnout)</span>
-  <span class='co'>## This replicates Table 4 in Imai et al. 2014</span>
-
-  <span class='no'>loyalreg</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.joint.html'>ictreg.joint</a></span>(<span class='kw'>formula</span> <span class='kw'>=</span> <span class='no'>mex.y.all</span> ~ <span class='no'>mex.male</span> + <span class='no'>mex.age</span> + <span class='no'>mex.age2</span> + <span class='no'>mex.education</span> +
-                           <span class='no'>mex.interest</span> + <span class='no'>mex.married</span> +
-                           <span class='no'>mex.wealth</span> + <span class='no'>mex.urban</span> + <span class='no'>mex.havepropoganda</span> + <span class='no'>mex.concurrent</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>loyal</span>,
-                           <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"mex.t"</span>, <span class='kw'>outcome</span> <span class='kw'>=</span> <span class='st'>"mex.votecard"</span>, <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-                           <span class='kw'>outcome.reg</span> <span class='kw'>=</span> <span class='st'>"logistic"</span>, <span class='kw'>maxIter</span> <span class='kw'>=</span> <span class='fl'>1000</span>)
+<span class='no'>loyalreg</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.joint.html'>ictreg.joint</a></span>(<span class='kw'>formula</span> <span class='kw'>=</span> <span class='no'>mex.y.all</span> ~ <span class='no'>mex.male</span> + <span class='no'>mex.age</span> + <span class='no'>mex.age2</span> + <span class='no'>mex.education</span> +
+                         <span class='no'>mex.interest</span> + <span class='no'>mex.married</span> +
+                         <span class='no'>mex.wealth</span> + <span class='no'>mex.urban</span> + <span class='no'>mex.havepropoganda</span> + <span class='no'>mex.concurrent</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>loyal</span>,
+                         <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"mex.t"</span>, <span class='kw'>outcome</span> <span class='kw'>=</span> <span class='st'>"mex.votecard"</span>, <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+                         <span class='kw'>outcome.reg</span> <span class='kw'>=</span> <span class='st'>"logistic"</span>, <span class='kw'>maxIter</span> <span class='kw'>=</span> <span class='fl'>1000</span>)
 
 
-  <span class='co'>## Linear outcome regression</span>
-  <span class='co'>## (effect of vote-selling on candidate approval)</span>
-  <span class='co'>## This replicates Table 5 in Imai et al. 2014</span>
+<span class='co'>## Linear outcome regression</span>
+<span class='co'>## (effect of vote-selling on candidate approval)</span>
+<span class='co'>## This replicates Table 5 in Imai et al. 2014</span>
 
-  <span class='no'>approvalreg</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.joint.html'>ictreg.joint</a></span>(<span class='kw'>formula</span> <span class='kw'>=</span> <span class='no'>mex.y.all</span> ~ <span class='no'>mex.male</span> + <span class='no'>mex.age</span> + <span class='no'>mex.age2</span> +
-                              <span class='no'>mex.education</span> +
-                              <span class='no'>mex.interest</span> + <span class='no'>mex.married</span> +
-                              <span class='no'>mex.urban</span> +
-                              <span class='no'>mex.cleanelections</span> + <span class='no'>mex.cleanelectionsmiss</span> +
-                              <span class='no'>mex.havepropoganda</span> +
-                              <span class='no'>mex.wealth</span> + <span class='no'>mex.northregion</span> +
-                              <span class='no'>mex.centralregion</span> + <span class='no'>mex.metro</span> + <span class='no'>mex.pidpriw2</span> +
+<span class='no'>approvalreg</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.joint.html'>ictreg.joint</a></span>(<span class='kw'>formula</span> <span class='kw'>=</span> <span class='no'>mex.y.all</span> ~ <span class='no'>mex.male</span> + <span class='no'>mex.age</span> + <span class='no'>mex.age2</span> +
+                            <span class='no'>mex.education</span> +
+                            <span class='no'>mex.interest</span> + <span class='no'>mex.married</span> +
+                            <span class='no'>mex.urban</span> +
+                            <span class='no'>mex.cleanelections</span> + <span class='no'>mex.cleanelectionsmiss</span> +
+                            <span class='no'>mex.havepropoganda</span> +
+                            <span class='no'>mex.wealth</span> + <span class='no'>mex.northregion</span> +
+                            <span class='no'>mex.centralregion</span> + <span class='no'>mex.metro</span> + <span class='no'>mex.pidpriw2</span> +
                             <span class='no'>mex.pidpanw2</span> + <span class='no'>mex.pidprdw2</span>,
-                              <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>mexico</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"mex.t"</span>, <span class='kw'>outcome</span> <span class='kw'>=</span> <span class='st'>"mex.epnapprove"</span>,
-                              <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-                              <span class='kw'>outcome.reg</span> <span class='kw'>=</span> <span class='st'>"linear"</span>, <span class='kw'>maxIter</span> <span class='kw'>=</span> <span class='fl'>1000</span>)
+                            <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>mexico</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"mex.t"</span>, <span class='kw'>outcome</span> <span class='kw'>=</span> <span class='st'>"mex.epnapprove"</span>,
+                            <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+                            <span class='kw'>outcome.reg</span> <span class='kw'>=</span> <span class='st'>"linear"</span>, <span class='kw'>maxIter</span> <span class='kw'>=</span> <span class='fl'>1000</span>)
 
 
-  <span class='fu'>summary</span>(<span class='no'>approvalreg</span>)
+<span class='fu'>summary</span>(<span class='no'>approvalreg</span>)
 
-  <span class='co'>## Generate predicted probability of turnout, averaged over the whole sample,</span>
-  <span class='co'>## for vote sellers (z = 1), non-vote sellers (z = 0), and the difference</span>
-  <span class='co'>## between vote sellers and non-vote sellers, in the sample of party supporters.</span>
-  <span class='co'>## This replicates the results in the righthand panel of Figure 2 in Imai et al. 2014</span>
+<span class='co'>## Generate predicted probability of turnout, averaged over the whole sample,</span>
+<span class='co'>## for vote sellers (z = 1), non-vote sellers (z = 0), and the difference</span>
+<span class='co'>## between vote sellers and non-vote sellers, in the sample of party supporters.</span>
+<span class='co'>## This replicates the results in the righthand panel of Figure 2 in Imai et al. 2014</span>
 
-  <span class='no'>loyalpred</span> <span class='kw'>&lt;-</span> <span class='fu'>predict.ictreg.joint</span>(<span class='no'>loyalreg</span>, <span class='kw'>se.fit</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>interval</span> <span class='kw'>=</span> <span class='st'>"confidence"</span>,
+<span class='no'>loyalpred</span> <span class='kw'>&lt;-</span> <span class='fu'>predict.ictreg.joint</span>(<span class='no'>loyalreg</span>, <span class='kw'>se.fit</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>interval</span> <span class='kw'>=</span> <span class='st'>"confidence"</span>,
                                         <span class='kw'>level</span> <span class='kw'>=</span> <span class='fl'>0.95</span>, <span class='kw'>avg</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
                                         <span class='kw'>sensitive.value</span> <span class='kw'>=</span> <span class='st'>"both"</span>,
                                         <span class='kw'>sensitive.diff</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>return.draws</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
                                         <span class='kw'>predict.sensitive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-  <span class='no'>loyalpred</span>$<span class='no'>fit</span>
+<span class='no'>loyalpred</span>$<span class='no'>fit</span>
 
-  <span class='co'>## View predicted probability of vote selling, in the sample of party supporters.</span>
-  <span class='co'>## This replicates the results in the lefthand panel of Figure 2 in Imai et al. 2014</span>
+<span class='co'>## View predicted probability of vote selling, in the sample of party supporters.</span>
+<span class='co'>## This replicates the results in the lefthand panel of Figure 2 in Imai et al. 2014</span>
 
-  <span class='no'>loyalpred</span>$<span class='no'>fitsens</span>
+<span class='no'>loyalpred</span>$<span class='no'>fitsens</span>
 
 
-})</div></pre>
+<span class='co'># }</span><div class='input'>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>

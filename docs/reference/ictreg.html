@@ -23,7 +23,8 @@
 <link href="../pkgdown.css" rel="stylesheet">
 <script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
-
+  
+  
 <!-- mathjax -->
 <script src='https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 
@@ -50,8 +51,23 @@
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-        <li>
-  <a href="../articles/">How-To's</a>
+        <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    How-To's
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/getting-started.html">Getting started</a>
+    </li>
+    <li>
+      <a href="../articles/combined-list.html">Combining List Experiments with Direct Questions</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="../articles/published-list-experiments.html">Examples of List Experiments</a>
 </li>
 <li>
   <a href="../reference/">Reference</a>
@@ -375,11 +391,11 @@ is available.</p>
 
     <p>Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
 List Experiments."  Political Analysis. Forthcoming. available at
-<a href = 'http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
+<a href='http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
 <p>Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item Count
 Technique.'' Journal of the American Statistical Association, Vol. 106, No.
 494 (June), pp. 407-416. available at
-<a href = 'http://imai.princeton.edu/research/list.html'>http://imai.princeton.edu/research/list.html</a></p>
+<a href='http://imai.princeton.edu/research/list.html'>http://imai.princeton.edu/research/list.html</a></p>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
@@ -480,77 +496,77 @@ Technique.'' Journal of the American Statistical Association, Vol. 106, No.
 #&gt; 
 #&gt; Number of control items J set to 3. Treatment groups were indicated by '' and '' and the control group by ''.
 #&gt; </div><div class='input'>
-<span class='fu'>not_run</span>({
+</div><span class='co'># NOT RUN {</span>
+<span class='co'># Fit EM algorithm ML model with constraint</span>
+<span class='co'># Replicates Table 1 Columns 5-6, Imai (2011); note that age is divided by 10</span>
 
-  <span class='co'># Fit EM algorithm ML model with constraint</span>
-  <span class='co'># Replicates Table 1 Columns 5-6, Imai (2011); note that age is divided by 10</span>
-
-  <span class='no'>ml.constrained.results</span> <span class='kw'>&lt;-</span> <span class='fu'>ictreg</span>(<span class='no'>y</span> ~ <span class='no'>south</span> + <span class='no'>age</span> + <span class='no'>male</span> + <span class='no'>college</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
+<span class='no'>ml.constrained.results</span> <span class='kw'>&lt;-</span> <span class='fu'>ictreg</span>(<span class='no'>y</span> ~ <span class='no'>south</span> + <span class='no'>age</span> + <span class='no'>male</span> + <span class='no'>college</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
                                  <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>, <span class='kw'>J</span><span class='kw'>=</span><span class='fl'>3</span>, <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ml"</span>,
                                  <span class='kw'>overdispersed</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-  <span class='fu'>summary</span>(<span class='no'>ml.constrained.results</span>)
+<span class='fu'>summary</span>(<span class='no'>ml.constrained.results</span>)
 
-  <span class='co'># Fit EM algorithm ML model with no constraint</span>
-  <span class='co'># Replicates Table 1 Columns 7-10, Imai (2011); note that age is divided by 10</span>
+<span class='co'># Fit EM algorithm ML model with no constraint</span>
+<span class='co'># Replicates Table 1 Columns 7-10, Imai (2011); note that age is divided by 10</span>
 
-  <span class='no'>ml.unconstrained.results</span> <span class='kw'>&lt;-</span> <span class='fu'>ictreg</span>(<span class='no'>y</span> ~ <span class='no'>south</span> + <span class='no'>age</span> + <span class='no'>male</span> + <span class='no'>college</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
+<span class='no'>ml.unconstrained.results</span> <span class='kw'>&lt;-</span> <span class='fu'>ictreg</span>(<span class='no'>y</span> ~ <span class='no'>south</span> + <span class='no'>age</span> + <span class='no'>male</span> + <span class='no'>college</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
                                    <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>, <span class='kw'>J</span><span class='kw'>=</span><span class='fl'>3</span>, <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ml"</span>,
                                    <span class='kw'>overdispersed</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
 
-  <span class='fu'>summary</span>(<span class='no'>ml.unconstrained.results</span>)
+<span class='fu'>summary</span>(<span class='no'>ml.unconstrained.results</span>)
 
-  <span class='co'># Fit EM algorithm ML model for multiple sensitive items</span>
-  <span class='co'># Replicates Table 3 in Blair and Imai (2010)</span>
+<span class='co'># Fit EM algorithm ML model for multiple sensitive items</span>
+<span class='co'># Replicates Table 3 in Blair and Imai (2010)</span>
 
-  <span class='no'>multi.results</span> <span class='kw'>&lt;-</span> <span class='fu'>ictreg</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span> + <span class='no'>south</span>:<span class='no'>age</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
+<span class='no'>multi.results</span> <span class='kw'>&lt;-</span> <span class='fu'>ictreg</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span> + <span class='no'>south</span>:<span class='no'>age</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
                         <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ml"</span>,
                         <span class='kw'>multi.condition</span> <span class='kw'>=</span> <span class='st'>"level"</span>)
 
-  <span class='fu'>summary</span>(<span class='no'>multi.results</span>)
+<span class='fu'>summary</span>(<span class='no'>multi.results</span>)
 
-  <span class='co'># Fit standard design ML model</span>
-  <span class='co'># Replicates Table 7 Columns 1-2 in Blair and Imai (2010)</span>
+<span class='co'># Fit standard design ML model</span>
+<span class='co'># Replicates Table 7 Columns 1-2 in Blair and Imai (2010)</span>
 
-  <span class='no'>noboundary.results</span> <span class='kw'>&lt;-</span> <span class='fu'>ictreg</span>(<span class='no'>y</span> ~ <span class='no'>age</span> + <span class='no'>college</span> + <span class='no'>male</span> + <span class='no'>south</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
+<span class='no'>noboundary.results</span> <span class='kw'>&lt;-</span> <span class='fu'>ictreg</span>(<span class='no'>y</span> ~ <span class='no'>age</span> + <span class='no'>college</span> + <span class='no'>male</span> + <span class='no'>south</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
                              <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>affirm</span>, <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ml"</span>,
                              <span class='kw'>overdispersed</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
 
-  <span class='fu'>summary</span>(<span class='no'>noboundary.results</span>)
+<span class='fu'>summary</span>(<span class='no'>noboundary.results</span>)
 
-  <span class='co'># Fit standard design ML model with ceiling effects alone</span>
-  <span class='co'># Replicates Table 7 Columns 3-4 in Blair and Imai (2010)</span>
+<span class='co'># Fit standard design ML model with ceiling effects alone</span>
+<span class='co'># Replicates Table 7 Columns 3-4 in Blair and Imai (2010)</span>
 
-  <span class='no'>ceiling.results</span> <span class='kw'>&lt;-</span> <span class='fu'>ictreg</span>(<span class='no'>y</span> ~ <span class='no'>age</span> + <span class='no'>college</span> + <span class='no'>male</span> + <span class='no'>south</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
+<span class='no'>ceiling.results</span> <span class='kw'>&lt;-</span> <span class='fu'>ictreg</span>(<span class='no'>y</span> ~ <span class='no'>age</span> + <span class='no'>college</span> + <span class='no'>male</span> + <span class='no'>south</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
                           <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>affirm</span>, <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ml"</span>, <span class='kw'>fit.start</span> <span class='kw'>=</span> <span class='st'>"nls"</span>,
                           <span class='kw'>ceiling</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>ceiling.fit</span> <span class='kw'>=</span> <span class='st'>"bayesglm"</span>,
                           <span class='kw'>ceiling.formula</span> <span class='kw'>=</span> ~ <span class='no'>age</span> + <span class='no'>college</span> + <span class='no'>male</span> + <span class='no'>south</span>)
 
-  <span class='fu'>summary</span>(<span class='no'>ceiling.results</span>)
+<span class='fu'>summary</span>(<span class='no'>ceiling.results</span>)
 
-  <span class='co'># Fit standard design ML model with floor effects alone</span>
-  <span class='co'># Replicates Table 7 Columns 5-6 in Blair and Imai (2010)</span>
+<span class='co'># Fit standard design ML model with floor effects alone</span>
+<span class='co'># Replicates Table 7 Columns 5-6 in Blair and Imai (2010)</span>
 
-  <span class='no'>floor.results</span> <span class='kw'>&lt;-</span> <span class='fu'>ictreg</span>(<span class='no'>y</span> ~ <span class='no'>age</span> + <span class='no'>college</span> + <span class='no'>male</span> + <span class='no'>south</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
+<span class='no'>floor.results</span> <span class='kw'>&lt;-</span> <span class='fu'>ictreg</span>(<span class='no'>y</span> ~ <span class='no'>age</span> + <span class='no'>college</span> + <span class='no'>male</span> + <span class='no'>south</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
                         <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>affirm</span>, <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ml"</span>, <span class='kw'>fit.start</span> <span class='kw'>=</span> <span class='st'>"glm"</span>,
                         <span class='kw'>floor</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>floor.fit</span> <span class='kw'>=</span> <span class='st'>"bayesglm"</span>,
                         <span class='kw'>floor.formula</span> <span class='kw'>=</span> ~ <span class='no'>age</span> + <span class='no'>college</span> + <span class='no'>male</span> + <span class='no'>south</span>)
 
-  <span class='fu'>summary</span>(<span class='no'>floor.results</span>)
+<span class='fu'>summary</span>(<span class='no'>floor.results</span>)
 
-  <span class='co'># Fit standard design ML model with floor and ceiling effects</span>
-  <span class='co'># Replicates Table 7 Columns 7-8 in Blair and Imai (2010)</span>
+<span class='co'># Fit standard design ML model with floor and ceiling effects</span>
+<span class='co'># Replicates Table 7 Columns 7-8 in Blair and Imai (2010)</span>
 
-  <span class='no'>both.results</span> <span class='kw'>&lt;-</span> <span class='fu'>ictreg</span>(<span class='no'>y</span> ~ <span class='no'>age</span> + <span class='no'>college</span> + <span class='no'>male</span> + <span class='no'>south</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
+<span class='no'>both.results</span> <span class='kw'>&lt;-</span> <span class='fu'>ictreg</span>(<span class='no'>y</span> ~ <span class='no'>age</span> + <span class='no'>college</span> + <span class='no'>male</span> + <span class='no'>south</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
                        <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>affirm</span>, <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ml"</span>,
                        <span class='kw'>floor</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>ceiling</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
                        <span class='kw'>floor.fit</span> <span class='kw'>=</span> <span class='st'>"bayesglm"</span>, <span class='kw'>ceiling.fit</span> <span class='kw'>=</span> <span class='st'>"bayesglm"</span>,
                        <span class='kw'>floor.formula</span> <span class='kw'>=</span> ~ <span class='no'>age</span> + <span class='no'>college</span> + <span class='no'>male</span> + <span class='no'>south</span>,
                        <span class='kw'>ceiling.formula</span> <span class='kw'>=</span> ~ <span class='no'>age</span> + <span class='no'>college</span> + <span class='no'>male</span> + <span class='no'>south</span>)
 
-  <span class='fu'>summary</span>(<span class='no'>both.results</span>)
+<span class='fu'>summary</span>(<span class='no'>both.results</span>)
 
-})</div></pre>
+<span class='co'># }</span><div class='input'>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Authors • list</title>
+<title>Citation and Authors • list</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -23,7 +23,8 @@
 <link href="pkgdown.css" rel="stylesheet">
 <script src="jquery.sticky-kit.min.js"></script>
 <script src="pkgdown.js"></script>
-
+  
+  
 <!-- mathjax -->
 <script src='https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 
@@ -36,7 +37,7 @@
   </head>
 
   <body>
-    <div class="container template-authors">
+    <div class="container template-citation-authors">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -50,8 +51,23 @@
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-        <li>
-  <a href="articles/">How-To's</a>
+        <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    How-To's
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="articles/getting-started.html">Getting started</a>
+    </li>
+    <li>
+      <a href="articles/combined-list.html">Combining List Experiments with Direct Questions</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="articles/published-list-experiments.html">Examples of List Experiments</a>
 </li>
 <li>
   <a href="reference/">Reference</a>
@@ -90,7 +106,24 @@
       </header>
 
       <div class="row">
-  <div class="contents col-md-12">
+  <div class="contents col-md-9">
+
+    <div class="page-header">
+      <h1>Citation</h1>
+    </div>
+
+    <p>Blair G and Imai K (2010).
+&ldquo;list: Statistical Methods for the Item Count Technique and List Experiment.&rdquo;
+Available at The Comprehensive R Archive Network (CRAN).
+<a href="https://CRAN.R-project.org/package=list">https://CRAN.R-project.org/package=list</a>. 
+</p>
+    <pre>@Misc{,
+  title = {{list}: Statistical Methods for the Item Count Technique and List Experiment},
+  author = {Graeme Blair and Kosuke Imai},
+  howpublished = {Available at The Comprehensive R Archive Network (CRAN)},
+  year = {2010},
+  url = {https://CRAN.R-project.org/package=list},
+}</pre>
     <div class="page-header">
       <h1>Authors</h1>
     </div>

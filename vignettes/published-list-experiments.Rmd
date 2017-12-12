@@ -1,0 +1,11 @@
+---
+title: "Published List Experiments"
+output: html_document
+bibliography: published-list-experiments.bib
+nocite: '@*'
+---
+
+Below is a list compiled by Graeme Blair, Alex Coppock, and Margaret Moor of all published list experiments. If your published list experiment is not included, please email Margaret at xx. 
+
+# Bibliography
+

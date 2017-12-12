@@ -23,7 +23,8 @@
 <link href="../pkgdown.css" rel="stylesheet">
 <script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
-
+  
+  
 <!-- mathjax -->
 <script src='https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 
@@ -50,8 +51,23 @@
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-        <li>
-  <a href="../articles/">How-To's</a>
+        <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    How-To's
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/getting-started.html">Getting started</a>
+    </li>
+    <li>
+      <a href="../articles/combined-list.html">Combining List Experiments with Direct Questions</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="../articles/published-list-experiments.html">Examples of List Experiments</a>
 </li>
 <li>
   <a href="../reference/">Reference</a>
@@ -114,14 +130,14 @@ observations.</p><table><tr><td> y </td>
 <td> numeric </td>
 <td> the number of items that
 make respondents angry </td>
-</tr><tr><td> 0 - 4 </td>
-<td>
+<td> 0 - 4 </td>
+</tr><tr><td>
     mex.t </td>
 <td> numeric </td>
-</tr><tr><td> treatment status </td>
+<td> treatment status </td>
 <td> 0-1 </td>
-<td> mex.male </td>
-</tr><tr><td> numeric
+</tr><tr><td> mex.male </td>
+<td> numeric
 </td>
 <td> whether or not a respondent is male</td>
 <td> 0-1 </td>
@@ -129,14 +145,14 @@ make respondents angry </td>
 <td> numeric
 </td>
 <td> age of a respondent </td>
-</tr><tr><td> mex.education </td>
-<td> numeric </td>
+<td> mex.education </td>
+</tr><tr><td> numeric </td>
 <td> respondent's
 level of education </td>
-</tr><tr><td> 0-9 </td>
+<td> 0-9 </td>
 <td> mex.y.all </td>
-<td> numeric </td>
-</tr><tr><td> the number of
+</tr><tr><td> numeric </td>
+<td> the number of
 activities that respondent did </td>
 <td> 0 - 4 </td>
 <td> mex.vote </td>
@@ -144,15 +160,15 @@ activities that respondent did </td>
 <td>
 respondent's self-reported turnout </td>
 <td> 0-1 </td>
-</tr><tr><td> mex.age2 </td>
-<td> numeric </td>
+<td> mex.age2 </td>
+</tr><tr><td> numeric </td>
 <td>
 age of a respondent, squared </td>
-</tr><tr><td> mex.interest </td>
+<td> mex.interest </td>
 <td> numeric </td>
-<td> how
+</tr><tr><td> how
 interested respondent is in politics </td>
-</tr><tr><td> 1-4 </td>
+<td> 1-4 </td>
 <td> mex.married </td>
 <td> numeric
 </td>
@@ -160,15 +176,15 @@ interested respondent is in politics </td>
 <td> 0-1 </td>
 <td> mex.pidpanw2
 </td>
-</tr><tr><td> numeric </td>
-<td> indicator for whether respondent identifies with PAN party
+<td> numeric </td>
+</tr><tr><td> indicator for whether respondent identifies with PAN party
 </td>
 <td> 0-1 </td>
-</tr><tr><td> mex.pidprdw2 </td>
+<td> mex.pidprdw2 </td>
 <td> numeric </td>
-<td> indicator for whether respondent
+</tr><tr><td> indicator for whether respondent
 identifies with PRD party </td>
-</tr><tr><td> 0-1 </td>
+<td> 0-1 </td>
 <td> mex.pidpriw2 </td>
 <td> numeric </td>
 </tr><tr><td>
@@ -176,15 +192,15 @@ indicator for whether respondent identifies with PRI party </td>
 <td> 0-1 </td>
 <td>
 mex.votecard </td>
-</tr><tr><td> numeric </td>
-<td> respondent's enumerator-verified turnout </td>
+<td> numeric </td>
+</tr><tr><td> respondent's enumerator-verified turnout </td>
 <td>
 0-1 </td>
-</tr><tr><td> mex.urban </td>
+<td> mex.urban </td>
 <td> numeric </td>
-<td> indicator for whether respondent lives
+</tr><tr><td> indicator for whether respondent lives
 in urban area </td>
-</tr><tr><td> 0-1 </td>
+<td> 0-1 </td>
 <td> mex.cleanelections </td>
 <td> numeric </td>
 </tr><tr><td> indicator
@@ -192,15 +208,15 @@ for whether respondent thinks elections were clean </td>
 <td> 0-1 </td>
 <td>
 mex.cleanelectionsmiss </td>
-</tr><tr><td> numeric </td>
-<td> indicator for whether
+<td> numeric </td>
+</tr><tr><td> indicator for whether
 cleanelections variable was missing </td>
 <td> 0-1 </td>
-</tr><tr><td> mex.metro </td>
+<td> mex.metro </td>
 <td> numeric </td>
-<td>
+</tr><tr><td>
 indicator for whether respondent lives in Mexico City metro area </td>
-</tr><tr><td> 0-1
+<td> 0-1
 </td>
 <td> mex.centralregion </td>
 <td> numeric </td>
@@ -208,16 +224,16 @@ indicator for whether respondent lives in Mexico City metro area </td>
 lives in Mexico's central region </td>
 <td> 0-1 </td>
 <td> mex.northregion </td>
-</tr><tr><td> numeric
+<td> numeric
 </td>
-<td> indicator for whether respondent lives in Mexico's north region </td>
+</tr><tr><td> indicator for whether respondent lives in Mexico's north region </td>
 <td>
 0-1 </td>
-</tr><tr><td> mex.wealth </td>
+<td> mex.wealth </td>
 <td> numeric </td>
-<td> scale for respondent's wealth, based on
+</tr><tr><td> scale for respondent's wealth, based on
 household asset indicators </td>
-</tr><tr><td> mex.epnapprove </td>
+<td> mex.epnapprove </td>
 <td> numeric </td>
 <td> respondent's
 approval rating of Enrique Pena-Nieto </td>
@@ -225,15 +241,15 @@ approval rating of Enrique Pena-Nieto </td>
 <td> mex.havepropoganda </td>
 <td>
 numeric </td>
-</tr><tr><td> indicator for whether respondent has propaganda outside their
+<td> indicator for whether respondent has propaganda outside their
 home </td>
-<td> 0-1 </td>
+</tr><tr><td> 0-1 </td>
 <td> mex.concurrent </td>
-</tr><tr><td> numeric </td>
+<td> numeric </td>
 <td> indicator for whether
 respondent lives in state with concurrent elections </td>
-<td> 0-1 </td>
-</tr><tr><td> mex.loyal
+</tr><tr><td> 0-1 </td>
+<td> mex.loyal
 </td>
 <td> numeric </td>
 <td> indicator for whether respondent strongly identifies with
@@ -241,12 +257,14 @@ the PAN, PRI, or PRD party </td>
 </tr><tr><td> 0-1 </td>
 <td> y </td>
 <td> numeric </td>
+<td> the number of items that
+make respondents angry </td>
 </tr></table>
     
     <h2 class="hasAnchor" id="source"><a class="anchor" href="#source"></a>Source</h2>
 
     <p>The full data set is available at the Mexico Panel Study website
-(<a href = 'http://mexicopanelstudy.mit.edu/'>http://mexicopanelstudy.mit.edu/</a>)</p>
+(<a href='http://mexicopanelstudy.mit.edu/'>http://mexicopanelstudy.mit.edu/</a>)</p>
     
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 

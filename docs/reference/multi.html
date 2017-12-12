@@ -23,7 +23,8 @@
 <link href="../pkgdown.css" rel="stylesheet">
 <script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
-
+  
+  
 <!-- mathjax -->
 <script src='https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 
@@ -50,8 +51,23 @@
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-        <li>
-  <a href="../articles/">How-To's</a>
+        <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    How-To's
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/getting-started.html">Getting started</a>
+    </li>
+    <li>
+      <a href="../articles/combined-list.html">Combining List Experiments with Direct Questions</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="../articles/published-list-experiments.html">Examples of List Experiments</a>
 </li>
 <li>
   <a href="../reference/">Reference</a>
@@ -115,14 +131,14 @@ observations.</p><table><tr><td> y </td>
 <td> numeric </td>
 <td> the number of items that make
 respondents angry </td>
-</tr><tr><td> 0 - 4 </td>
-<td> south </td>
+<td> 0 - 4 </td>
+</tr><tr><td> south </td>
 <td> numeric </td>
-</tr><tr><td> whether or not a
+<td> whether or not a
 respondents live in a southern state </td>
 <td> 0 - 1 </td>
-<td> male </td>
-</tr><tr><td> numeric </td>
+</tr><tr><td> male </td>
+<td> numeric </td>
 <td>
 whether or not a respondent is male </td>
 <td> 0 - 1 </td>
@@ -130,19 +146,18 @@ whether or not a respondent is male </td>
 <td> numeric </td>
 <td>
 whether or not a respondent attended some college </td>
-</tr><tr><td> 0 - 1 </td>
-<td> age </td>
+<td> 0 - 1 </td>
+</tr><tr><td> age </td>
 <td>
 numeric </td>
-</tr><tr><td> age of a respondent divided by 10 </td>
+<td> age of a respondent divided by 10 </td>
 <td> y </td>
-<td> numeric </td>
 </tr></table>
     
     <h2 class="hasAnchor" id="source"><a class="anchor" href="#source"></a>Source</h2>
 
     <p>The full data set is available at SDA (Survey Documentation and
-Analysis; <a href = 'http://sda.berkeley.edu/D3/Natlrace/Doc/nrac.htm'>http://sda.berkeley.edu/D3/Natlrace/Doc/nrac.htm</a>)</p>
+Analysis; <a href='http://sda.berkeley.edu/D3/Natlrace/Doc/nrac.htm'>http://sda.berkeley.edu/D3/Natlrace/Doc/nrac.htm</a>)</p>
     
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 

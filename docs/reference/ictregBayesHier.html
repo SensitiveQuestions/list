@@ -23,7 +23,8 @@
 <link href="../pkgdown.css" rel="stylesheet">
 <script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
-
+  
+  
 <!-- mathjax -->
 <script src='https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 
@@ -50,8 +51,23 @@
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-        <li>
-  <a href="../articles/">How-To's</a>
+        <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    How-To's
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/getting-started.html">Getting started</a>
+    </li>
+    <li>
+      <a href="../articles/combined-list.html">Combining List Experiments with Direct Questions</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="../articles/published-list-experiments.html">Examples of List Experiments</a>
 </li>
 <li>
   <a href="../reference/">Reference</a>
@@ -442,11 +458,11 @@ have converged.</p>
 
     <p>Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
 List Experiments."  Political Analysis, Vol. 20, No 1 (Winter). available at
-<a href = 'http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
+<a href='http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
 <p>Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item Count
 Technique.'' Journal of the American Statistical Association, Vol. 106, No.
 494 (June), pp. 407-416. available at
-<a href = 'http://imai.princeton.edu/research/list.html'>http://imai.princeton.edu/research/list.html</a></p>
+<a href='http://imai.princeton.edu/research/list.html'>http://imai.princeton.edu/research/list.html</a></p>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
@@ -456,92 +472,90 @@ Technique.'' Journal of the American Statistical Association, Vol. 106, No.
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'>
 
-<span class='fu'>data</span>(<span class='no'>race</span>)
+<span class='fu'>data</span>(<span class='no'>race</span>)</div><span class='co'># NOT RUN {</span>
+<span class='co'>## Multiple chain MCMC list experiment regression</span>
+<span class='co'>## starts with overdispersed MLE starting values</span>
 
-<span class='fu'>not_run</span>({
+<span class='co'>## Multiple item two level hierarchical model - varying intercepts</span>
 
-  <span class='co'>## Multiple chain MCMC list experiment regression</span>
-  <span class='co'>## starts with overdispersed MLE starting values</span>
+<span class='no'>mle.estimates.multi</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>,
+  <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-  <span class='co'>## Multiple item two level hierarchical model - varying intercepts</span>
+<span class='no'>draws</span> <span class='kw'>&lt;-</span> <span class='fu'>mvrnorm</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>mu</span> <span class='kw'>=</span> <span class='fu'>coef</span>(<span class='no'>mle.estimates.multi</span>),
+  <span class='kw'>Sigma</span> <span class='kw'>=</span> <span class='fu'>vcov</span>(<span class='no'>mle.estimates.multi</span>) * <span class='fl'>9</span>)
 
-  <span class='no'>mle.estimates.multi</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>,
-    <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='no'>bayesDraws.1</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayesHier</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span>,
+                        <span class='kw'>formula.level.2</span> <span class='kw'>=</span> ~ <span class='fl'>1</span>,
+                        <span class='kw'>delta.start.level.1</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>8</span>:<span class='fl'>9</span>], <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>2</span>:<span class='fl'>3</span>], <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>5</span>:<span class='fl'>6</span>]),
+                        <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
+                        <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='fu'>rep</span>(<span class='fl'>0.005</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>)),
+                        <span class='kw'>alpha.tune</span> <span class='kw'>=</span> <span class='fu'>rep</span>(<span class='fl'>0.001</span>, <span class='fu'>length</span>(<span class='fu'>unique</span>(<span class='no'>multi</span>$<span class='no'>state</span>))),
+                        <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>group.level.2</span> <span class='kw'>=</span> <span class='st'>"state"</span>,
+                        <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>50000</span>, <span class='kw'>thin</span> <span class='kw'>=</span> <span class='fl'>100</span>)
 
-  <span class='no'>draws</span> <span class='kw'>&lt;-</span> <span class='fu'>mvrnorm</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>mu</span> <span class='kw'>=</span> <span class='fu'>coef</span>(<span class='no'>mle.estimates.multi</span>),
-    <span class='kw'>Sigma</span> <span class='kw'>=</span> <span class='fu'>vcov</span>(<span class='no'>mle.estimates.multi</span>) * <span class='fl'>9</span>)
+<span class='no'>bayesDraws.2</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayesHier</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span>,
+                        <span class='kw'>formula.level.2</span> <span class='kw'>=</span> ~ <span class='fl'>1</span>,
+                        <span class='kw'>delta.start.level.1</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>8</span>:<span class='fl'>9</span>], <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>2</span>:<span class='fl'>3</span>], <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>5</span>:<span class='fl'>6</span>]),
+                        <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
+                        <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='fu'>rep</span>(<span class='fl'>0.005</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>)),
+                        <span class='kw'>alpha.tune</span> <span class='kw'>=</span> <span class='fu'>rep</span>(<span class='fl'>0.001</span>, <span class='fu'>length</span>(<span class='fu'>unique</span>(<span class='no'>multi</span>$<span class='no'>state</span>))),
+                        <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>group.level.2</span> <span class='kw'>=</span> <span class='st'>"state"</span>,
+                        <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>50000</span>, <span class='kw'>thin</span> <span class='kw'>=</span> <span class='fl'>100</span>)
 
-  <span class='no'>bayesDraws.1</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayesHier</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span>,
-                          <span class='kw'>formula.level.2</span> <span class='kw'>=</span> ~ <span class='fl'>1</span>,
-                          <span class='kw'>delta.start.level.1</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>8</span>:<span class='fl'>9</span>], <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>2</span>:<span class='fl'>3</span>], <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>5</span>:<span class='fl'>6</span>]),
-                          <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
-                          <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='fu'>rep</span>(<span class='fl'>0.005</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>)),
-                          <span class='kw'>alpha.tune</span> <span class='kw'>=</span> <span class='fu'>rep</span>(<span class='fl'>0.001</span>, <span class='fu'>length</span>(<span class='fu'>unique</span>(<span class='no'>multi</span>$<span class='no'>state</span>))),
-                          <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>group.level.2</span> <span class='kw'>=</span> <span class='st'>"state"</span>,
-                          <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>50000</span>, <span class='kw'>thin</span> <span class='kw'>=</span> <span class='fl'>100</span>)
+<span class='no'>bayesDraws.3</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayesHier</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span>,
+                        <span class='kw'>formula.level.2</span> <span class='kw'>=</span> ~ <span class='fl'>1</span>,
+                        <span class='kw'>delta.start.level.1</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>8</span>:<span class='fl'>9</span>], <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>2</span>:<span class='fl'>3</span>], <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>5</span>:<span class='fl'>6</span>]),
+                        <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
+                        <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='fu'>rep</span>(<span class='fl'>0.005</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>)),
+                        <span class='kw'>alpha.tune</span> <span class='kw'>=</span> <span class='fu'>rep</span>(<span class='fl'>0.001</span>, <span class='fu'>length</span>(<span class='fu'>unique</span>(<span class='no'>multi</span>$<span class='no'>state</span>))),
+                        <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>group.level.2</span> <span class='kw'>=</span> <span class='st'>"state"</span>,
+                        <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>50000</span>, <span class='kw'>thin</span> <span class='kw'>=</span> <span class='fl'>100</span>)
 
-  <span class='no'>bayesDraws.2</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayesHier</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span>,
-                          <span class='kw'>formula.level.2</span> <span class='kw'>=</span> ~ <span class='fl'>1</span>,
-                          <span class='kw'>delta.start.level.1</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>8</span>:<span class='fl'>9</span>], <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>2</span>:<span class='fl'>3</span>], <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>5</span>:<span class='fl'>6</span>]),
-                          <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
-                          <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='fu'>rep</span>(<span class='fl'>0.005</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>)),
-                          <span class='kw'>alpha.tune</span> <span class='kw'>=</span> <span class='fu'>rep</span>(<span class='fl'>0.001</span>, <span class='fu'>length</span>(<span class='fu'>unique</span>(<span class='no'>multi</span>$<span class='no'>state</span>))),
-                          <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>group.level.2</span> <span class='kw'>=</span> <span class='st'>"state"</span>,
-                          <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>50000</span>, <span class='kw'>thin</span> <span class='kw'>=</span> <span class='fl'>100</span>)
+<span class='no'>bayesHierTwoLevel</span> <span class='kw'>&lt;-</span> <span class='fu'>as.list</span>(<span class='no'>bayesDraws.1</span>, <span class='no'>bayesDraws.2</span>, <span class='no'>bayesDraws.3</span>)
 
-  <span class='no'>bayesDraws.3</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayesHier</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span>,
-                          <span class='kw'>formula.level.2</span> <span class='kw'>=</span> ~ <span class='fl'>1</span>,
-                          <span class='kw'>delta.start.level.1</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>8</span>:<span class='fl'>9</span>], <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>2</span>:<span class='fl'>3</span>], <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>5</span>:<span class='fl'>6</span>]),
-                          <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
-                          <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='fu'>rep</span>(<span class='fl'>0.005</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>)),
-                          <span class='kw'>alpha.tune</span> <span class='kw'>=</span> <span class='fu'>rep</span>(<span class='fl'>0.001</span>, <span class='fu'>length</span>(<span class='fu'>unique</span>(<span class='no'>multi</span>$<span class='no'>state</span>))),
-                          <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>group.level.2</span> <span class='kw'>=</span> <span class='st'>"state"</span>,
-                          <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>50000</span>, <span class='kw'>thin</span> <span class='kw'>=</span> <span class='fl'>100</span>)
+<span class='fu'>summary</span>(<span class='no'>bayesHierTwoLevel</span>)
 
-  <span class='no'>bayesHierTwoLevel</span> <span class='kw'>&lt;-</span> <span class='fu'>as.list</span>(<span class='no'>bayesDraws.1</span>, <span class='no'>bayesDraws.2</span>, <span class='no'>bayesDraws.3</span>)
+<span class='co'>## Multiple item two level hierarchical model - including covariates</span>
 
-  <span class='fu'>summary</span>(<span class='no'>bayesHierTwoLevel</span>)
+<span class='no'>mle.estimates.multi</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>,
+  <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-  <span class='co'>## Multiple item two level hierarchical model - including covariates</span>
+<span class='no'>draws</span> <span class='kw'>&lt;-</span> <span class='fu'>mvrnorm</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>mu</span> <span class='kw'>=</span> <span class='fu'>coef</span>(<span class='no'>mle.estimates.multi</span>),
+  <span class='kw'>Sigma</span> <span class='kw'>=</span> <span class='fu'>vcov</span>(<span class='no'>mle.estimates.multi</span>) * <span class='fl'>9</span>)
 
-  <span class='no'>mle.estimates.multi</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>,
-    <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='no'>bayesDraws.1</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayesHier</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span>,
+                        <span class='kw'>formula.level.2</span> <span class='kw'>=</span> ~ <span class='no'>age</span>,
+                        <span class='kw'>delta.start.level.1</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>8</span>:<span class='fl'>9</span>], <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>2</span>:<span class='fl'>3</span>], <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>5</span>:<span class='fl'>6</span>]),
+                        <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
+                        <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='fu'>rep</span>(<span class='fl'>0.005</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>)),
+                        <span class='kw'>alpha.tune</span> <span class='kw'>=</span> <span class='fu'>rep</span>(<span class='fl'>0.001</span>, <span class='fu'>length</span>(<span class='fu'>unique</span>(<span class='no'>multi</span>$<span class='no'>state</span>))),
+                        <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>group.level.2</span> <span class='kw'>=</span> <span class='st'>"state"</span>,
+                        <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>50000</span>, <span class='kw'>thin</span> <span class='kw'>=</span> <span class='fl'>100</span>)
 
-  <span class='no'>draws</span> <span class='kw'>&lt;-</span> <span class='fu'>mvrnorm</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>mu</span> <span class='kw'>=</span> <span class='fu'>coef</span>(<span class='no'>mle.estimates.multi</span>),
-    <span class='kw'>Sigma</span> <span class='kw'>=</span> <span class='fu'>vcov</span>(<span class='no'>mle.estimates.multi</span>) * <span class='fl'>9</span>)
+<span class='no'>bayesDraws.2</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayesHier</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span>,
+                        <span class='kw'>formula.level.2</span> <span class='kw'>=</span> ~ <span class='no'>age</span>,
+                        <span class='kw'>delta.start.level.1</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>8</span>:<span class='fl'>9</span>], <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>2</span>:<span class='fl'>3</span>], <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>5</span>:<span class='fl'>6</span>]),
+                        <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
+                        <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='fu'>rep</span>(<span class='fl'>0.005</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>)),
+                        <span class='kw'>alpha.tune</span> <span class='kw'>=</span> <span class='fu'>rep</span>(<span class='fl'>0.001</span>, <span class='fu'>length</span>(<span class='fu'>unique</span>(<span class='no'>multi</span>$<span class='no'>state</span>))),
+                        <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>group.level.2</span> <span class='kw'>=</span> <span class='st'>"state"</span>,
+                        <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>50000</span>, <span class='kw'>thin</span> <span class='kw'>=</span> <span class='fl'>100</span>)
 
-  <span class='no'>bayesDraws.1</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayesHier</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span>,
-                          <span class='kw'>formula.level.2</span> <span class='kw'>=</span> ~ <span class='no'>age</span>,
-                          <span class='kw'>delta.start.level.1</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>8</span>:<span class='fl'>9</span>], <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>2</span>:<span class='fl'>3</span>], <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>5</span>:<span class='fl'>6</span>]),
-                          <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
-                          <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='fu'>rep</span>(<span class='fl'>0.005</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>)),
-                          <span class='kw'>alpha.tune</span> <span class='kw'>=</span> <span class='fu'>rep</span>(<span class='fl'>0.001</span>, <span class='fu'>length</span>(<span class='fu'>unique</span>(<span class='no'>multi</span>$<span class='no'>state</span>))),
-                          <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>group.level.2</span> <span class='kw'>=</span> <span class='st'>"state"</span>,
-                          <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>50000</span>, <span class='kw'>thin</span> <span class='kw'>=</span> <span class='fl'>100</span>)
+<span class='no'>bayesDraws.3</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayesHier</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span>,
+                        <span class='kw'>formula.level.2</span> <span class='kw'>=</span> ~ <span class='no'>age</span>,
+                        <span class='kw'>delta.start.level.1</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>8</span>:<span class='fl'>9</span>], <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>2</span>:<span class='fl'>3</span>], <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>5</span>:<span class='fl'>6</span>]),
+                        <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
+                        <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='fu'>rep</span>(<span class='fl'>0.005</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>)),
+                        <span class='kw'>alpha.tune</span> <span class='kw'>=</span> <span class='fu'>rep</span>(<span class='fl'>0.001</span>, <span class='fu'>length</span>(<span class='fu'>unique</span>(<span class='no'>multi</span>$<span class='no'>state</span>))),
+                        <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>group.level.2</span> <span class='kw'>=</span> <span class='st'>"state"</span>,
+                        <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>50000</span>, <span class='kw'>thin</span> <span class='kw'>=</span> <span class='fl'>100</span>)
 
-  <span class='no'>bayesDraws.2</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayesHier</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span>,
-                          <span class='kw'>formula.level.2</span> <span class='kw'>=</span> ~ <span class='no'>age</span>,
-                          <span class='kw'>delta.start.level.1</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>8</span>:<span class='fl'>9</span>], <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>2</span>:<span class='fl'>3</span>], <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>5</span>:<span class='fl'>6</span>]),
-                          <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
-                          <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='fu'>rep</span>(<span class='fl'>0.005</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>)),
-                          <span class='kw'>alpha.tune</span> <span class='kw'>=</span> <span class='fu'>rep</span>(<span class='fl'>0.001</span>, <span class='fu'>length</span>(<span class='fu'>unique</span>(<span class='no'>multi</span>$<span class='no'>state</span>))),
-                          <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>group.level.2</span> <span class='kw'>=</span> <span class='st'>"state"</span>,
-                          <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>50000</span>, <span class='kw'>thin</span> <span class='kw'>=</span> <span class='fl'>100</span>)
+<span class='no'>bayesHierTwoLevel</span> <span class='kw'>&lt;-</span> <span class='fu'>as.list</span>(<span class='no'>bayesDraws.1</span>, <span class='no'>bayesDraws.2</span>, <span class='no'>bayesDraws.3</span>)
 
-  <span class='no'>bayesDraws.3</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayesHier</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span>,
-                          <span class='kw'>formula.level.2</span> <span class='kw'>=</span> ~ <span class='no'>age</span>,
-                          <span class='kw'>delta.start.level.1</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>8</span>:<span class='fl'>9</span>], <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>2</span>:<span class='fl'>3</span>], <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>5</span>:<span class='fl'>6</span>]),
-                          <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='st'>"treat"</span>,
-                          <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='fu'>rep</span>(<span class='fl'>0.005</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='fl'>0.05</span>, <span class='fl'>2</span>)),
-                          <span class='kw'>alpha.tune</span> <span class='kw'>=</span> <span class='fu'>rep</span>(<span class='fl'>0.001</span>, <span class='fu'>length</span>(<span class='fu'>unique</span>(<span class='no'>multi</span>$<span class='no'>state</span>))),
-                          <span class='kw'>J</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>group.level.2</span> <span class='kw'>=</span> <span class='st'>"state"</span>,
-                          <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>50000</span>, <span class='kw'>thin</span> <span class='kw'>=</span> <span class='fl'>100</span>)
+<span class='fu'>summary</span>(<span class='no'>bayesHierTwoLevel</span>)
 
-  <span class='no'>bayesHierTwoLevel</span> <span class='kw'>&lt;-</span> <span class='fu'>as.list</span>(<span class='no'>bayesDraws.1</span>, <span class='no'>bayesDraws.2</span>, <span class='no'>bayesDraws.3</span>)
-
-  <span class='fu'>summary</span>(<span class='no'>bayesHierTwoLevel</span>)
-
-})</div></pre>
+<span class='co'># }</span><div class='input'>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>

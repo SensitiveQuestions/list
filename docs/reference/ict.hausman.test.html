@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>The 1994 Multi-Investigator Survey — mis • list</title>
+<title>Hausman Specification Test for Two List Experiment Regression Fit Objects — ict.hausman.test • list</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -108,116 +108,35 @@
       <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>The 1994 Multi-Investigator Survey</h1>
+    <h1>Hausman Specification Test for Two List Experiment Regression Fit Objects</h1>
     </div>
 
     
-    <p>This dataset is a subset of the 1994 Multi-Investigator Survey and contains
-the item count technique or the list experiment.  The main question reads as
-follows: <code> Now I'm going to read you four things that sometimes make
-people angry or upset.  After I read all (three/four), just tell me HOW MANY
-of them upset you.  (I don't want to know which ones, just how many.)  (1)
-"the federal government increasing the tax on gasoline;" (2) "professional
-athletes getting million-dollar-plus salaries;" (3) "requiring seatbelts be
-used when driving;" (4) "large corporations polluting the environment;" (5)
-"black leaders asking the government for affirmative action."</code></p>
+    <p>Hausman Specification Test for Two List Experiment Regression Fit Objects</p>
     
 
-        
-    <h2 class="hasAnchor" id="format"><a class="anchor" href="#format"></a>Format</h2>
-
-    <p>A data frame containing the following 6 variables for 1171
-observations.</p><table><tr><td> y </td>
-<td> numeric </td>
-<td> the number of items that make
-respondents angry </td>
-<td> 0 - 4 </td>
-</tr><tr><td> sensitive </td>
-<td> numeric </td>
-<td> whether or not
-the sensitive item (asked directly) makes respondents angry </td>
-<td> 0 - 1 </td>
-</tr><tr><td>
-south </td>
-<td> numeric </td>
-<td> whether or not a respondents live in a southern
-state </td>
-<td> 0 - 1 </td>
-</tr><tr><td> male </td>
-<td> numeric </td>
-<td> whether or not a respondent is
-male </td>
-<td> 0 - 1 </td>
-</tr><tr><td> college </td>
-<td> numeric </td>
-<td> whether or not a respondent
-attended some college </td>
-<td> 0 - 1 </td>
-</tr><tr><td> age </td>
-<td> numeric </td>
-<td> age of a
-respondent divided by 10 </td>
-<td> democrat </td>
-</tr><tr><td> numeric </td>
-<td> whether not a
-respondent identifies as a Democrat </td>
-<td> 0 - 1 </td>
-<td> republican </td>
-</tr><tr><td> numeric
-</td>
-<td> whether not a respondent identifies as a Republican </td>
-<td> 0 - 1</td>
-<td>
-independent </td>
-</tr><tr><td> numeric </td>
-<td> whether not a respondent identifies as an
-independent </td>
-<td> 0 - 1 </td>
-<td> treat </td>
-</tr><tr><td> numeric </td>
-<td> treatment status </td>
-<td> 0 -
-1 </td>
-<td> list.data </td>
-</tr><tr><td> numeric </td>
-<td> indicator for list experiment subset
-(treatment and control groups) </td>
-<td> 0 - 1 </td>
-<td> sens.data </td>
-</tr><tr><td> numeric </td>
-<td>
-indicator for direct sensitive item subset </td>
-<td> 0 - 1 </td>
-<td> y </td>
-</tr></table>
+    <pre class="usage"><span class='fu'>ict.hausman.test</span>(<span class='no'>fit1</span>, <span class='no'>fit2</span>)</pre>
     
-    <h2 class="hasAnchor" id="source"><a class="anchor" href="#source"></a>Source</h2>
-
-    <p>The full data set is available at SDA (Survey Documentation and
-Analysis; <a href='http://sda.berkeley.edu/D3/Multi/Doc/mult.htm'>http://sda.berkeley.edu/D3/Multi/Doc/mult.htm</a>)</p>
-    
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>where the last item is presented only with the treatment group and the
-control list only contains the first three items.</p>
-<p>The survey also includes a question in which attitudes toward the sensitive
-item are asked directly.
-    <code> Now I'm going to ask you about another thing that sometimes makes
-people angry or upset. Do you get angry or upset when black leaders ask the
-government for affirmative action?</code></p>
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>fit1</th>
+      <td></td>
+    </tr>
+    <tr>
+      <th>fit2</th>
+      <td></td>
+    </tr>
+    </table>
     
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
-      
-      <li><a href="#format">Format</a></li>
-
-      <li><a href="#source">Source</a></li>
-
-      <li><a href="#details">Details</a></li>
-          </ul>
+      <li><a href="#arguments">Arguments</a></li>
+                </ul>
 
   </div>
 </div>

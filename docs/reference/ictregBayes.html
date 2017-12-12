@@ -23,7 +23,8 @@
 <link href="../pkgdown.css" rel="stylesheet">
 <script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
-
+  
+  
 <!-- mathjax -->
 <script src='https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 
@@ -50,8 +51,23 @@
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-        <li>
-  <a href="../articles/">How-To's</a>
+        <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    How-To's
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/getting-started.html">Getting started</a>
+    </li>
+    <li>
+      <a href="../articles/combined-list.html">Combining List Experiments with Direct Questions</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="../articles/published-list-experiments.html">Examples of List Experiments</a>
 </li>
 <li>
   <a href="../reference/">Reference</a>
@@ -395,14 +411,14 @@ have converged.</p>
 
     <p>Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
 List Experiments."  Political Analysis, Vol. 20, No 1 (Winter). available at
-<a href = 'http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
+<a href='http://imai.princeton.edu/research/listP.html'>http://imai.princeton.edu/research/listP.html</a></p>
 <p>Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item Count
 Technique.'' Journal of the American Statistical Association, Vol. 106, No.
 494 (June), pp. 407-416. available at
-<a href = 'http://imai.princeton.edu/research/list.html'>http://imai.princeton.edu/research/list.html</a></p>
+<a href='http://imai.princeton.edu/research/list.html'>http://imai.princeton.edu/research/list.html</a></p>
 <p>Blair, Graeme, Jason Lyall and Kosuke Imai. (2013) ``Comparing and Combining
 List and Experiments: Evidence from Afghanistan."  Working paper. available
-at <a href = 'http://imai.princeton.edu/research/comp.html'>http://imai.princeton.edu/research/comp.html</a></p>
+at <a href='http://imai.princeton.edu/research/comp.html'>http://imai.princeton.edu/research/comp.html</a></p>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
@@ -412,194 +428,192 @@ at <a href = 'http://imai.princeton.edu/research/comp.html'>http://imai.princeto
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'>
 
-<span class='fu'>data</span>(<span class='no'>race</span>)
+<span class='fu'>data</span>(<span class='no'>race</span>)</div><span class='co'># NOT RUN {</span>
+<span class='co'>## Multiple chain MCMC list experiment regression</span>
+<span class='co'>## starts with overdispersed MLE starting values</span>
 
-<span class='fu'>not_run</span>({
+<span class='co'>## Standard single sensitive-item design</span>
 
-  <span class='co'>## Multiple chain MCMC list experiment regression</span>
-  <span class='co'>## starts with overdispersed MLE starting values</span>
+<span class='co'>## Control item parameters fully constrained</span>
 
-  <span class='co'>## Standard single sensitive-item design</span>
+<span class='no'>mle.estimates</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>)
 
-  <span class='co'>## Control item parameters fully constrained</span>
+<span class='no'>draws</span> <span class='kw'>&lt;-</span> <span class='fu'>mvrnorm</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>mu</span> <span class='kw'>=</span> <span class='fu'>coef</span>(<span class='no'>mle.estimates</span>),
+  <span class='kw'>Sigma</span> <span class='kw'>=</span> <span class='fu'>vcov</span>(<span class='no'>mle.estimates</span>) * <span class='fl'>9</span>)
 
-  <span class='no'>mle.estimates</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>)
+<span class='no'>bayesDraws.1</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
+  <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>,
+  <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00025</span>, <span class='fl'>5</span>),
+  <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"full"</span>)
 
-  <span class='no'>draws</span> <span class='kw'>&lt;-</span> <span class='fu'>mvrnorm</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>mu</span> <span class='kw'>=</span> <span class='fu'>coef</span>(<span class='no'>mle.estimates</span>),
-    <span class='kw'>Sigma</span> <span class='kw'>=</span> <span class='fu'>vcov</span>(<span class='no'>mle.estimates</span>) * <span class='fl'>9</span>)
+<span class='no'>bayesDraws.2</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
+  <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>,
+  <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00025</span>, <span class='fl'>5</span>),
+  <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"full"</span>)
 
-  <span class='no'>bayesDraws.1</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
-    <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>,
-    <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00025</span>, <span class='fl'>5</span>),
-    <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"full"</span>)
+<span class='no'>bayesDraws.3</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
+  <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>,
+  <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00025</span>, <span class='fl'>5</span>),
+  <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"full"</span>)
 
-  <span class='no'>bayesDraws.2</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
-    <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>,
-    <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00025</span>, <span class='fl'>5</span>),
-    <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"full"</span>)
+<span class='no'>bayesSingleConstrained</span> <span class='kw'>&lt;-</span> <span class='fu'>as.list</span>(<span class='no'>bayesDraws.1</span>, <span class='no'>bayesDraws.2</span>, <span class='no'>bayesDraws.3</span>)
 
-  <span class='no'>bayesDraws.3</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
-    <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>,
-    <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00025</span>, <span class='fl'>5</span>),
-    <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"full"</span>)
+<span class='fu'>summary</span>(<span class='no'>bayesSingleConstrained</span>)
 
-  <span class='no'>bayesSingleConstrained</span> <span class='kw'>&lt;-</span> <span class='fu'>as.list</span>(<span class='no'>bayesDraws.1</span>, <span class='no'>bayesDraws.2</span>, <span class='no'>bayesDraws.3</span>)
+<span class='co'>## Control item parameters unconstrained</span>
 
-  <span class='fu'>summary</span>(<span class='no'>bayesSingleConstrained</span>)
+<span class='no'>mle.estimates</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
+  <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
 
-  <span class='co'>## Control item parameters unconstrained</span>
+<span class='no'>draws</span> <span class='kw'>&lt;-</span> <span class='fu'>mvrnorm</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>mu</span> <span class='kw'>=</span> <span class='fu'>coef</span>(<span class='no'>mle.estimates</span>),
+  <span class='kw'>Sigma</span> <span class='kw'>=</span> <span class='fu'>vcov</span>(<span class='no'>mle.estimates</span>) * <span class='fl'>9</span>)
 
-  <span class='no'>mle.estimates</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
-    <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
+<span class='no'>bayesDraws.1</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
+  <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='kw'>psi0</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>6</span>:<span class='fl'>10</span>],
+  <span class='kw'>psi1</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>11</span>:<span class='fl'>15</span>]), <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>,
+  <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>),
+  <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='kw'>psi0</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.0017</span>, <span class='fl'>5</span>), <span class='kw'>psi1</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00005</span>, <span class='fl'>5</span>)),
+  <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"none"</span>)
 
-  <span class='no'>draws</span> <span class='kw'>&lt;-</span> <span class='fu'>mvrnorm</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>mu</span> <span class='kw'>=</span> <span class='fu'>coef</span>(<span class='no'>mle.estimates</span>),
-    <span class='kw'>Sigma</span> <span class='kw'>=</span> <span class='fu'>vcov</span>(<span class='no'>mle.estimates</span>) * <span class='fl'>9</span>)
+<span class='no'>bayesDraws.2</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
+  <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='kw'>psi0</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>6</span>:<span class='fl'>10</span>],
+  <span class='kw'>psi1</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>11</span>:<span class='fl'>15</span>]), <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>,
+  <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>),
+  <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='kw'>psi0</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.0017</span>, <span class='fl'>5</span>), <span class='kw'>psi1</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00005</span>, <span class='fl'>5</span>)),
+  <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"none"</span>)
 
-  <span class='no'>bayesDraws.1</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
-    <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='kw'>psi0</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>6</span>:<span class='fl'>10</span>],
-    <span class='kw'>psi1</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>11</span>:<span class='fl'>15</span>]), <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>,
-    <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>),
-    <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='kw'>psi0</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.0017</span>, <span class='fl'>5</span>), <span class='kw'>psi1</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00005</span>, <span class='fl'>5</span>)),
-    <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"none"</span>)
+<span class='no'>bayesDraws.3</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
+  <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='kw'>psi0</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>6</span>:<span class='fl'>10</span>],
+  <span class='kw'>psi1</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>11</span>:<span class='fl'>15</span>]), <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>,
+  <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>),
+  <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='kw'>psi0</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.0017</span>, <span class='fl'>5</span>), <span class='kw'>psi1</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00005</span>, <span class='fl'>5</span>)),
+  <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"none"</span>)
 
-  <span class='no'>bayesDraws.2</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
-    <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='kw'>psi0</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>6</span>:<span class='fl'>10</span>],
-    <span class='kw'>psi1</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>11</span>:<span class='fl'>15</span>]), <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>,
-    <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>),
-    <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='kw'>psi0</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.0017</span>, <span class='fl'>5</span>), <span class='kw'>psi1</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00005</span>, <span class='fl'>5</span>)),
-    <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"none"</span>)
+<span class='no'>bayesSingleUnconstrained</span> <span class='kw'>&lt;-</span> <span class='fu'>as.list</span>(<span class='no'>bayesDraws.1</span>, <span class='no'>bayesDraws.2</span>, <span class='no'>bayesDraws.3</span>)
 
-  <span class='no'>bayesDraws.3</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
-    <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='kw'>psi0</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>6</span>:<span class='fl'>10</span>],
-    <span class='kw'>psi1</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>11</span>:<span class='fl'>15</span>]), <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>,
-    <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>),
-    <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='kw'>psi0</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.0017</span>, <span class='fl'>5</span>), <span class='kw'>psi1</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00005</span>, <span class='fl'>5</span>)),
-    <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"none"</span>)
+<span class='fu'>summary</span>(<span class='no'>bayesSingleUnconstrained</span>)
 
-  <span class='no'>bayesSingleUnconstrained</span> <span class='kw'>&lt;-</span> <span class='fu'>as.list</span>(<span class='no'>bayesDraws.1</span>, <span class='no'>bayesDraws.2</span>, <span class='no'>bayesDraws.3</span>)
+<span class='co'>## Control item parameters constrained except intercept</span>
 
-  <span class='fu'>summary</span>(<span class='no'>bayesSingleUnconstrained</span>)
+<span class='no'>mle.estimates</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
+  <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-  <span class='co'>## Control item parameters constrained except intercept</span>
+<span class='no'>draws</span> <span class='kw'>&lt;-</span> <span class='fu'>mvrnorm</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>mu</span> <span class='kw'>=</span> <span class='fu'>coef</span>(<span class='no'>mle.estimates</span>),
+  <span class='kw'>Sigma</span> <span class='kw'>=</span> <span class='fu'>vcov</span>(<span class='no'>mle.estimates</span>) * <span class='fl'>9</span>)
 
-  <span class='no'>mle.estimates</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
-    <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='no'>bayesDraws.1</span> <span class='kw'>&lt;-</span>  <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
+  <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>6</span>:<span class='fl'>10</span>],<span class='fl'>0</span>),
+  <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>),
+  <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.0004</span>, <span class='fl'>6</span>), <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"intercept"</span>)
 
-  <span class='no'>draws</span> <span class='kw'>&lt;-</span> <span class='fu'>mvrnorm</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>mu</span> <span class='kw'>=</span> <span class='fu'>coef</span>(<span class='no'>mle.estimates</span>),
-    <span class='kw'>Sigma</span> <span class='kw'>=</span> <span class='fu'>vcov</span>(<span class='no'>mle.estimates</span>) * <span class='fl'>9</span>)
+<span class='no'>bayesDraws.2</span> <span class='kw'>&lt;-</span>  <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
+  <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>6</span>:<span class='fl'>10</span>],<span class='fl'>0</span>),
+  <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>),
+  <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.0004</span>, <span class='fl'>6</span>), <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"intercept"</span>)
 
-  <span class='no'>bayesDraws.1</span> <span class='kw'>&lt;-</span>  <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
-    <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>6</span>:<span class='fl'>10</span>],<span class='fl'>0</span>),
-    <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>),
-    <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.0004</span>, <span class='fl'>6</span>), <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"intercept"</span>)
+<span class='no'>bayesDraws.3</span> <span class='kw'>&lt;-</span>  <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
+  <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>6</span>:<span class='fl'>10</span>],<span class='fl'>0</span>),
+  <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>),
+  <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.0004</span>, <span class='fl'>6</span>), <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"intercept"</span>)
 
-  <span class='no'>bayesDraws.2</span> <span class='kw'>&lt;-</span>  <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
-    <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>6</span>:<span class='fl'>10</span>],<span class='fl'>0</span>),
-    <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>),
-    <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.0004</span>, <span class='fl'>6</span>), <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"intercept"</span>)
+<span class='no'>bayesSingleInterceptOnly</span> <span class='kw'>&lt;-</span> <span class='fu'>as.list</span>(<span class='no'>bayesDraws.1</span>, <span class='no'>bayesDraws.2</span>, <span class='no'>bayesDraws.3</span>)
 
-  <span class='no'>bayesDraws.3</span> <span class='kw'>&lt;-</span>  <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
-    <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>6</span>:<span class='fl'>10</span>],<span class='fl'>0</span>),
-    <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>),
-    <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.0004</span>, <span class='fl'>6</span>), <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"intercept"</span>)
+<span class='fu'>summary</span>(<span class='no'>bayesSingleInterceptOnly</span>)
 
-  <span class='no'>bayesSingleInterceptOnly</span> <span class='kw'>&lt;-</span> <span class='fu'>as.list</span>(<span class='no'>bayesDraws.1</span>, <span class='no'>bayesDraws.2</span>, <span class='no'>bayesDraws.3</span>)
+<span class='co'>## Multiple sensitive item design</span>
 
-  <span class='fu'>summary</span>(<span class='no'>bayesSingleInterceptOnly</span>)
+<span class='co'>## Constrained (estimated control item count not included in sensitive fit)</span>
 
-  <span class='co'>## Multiple sensitive item design</span>
+<span class='no'>mle.estimates.multi</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>,
+  <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-  <span class='co'>## Constrained (estimated control item count not included in sensitive fit)</span>
+<span class='no'>draws</span> <span class='kw'>&lt;-</span> <span class='fu'>mvrnorm</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>mu</span> <span class='kw'>=</span> <span class='fu'>coef</span>(<span class='no'>mle.estimates.multi</span>),
+  <span class='kw'>Sigma</span> <span class='kw'>=</span> <span class='fu'>vcov</span>(<span class='no'>mle.estimates.multi</span>) * <span class='fl'>9</span>)
 
-  <span class='no'>mle.estimates.multi</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>,
-    <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='no'>bayesMultiDraws.1</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>,
+  <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>11</span>:<span class='fl'>15</span>]),
+  <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>,
+  <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.001</span>, <span class='fl'>5</span>),
+  <span class='kw'>constrained.multi</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-  <span class='no'>draws</span> <span class='kw'>&lt;-</span> <span class='fu'>mvrnorm</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>mu</span> <span class='kw'>=</span> <span class='fu'>coef</span>(<span class='no'>mle.estimates.multi</span>),
-    <span class='kw'>Sigma</span> <span class='kw'>=</span> <span class='fu'>vcov</span>(<span class='no'>mle.estimates.multi</span>) * <span class='fl'>9</span>)
+<span class='no'>bayesMultiDraws.2</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>,
+  <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>11</span>:<span class='fl'>15</span>]),
+  <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>,
+  <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.001</span>, <span class='fl'>5</span>),
+  <span class='kw'>constrained.multi</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-  <span class='no'>bayesMultiDraws.1</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>,
-    <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>11</span>:<span class='fl'>15</span>]),
-    <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>,
-    <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.001</span>, <span class='fl'>5</span>),
-    <span class='kw'>constrained.multi</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='no'>bayesMultiDraws.3</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>,
+  <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>11</span>:<span class='fl'>15</span>]),
+  <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>,
+  <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.001</span>, <span class='fl'>5</span>),
+  <span class='kw'>constrained.multi</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
-  <span class='no'>bayesMultiDraws.2</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>,
-    <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>11</span>:<span class='fl'>15</span>]),
-    <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>,
-    <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.001</span>, <span class='fl'>5</span>),
-    <span class='kw'>constrained.multi</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='no'>bayesMultiConstrained</span> <span class='kw'>&lt;-</span> <span class='fu'>as.list</span>(<span class='no'>bayesMultiDraws.1</span>, <span class='no'>bayesMultiDraws.2</span>,
+  <span class='no'>bayesMultiDraws.3</span>)
 
-  <span class='no'>bayesMultiDraws.3</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>,
-    <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>11</span>:<span class='fl'>15</span>]),
-    <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>,
-    <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.001</span>, <span class='fl'>5</span>),
-    <span class='kw'>constrained.multi</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='fu'>summary</span>(<span class='no'>bayesMultiConstrained</span>)
 
-  <span class='no'>bayesMultiConstrained</span> <span class='kw'>&lt;-</span> <span class='fu'>as.list</span>(<span class='no'>bayesMultiDraws.1</span>, <span class='no'>bayesMultiDraws.2</span>,
-    <span class='no'>bayesMultiDraws.3</span>)
+<span class='co'>## Unconstrained (estimated control item count is included in sensitive fit)</span>
 
-  <span class='fu'>summary</span>(<span class='no'>bayesMultiConstrained</span>)
+<span class='no'>mle.estimates.multi</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>,
+  <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
 
-  <span class='co'>## Unconstrained (estimated control item count is included in sensitive fit)</span>
+<span class='no'>draws</span> <span class='kw'>&lt;-</span> <span class='fu'>mvrnorm</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>mu</span> <span class='kw'>=</span> <span class='fu'>coef</span>(<span class='no'>mle.estimates.multi</span>),
+  <span class='kw'>Sigma</span> <span class='kw'>=</span> <span class='fu'>vcov</span>(<span class='no'>mle.estimates.multi</span>) * <span class='fl'>9</span>)
 
-  <span class='no'>mle.estimates.multi</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>,
-    <span class='kw'>constrained</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
+<span class='no'>bayesMultiDraws.1</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>,
+  <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>11</span>:<span class='fl'>15</span>]),
+  <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>50000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>300000</span>,
+  <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.0085</span>, <span class='fl'>6</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00025</span>, <span class='fl'>5</span>),
+  <span class='kw'>constrained.multi</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
 
-  <span class='no'>draws</span> <span class='kw'>&lt;-</span> <span class='fu'>mvrnorm</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>mu</span> <span class='kw'>=</span> <span class='fu'>coef</span>(<span class='no'>mle.estimates.multi</span>),
-    <span class='kw'>Sigma</span> <span class='kw'>=</span> <span class='fu'>vcov</span>(<span class='no'>mle.estimates.multi</span>) * <span class='fl'>9</span>)
+<span class='no'>bayesMultiDraws.2</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>,
+  <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>11</span>:<span class='fl'>15</span>]),
+  <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>50000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>300000</span>,
+  <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.0085</span>, <span class='fl'>6</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00025</span>, <span class='fl'>5</span>),
+  <span class='kw'>constrained.multi</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
 
-  <span class='no'>bayesMultiDraws.1</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>,
-    <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>11</span>:<span class='fl'>15</span>]),
-    <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>50000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>300000</span>,
-    <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.0085</span>, <span class='fl'>6</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00025</span>, <span class='fl'>5</span>),
-    <span class='kw'>constrained.multi</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
+<span class='no'>bayesMultiDraws.3</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>,
+  <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>11</span>:<span class='fl'>15</span>]),
+  <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>50000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>300000</span>,
+  <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.0085</span>, <span class='fl'>6</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00025</span>, <span class='fl'>5</span>),
+  <span class='kw'>constrained.multi</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
 
-  <span class='no'>bayesMultiDraws.2</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>,
-    <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>11</span>:<span class='fl'>15</span>]),
-    <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>50000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>300000</span>,
-    <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.0085</span>, <span class='fl'>6</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00025</span>, <span class='fl'>5</span>),
-    <span class='kw'>constrained.multi</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
+<span class='no'>bayesMultiUnconstrained</span> <span class='kw'>&lt;-</span> <span class='fu'>as.list</span>(<span class='no'>bayesMultiDraws.1</span>, <span class='no'>bayesMultiDraws.2</span>,
+  <span class='no'>bayesMultiDraws.3</span>)
 
-  <span class='no'>bayesMultiDraws.3</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>,
-    <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>multi</span>, <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='fu'><a href='ictreg.html'>list</a></span>(<span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>11</span>:<span class='fl'>15</span>]),
-    <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>50000</span>, <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>300000</span>,
-    <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.0085</span>, <span class='fl'>6</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00025</span>, <span class='fl'>5</span>),
-    <span class='kw'>constrained.multi</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
+<span class='fu'>summary</span>(<span class='no'>bayesMultiUnconstrained</span>)
 
-  <span class='no'>bayesMultiUnconstrained</span> <span class='kw'>&lt;-</span> <span class='fu'>as.list</span>(<span class='no'>bayesMultiDraws.1</span>, <span class='no'>bayesMultiDraws.2</span>,
-    <span class='no'>bayesMultiDraws.3</span>)
+<span class='co'>## Mixed effects models</span>
 
-  <span class='fu'>summary</span>(<span class='no'>bayesMultiUnconstrained</span>)
+<span class='co'>## Varying intercepts</span>
 
-  <span class='co'>## Mixed effects models</span>
+<span class='no'>mle.estimates</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>)
 
-  <span class='co'>## Varying intercepts</span>
+<span class='no'>draws</span> <span class='kw'>&lt;-</span> <span class='fu'>mvrnorm</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>mu</span> <span class='kw'>=</span> <span class='fu'>coef</span>(<span class='no'>mle.estimates</span>),
+  <span class='kw'>Sigma</span> <span class='kw'>=</span> <span class='fu'>vcov</span>(<span class='no'>mle.estimates</span>) * <span class='fl'>9</span>)
 
-  <span class='no'>mle.estimates</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='ictreg.html'>ictreg</a></span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>)
+<span class='no'>bayesDraws.1</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
+  <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>100</span>,
+  <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>1000</span>, <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00025</span>, <span class='fl'>5</span>),
+  <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"full"</span>, <span class='kw'>group.mixed</span> <span class='kw'>=</span> <span class='st'>"state"</span>, <span class='kw'>formula.mixed</span> <span class='kw'>=</span> ~ <span class='fl'>1</span>)
 
-  <span class='no'>draws</span> <span class='kw'>&lt;-</span> <span class='fu'>mvrnorm</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>mu</span> <span class='kw'>=</span> <span class='fu'>coef</span>(<span class='no'>mle.estimates</span>),
-    <span class='kw'>Sigma</span> <span class='kw'>=</span> <span class='fu'>vcov</span>(<span class='no'>mle.estimates</span>) * <span class='fl'>9</span>)
+<span class='no'>bayesDraws.2</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
+  <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>,
+  <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00025</span>, <span class='fl'>5</span>),
+  <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"full"</span>, <span class='kw'>group.mixed</span> <span class='kw'>=</span> <span class='st'>"state"</span>, <span class='kw'>formula.mixed</span> <span class='kw'>=</span> ~ <span class='fl'>1</span>)
 
-  <span class='no'>bayesDraws.1</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
-    <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>1</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>100</span>,
-    <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>1000</span>, <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00025</span>, <span class='fl'>5</span>),
-    <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"full"</span>, <span class='kw'>group.mixed</span> <span class='kw'>=</span> <span class='st'>"state"</span>, <span class='kw'>formula.mixed</span> <span class='kw'>=</span> ~ <span class='fl'>1</span>)
+<span class='no'>bayesDraws.3</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
+  <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>,
+  <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00025</span>, <span class='fl'>5</span>),
+  <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"full"</span>, <span class='kw'>group.mixed</span> <span class='kw'>=</span> <span class='st'>"state"</span>, <span class='kw'>formula.mixed</span> <span class='kw'>=</span> ~ <span class='fl'>1</span>)
 
-  <span class='no'>bayesDraws.2</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
-    <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>2</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>,
-    <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00025</span>, <span class='fl'>5</span>),
-    <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"full"</span>, <span class='kw'>group.mixed</span> <span class='kw'>=</span> <span class='st'>"state"</span>, <span class='kw'>formula.mixed</span> <span class='kw'>=</span> ~ <span class='fl'>1</span>)
+<span class='no'>bayesMixed</span> <span class='kw'>&lt;-</span> <span class='fu'>as.list</span>(<span class='no'>bayesDraws.1</span>, <span class='no'>bayesDraws.2</span>, <span class='no'>bayesDraws.3</span>)
 
-  <span class='no'>bayesDraws.3</span> <span class='kw'>&lt;-</span> <span class='fu'>ictregBayes</span>(<span class='no'>y</span> ~ <span class='no'>male</span> + <span class='no'>college</span> + <span class='no'>age</span> + <span class='no'>south</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>race</span>,
-    <span class='kw'>delta.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>1</span>:<span class='fl'>5</span>], <span class='kw'>psi.start</span> <span class='kw'>=</span> <span class='no'>draws</span>[<span class='fl'>3</span>, <span class='fl'>6</span>:<span class='fl'>10</span>], <span class='kw'>burnin</span> <span class='kw'>=</span> <span class='fl'>10000</span>,
-    <span class='kw'>n.draws</span> <span class='kw'>=</span> <span class='fl'>100000</span>, <span class='kw'>delta.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.002</span>, <span class='fl'>5</span>), <span class='kw'>psi.tune</span> <span class='kw'>=</span> <span class='fu'>diag</span>(<span class='fl'>.00025</span>, <span class='fl'>5</span>),
-    <span class='kw'>constrained.single</span> <span class='kw'>=</span> <span class='st'>"full"</span>, <span class='kw'>group.mixed</span> <span class='kw'>=</span> <span class='st'>"state"</span>, <span class='kw'>formula.mixed</span> <span class='kw'>=</span> ~ <span class='fl'>1</span>)
+<span class='fu'>summary</span>(<span class='no'>bayesMixed</span>)
 
-  <span class='no'>bayesMixed</span> <span class='kw'>&lt;-</span> <span class='fu'>as.list</span>(<span class='no'>bayesDraws.1</span>, <span class='no'>bayesDraws.2</span>, <span class='no'>bayesDraws.3</span>)
-
-  <span class='fu'>summary</span>(<span class='no'>bayesMixed</span>)
-
-})</div></pre>
+<span class='co'># }</span><div class='input'>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
