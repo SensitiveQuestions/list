@@ -8,7 +8,7 @@ navbar:
       - text: Combining List Experiments with Direct Questions
         href: articles/combined-list.html
   - text: Examples of List Experiments
-    href: articles/published-list-experiments.html
+    href: articles/list-experiment-examples.html
   - text: Reference
     href: reference/
   - text: "Packages"

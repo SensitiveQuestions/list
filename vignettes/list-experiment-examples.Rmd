@@ -1,7 +1,7 @@
 ---
-title: "Published List Experiments"
+title: "Examples of List Experiments"
 output: html_document
-bibliography: published-list-experiments.bib
+bibliography: list-experiment-examples.bib
 nocite: '@*'
 ---
 
