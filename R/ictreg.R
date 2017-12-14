@@ -3301,19 +3301,19 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       cW0   <- weightMatrix(pars = par0, J = J, y = Y, treat = T, x = X)  
       step1 <- optim(par = par0, fn = NLSGMM, gr = NLSGMM.Grad,
         J = J, y = Y, treat = T, x = X, W = cW0, 
-        method = "BFGS", control = list(maxit = 5000))
+        method = "L-BFGS-B", upper = 15, lower = -15, control = list(maxit = 5000))
       par1  <- step1$par
       cW1   <- weightMatrix(pars = par1, J = J, y = Y, treat = T, x = X)
 
       step2 <- optim(par = par1, fn = NLSGMM, gr = NLSGMM.Grad,
         J = J, y= Y, treat = T, x = X, W = cW1, 
-        method = "BFGS", control = list(maxit = 5000))
+        method = "L-BFGS-B", upper = 15, lower = -15, control = list(maxit = 5000))
       par2  <- step2$par
       cW2   <- weightMatrix(pars = par2, J = J, y = Y, treat = T, x = X)
 
       step3 <- optim(par = par2, fn = NLSGMM, gr = NLSGMM.Grad,
         J = J, y= Y, treat = T, x = X, W = cW2, 
-        method = "BFGS", control = list(maxit = 5000))
+        method = "L-BFGS-B", upper = 15, lower = -15, control = list(maxit = 5000))
       par3  <- step3$par
       cW3   <- weightMatrix(pars = par3, J = J, y = Y, treat = T, x = X)
 
@@ -3618,19 +3618,19 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       cW0   <- weightMatrix(params = par0, J = J, Y = Y, treat = Tr, X = X, robust = robust)  
       step1 <- optim(par = par0, fn = MLGMM, gr = MLGMM.Grad, robust, 
         J = J, Y = Y, treat = Tr, X = X, cW = cW0, 
-        method = "BFGS", control = list(maxit = 5000))
+        method = "L-BFGS-B", upper = 15, lower = -15, control = list(maxit = 5000))
       par1  <- step1$par
       cW1   <- weightMatrix(params = par1, J = J, Y = Y, treat = Tr, X = X, robust = robust)
 
       step2 <- optim(par = par1, fn = MLGMM, gr = MLGMM.Grad, robust, 
         J = J, Y = Y, treat = Tr, X = X, cW = cW1, 
-        method = "BFGS", control = list(maxit = 5000))
+        method = "L-BFGS-B", upper = 15, lower = -15, control = list(maxit = 5000))
       par2  <- step2$par
       cW2   <- weightMatrix(params = par2, J = J, Y = Y, treat = Tr, X = X, robust = robust)
 
       step3 <- optim(par = par2, fn = MLGMM, gr = MLGMM.Grad, robust, 
         J = J, Y = Y, treat = Tr, X = X, cW = cW2, 
-        method = "BFGS", control = list(maxit = 5000))
+        method = "L-BFGS-B", upper = 15, lower = -15, control = list(maxit = 5000))
       cW3   <- weightMatrix(params = step3$par, J = J, Y = Y, treat = Tr, X = X, robust = robust)
 
       vcov <- MLGMM.var(params = step3$par, J = J, Y = Y, treat = Tr, X = X, robust = TRUE, cW = cW3)
@@ -3969,6 +3969,93 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       J.stat <- fit.nls.aux$val * n
       overid.p <- round(1 - pchisq(J.stat, df = length(h)), 4)
      
+  }
+
+  # one-step estimator
+  if (method == "onestep") {
+
+    nls.objective <- function(params, J, Tr, Y, X) {
+      
+      k  <- length(params)/2
+      beta  <- params[1:k]
+      gamma <- params[(k + 1):(2*k)]
+
+      Xb <- X %*% beta
+      Xg <- X %*% gamma
+
+      tmp1 <- c(Tr * (Y - logistic(Xb) - J * logistic(Xg)) * logistic(Xb)/(1 + exp(Xb))) * X
+      tmp0 <- c((1 - Tr) * (Y - J * logistic(Xg)) * J * logistic(Xg)/(1 + exp(Xg))) * X
+    
+      m1 <- colMeans(tmp1)
+      m0 <- colMeans(tmp0)
+
+      W  <- solve(adiag(t(tmp1) %*% tmp1/n, t(tmp0) %*% tmp0/n), tol=1e-20)
+      
+      as.numeric(t(c(m1, m0)) %*% W %*% c(m1, m0))
+
+    }
+
+    vcov.twostep.std <- function(params, J, Tr, Y, X) {
+    
+        n  <- length(Y)
+        k  <- length(params)/2
+        beta  <- params[1:k]
+        gamma <- params[(k + 1):(2*k)]
+
+        Xb <- X %*% beta
+        Xg <- X %*% gamma
+
+        tmp1 <- c(Tr * (Y - logistic(Xb) - J * logistic(Xg)) * logistic(Xb)/(1 + exp(Xb))) * X
+        tmp0 <- c((1 - Tr) * (Y - J * logistic(Xg)) * J * logistic(Xg)/(1 + exp(Xg))) * X
+        Em1 <- t(tmp1) %*% tmp1 / n
+        Em0 <- t(tmp0) %*% tmp0 / n
+        F <- adiag(Em1, Em0)
+        Gtmp <- c(Tr * logistic(Xb)/(1 + exp(Xb))) * X
+        G1 <- -t(Gtmp) %*% Gtmp / n  
+        Gtmp <- c(sqrt(J*Tr*logistic(Xb)*logistic(Xg)/
+                       ((1 + exp(Xb))*(1 + exp(Xg))))) * X
+        G2 <- -t(Gtmp) %*% Gtmp / n
+        Gtmp <- c(J*(1-Tr)*logistic(Xg)/(1 + exp(Xg))) * X
+        G3 <- -t(Gtmp) %*% Gtmp / n
+        invG1 <- ginv(G1)
+        invG3 <- ginv(G3)
+        invG <- rbind(cbind(invG1, - invG1 %*% G2 %*% invG3),
+                      cbind(matrix(0, ncol = ncol(G1), nrow = nrow(G3)), invG3))
+        
+        return(invG %*% F %*% t(invG) / n)
+        
+      }
+
+    mf <- model.frame(formula, data)
+    n  <- nrow(mf)
+
+    Y  <- model.response(mf)
+    X  <- model.matrix(formula, data)
+    Tr <- data[row.names(mf), treat]
+    k  <- ncol(X)
+
+    par0   <- c(par.treat.nls.std, par.control.nls.std)
+    
+    optim.out <- optim(fn = nls.objective,
+      par = par0, J = J, Tr = Tr, Y = Y, X = X, 
+      control = list(maxit = 5000))
+
+    onestep.vcov <- vcov.twostep.std(params = optim.out$par, J = J, Tr = Tr, Y = Y, X = X)
+    onestep.se <- sqrt(diag(onestep.vcov))
+
+    onestep.par <- optim.out$par
+    onestep.convergence <- optim.out$convergence
+    if (onestep.convergence != 1) warning("Optimization routine did not converge.")
+    names(onestep.par) <- rep(names(x.all), 2)
+    names(onestep.se)  <- rep(names(x.all), 2)
+
+    par.treat.onestep <- onestep.par[1:ncol(x.all)]
+    par.control.onestep <- onestep.par[(ncol(x.all)+1):(ncol(x.all)*2)]
+
+    se.treat.onestep <- onestep.se[1:ncol(x.all)]
+    se.control.onestep <- onestep.se[(ncol(x.all)+1):(ncol(x.all)*2)]
+
+
   }
 
   ## 
@@ -4311,6 +4398,21 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
   
   }      
+
+  if (method == "onestep") {
+
+    return.object <- list(par.treat=par.treat.onestep, se.treat.onestep=se.treat.onestep, 
+      par.control.onestep=par.control.onestep, se.control.onestep = se.control.onestep, 
+      vcov=onestep.vcov, treat.labels = treatment.labels, control.label = control.label, 
+        J=J, coef.names=coef.names, design = design, method = method, robust = robust, 
+          overdispersed=overdispersed, constrained=constrained, boundary = boundary, multi = multi, 
+            ceiling = ceiling, floor = floor, call = match.call(), data = data, x = x.all, y = y.all, treat = t) 
+  
+    resid <- y.treatment - logistic(x.treatment %*% par.treat.onestep)
+    return.object$resid.df <- nrow(x.treatment) - length(par.treat.onestep)
+    return.object$resid.se <- 1/return.object$resid.df * sum(resid^2)
+
+  }
 
   # robust functionality 
   return.object$robust <- robust
@@ -4839,7 +4941,7 @@ coef.ictreg <- function(object, ...){
   
   nPar <- length(object$coef.names)
   
-  if((object$method=="lm" | object$method=="nls" | object$design=="modified") & object$boundary == FALSE & object$multi == FALSE){
+  if((object$method=="lm" | object$method=="nls" | object$method=="onestep" | object$design=="modified") & object$boundary == FALSE & object$multi == FALSE){
     coef <- c(object$par.treat,object$par.control)
     
     if(object$design=="standard") {
@@ -4919,7 +5021,7 @@ vcov.ictreg <- function(object, ...){
   nPar <- length(object$coef.names)
   
   ## dummy value for constraint
-  if(object$method=="nls" | object$design=="modified" | object$method == "lm")
+  if(object$method=="nls" | object$method=="onestep" | object$design=="modified" | object$method == "lm")
     object$constrained <- F
   
   if (object$method == "lm" | (object$method=="ml" & object$constrained==T &
@@ -4938,7 +5040,7 @@ vcov.ictreg <- function(object, ...){
                         vcov[(nPar+1):(nPar*2),(nPar+1):(nPar*2)]) )
   }
 
-  if((object$method=="nls" | object$method == "lm") &
+  if((object$method=="nls" | object$method=="onestep" | object$method == "lm") &
      object$boundary == FALSE & object$multi == FALSE){
     if(object$design=="standard") rownames(vcov) <-
       colnames(vcov)<- c(paste("sensitive.",object$coef.names,sep=""),
@@ -5264,12 +5366,12 @@ print.summary.ictreg <- function(x, ...){
 
   cat("\n")
   
-  if(x$method=="nls" | x$design=="modified" | x$method == "lm")
+  if(x$method=="nls" | x$method=="onestep" | x$design=="modified" | x$method == "lm")
     x$constrained <- T
 
   if (x$design == "standard") {
   
-    if((x$method=="nls" | x$method == "lm") & x$multi == FALSE){
+    if((x$method=="nls" | x$method=="onestep" | x$method == "lm") & x$multi == FALSE){
       ##cat(rep(" ", max(nchar(x$coef.names))+8), "Sensitive Item", rep(" ", 5),
       ##    "Control Items \n", sep="")
       tb.treat <- tb.control <- matrix(NA, ncol = 2, nrow = length(x$par.control))
