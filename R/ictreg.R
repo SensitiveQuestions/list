@@ -3240,12 +3240,12 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       gamma <- pars[(k + 1):(k * 2)]
 
       m1 <- c((y - J * logistic(x %*% gamma) - logistic(x %*% delta)) * 
-        logistic(x %*% delta)/( + exp(x %*% delta))) * treat * x
+        logistic(x %*% delta)/(1 + exp(x %*% delta))) * treat * x
       m0 <- c((y - J * logistic(x %*% gamma)) * 
         J * logistic(x %*% gamma)/(1 + exp(x %*% gamma))) * (1-treat) * x
       m.dim <- -logistic(x %*% delta) + n/n1 * treat * y - n/n0 * (1-treat) * y
       
-      F <- crossprod(cbind(m1, m0, m.dim/n))/n
+      F <- crossprod(cbind(m1, m0, m.dim/(n/100)))/n
 
       return(solve(F))
 
@@ -3269,18 +3269,20 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       gamma <- pars[(ncol(x) + 1):(2 * ncol(x))]
 
       m1 <- c((y - J * logistic(x %*% gamma) - logistic(x %*% delta)) * 
-        logistic(x %*% delta)/( + exp(x %*% delta))) * treat * x
+        logistic(x %*% delta)/(1 + exp(x %*% delta))) * treat * x
       m0 <- c((y - J * logistic(x %*% gamma)) * 
         J * logistic(x %*% gamma)/(1 + exp(x %*% gamma))) * (1-treat) * x
       m.dim <- -logistic(x %*% delta) + n/n1 * treat * y - n/n0 * (1-treat) * y
 
-      dm.dim <- colMeans(-c(logistic(x %*% delta)/(1 + exp(x %*% delta))) * x)
       F      <- crossprod(cbind(m1, m0, m.dim))/n
 
+      dm.dim <- colMeans(-c(logistic(x %*% delta)/(1 + exp(x %*% delta))) * x)
       G <- Gmat(delta, gamma, J, y, treat, x)
       G <- rbind(G, c(dm.dim, rep(0, length(gamma))))
 
-      V <- solve(t(G) %*% solve(F, tol = 1e-20) %*% G, tol = 1e-20)
+      V <- solve(t(G) %*% W %*% G, tol = 1e-20) %*% 
+        t(G) %*% W %*% F %*% W %*% G %*%
+          solve(t(G) %*% W %*% G, tol = 1e-20)
 
       return(V/n)
 
@@ -3354,7 +3356,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
     sweepCross <- function(M, x) t(M) %*% sweep(M, MAR = 1, STATS = x, "*")
 
-    loglik <- function(params, J, Y, T, X) {
+    loglik <- function(params, J, Y, treat, X) {
       
       n     <- length(Y)
       K     <- length(params)
@@ -3367,15 +3369,15 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       llik <- c(
          -J * log(1 + exp(Xg)) - log(1 + exp(Xb)) + 
           ifelse(Y == J + 1, Xb + J * Xg, 0) +  
-          ifelse(T == 0, log(choose(J, Y)) + Y * Xg + log(1 + exp(Xb)), 0) + 
-          ifelse(T == 1 & Y %in% 1:J, (Y - 1) * Xg + log(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
+          ifelse(treat == 0, log(choose(J, Y)) + Y * Xg + log(1 + exp(Xb)), 0) + 
+          ifelse(treat == 1 & Y %in% 1:J, (Y - 1) * Xg + log(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
         )
 
       return(sum(llik))
 
     }
 
-    MLGMM <- function(params, cW, J, Y, T, X, robust) {
+    MLGMM <- function(params, cW, J, Y, treat, X, robust) {
       
       n     <- length(Y)
       K     <- length(params)
@@ -3390,8 +3392,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       beta.coef <- c(
         -logistic(Xb) + 
         ifelse(Y == J + 1, 1, 0) + 
-        ifelse(T == 0, logistic(Xb), 0) + 
-        ifelse(T == 1 & Y %in% 1:J, choose(J, Y - 1) * exp(Xb)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
+        ifelse(treat == 0, logistic(Xb), 0) + 
+        ifelse(treat == 1 & Y %in% 1:J, choose(J, Y - 1) * exp(Xb)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
        )
 
       beta.foc <- colMeans(X*beta.coef)
@@ -3400,15 +3402,15 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       gamma.coef <- c(
         -J*logistic(Xg) + 
         ifelse(Y == J + 1, J, 0) + 
-        ifelse(T == 0, Y, 0) + 
-        ifelse(T == 1 & Y %in% 1:J, (Y - 1) + choose(J, Y) * exp(Xg)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
+        ifelse(treat == 0, Y, 0) + 
+        ifelse(treat == 1 & Y %in% 1:J, (Y - 1) + choose(J, Y) * exp(Xg)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
       )
       
       gamma.foc <- colMeans(X*gamma.coef)
 
       # dim moment
-      if (robust == TRUE) {
-        aux.vec <- (logistic(Xb) - mean(Y[T == 1]) + mean(Y[T == 0]))
+      if (robust) {
+        aux.vec <- mean(Y[treat == 1]) - mean(Y[treat == 0]) - logistic(Xb)
         aux.mom <- mean(aux.vec)
         cG <- c(beta.foc, gamma.foc, aux.mom) 
       } else {
@@ -3416,13 +3418,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       }
 
       # gmm objective
-      gmm.objective <- as.numeric(t(cG) %*% solve(cW, tol = 1e-20) %*% cG)
+      gmm.objective <- as.numeric(t(cG) %*% cW %*% cG)
 
       return(gmm.objective)
 
     }
 
-    MLGMM.Grad <- function(params, cW, J, Y, T, X, robust) {
+    MLGMM.Grad <- function(params, cW, J, Y, treat, X, robust) {
       
       n     <- length(Y)
       K     <- length(params)
@@ -3437,8 +3439,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       beta.coef <- c(
         -logistic(Xb) + 
         ifelse(Y == J + 1, 1, 0) + 
-        ifelse(T == 0, logistic(Xb), 0) + 
-        ifelse(T == 1 & Y %in% 1:J, choose(J, Y - 1) * exp(Xb)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
+        ifelse(treat == 0, logistic(Xb), 0) + 
+        ifelse(treat == 1 & Y %in% 1:J, choose(J, Y - 1) * exp(Xb)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
        )
 
       beta.foc <- colMeans(X*beta.coef)
@@ -3447,15 +3449,15 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       gamma.coef <- c(
         -J*logistic(Xg) + 
         ifelse(Y == J + 1, J, 0) + 
-        ifelse(T == 0, Y, 0) + 
-        ifelse(T == 1 & Y %in% 1:J, (Y - 1) + choose(J, Y) * exp(Xg)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
+        ifelse(treat == 0, Y, 0) + 
+        ifelse(treat == 1 & Y %in% 1:J, (Y - 1) + choose(J, Y) * exp(Xg)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
       )
       
       gamma.foc <- colMeans(X*gamma.coef)
 
       # dim moment
       if (robust == TRUE) {
-        aux.vec <- (logistic(Xb) - mean(Y[T == 1]) + mean(Y[T == 0]))
+        aux.vec <- mean(Y[treat == 1]) - mean(Y[treat == 0]) - logistic(Xb)
         aux.mom <- mean(aux.vec)
         cG <- c(beta.foc, gamma.foc, aux.mom) 
       } else {
@@ -3464,12 +3466,12 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       # jacobian
       tmp1 <- -logistic(Xb)/(1 + exp(Xb)) + 
-        ifelse(T == 0, logistic(Xb)/(1 + exp(Xb)), 0) + 
-          ifelse(T == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
+        ifelse(treat == 0, logistic(Xb)/(1 + exp(Xb)), 0) + 
+          ifelse(treat == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
       tmp2 <- -J*logistic(Xg)/(1+exp(Xg)) + 
-        ifelse(T == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
-      tmp3 <- -ifelse(T == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
-      tmp4 <- logistic(Xb)/(1+exp(Xb))
+        ifelse(treat == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
+      tmp3 <- -ifelse(treat == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
+      tmp4 <- -logistic(Xb)/(1+exp(Xb))
 
       if (robust) {
         dcG <- 1/n * rbind(
@@ -3484,17 +3486,17 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         )
       }
 
-      return.vec <- c(t(cG) %*% (solve(cW, tol = 1e-20) + t(solve(cW, tol = 1e-20))) %*% dcG)
+      return.vec <- c(t(cG) %*% (cW + t(cW)) %*% dcG)
       
       return(return.vec)
 
     }
 
-    weightMatrix <- function(params, J, Y, T, X, robust) {
+    weightMatrix <- function(params, J, Y, treat, X, robust) {
       
       n     <- length(Y)
-      n1    <- sum(T == 1)
-      n0    <- sum(T == 0)
+      n1    <- sum(treat == 1)
+      n0    <- sum(treat == 0)
 
       K     <- length(params)
       beta  <- params[1:(K/2)]
@@ -3508,8 +3510,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       beta.coef <- c(
         -logistic(Xb) + 
         ifelse(Y == J + 1, 1, 0) + 
-        ifelse(T == 0, logistic(Xb), 0) + 
-        ifelse(T == 1 & Y %in% 1:J, choose(J, Y - 1) * exp(Xb)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
+        ifelse(treat == 0, logistic(Xb), 0) + 
+        ifelse(treat == 1 & Y %in% 1:J, choose(J, Y - 1) * exp(Xb)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
        )
 
       beta.mat <- X*beta.coef
@@ -3518,28 +3520,27 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       gamma.coef <- c(
         -J*logistic(Xg) + 
         ifelse(Y == J + 1, J, 0) + 
-        ifelse(T == 0, Y, 0) + 
-        ifelse(T == 1 & Y %in% 1:J, (Y - 1) + choose(J, Y) * exp(Xg)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
+        ifelse(treat == 0, Y, 0) + 
+        ifelse(treat == 1 & Y %in% 1:J, (Y - 1) + choose(J, Y) * exp(Xg)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
       )
       
       gamma.mat <- X*gamma.coef
 
       # additional moment
-      m.dim <- logistic(Xb) - n/n1 * T * Y + n/n0 * (1-T) * Y
-      Wtmp  <- cbind(beta.mat, gamma.mat, m.dim/n)
+      m.dim <-  n/n1 * treat * Y - n/n0 * (1-treat) * Y - logistic(Xb)
+      Wtmp  <- crossprod(cbind(beta.mat, gamma.mat, m.dim/(n/100)))/n
+      # Wtmp  <- adiag(crossprod(beta.mat), crossprod(gamma.mat), sum(m.dim^2))/n
 
-      # weight matrix
-      cW <- (t(Wtmp) %*% Wtmp)/n
-    
-      return(cW)
+      # weight matrix    
+      return(solve(Wtmp, tol=1e-20))
 
     }
 
-    MLGMM.var <- function(params, J, Y, T, X, robust) {
+    MLGMM.var <- function(params, J, Y, treat, X, robust, cW) {
       
       n     <- length(Y)
-      n1    <- sum(T == 1)
-      n0    <- sum(T == 0)
+      n1    <- sum(treat == 1)
+      n0    <- sum(treat == 0)
 
       K     <- length(params)
       beta  <- params[1:(K/2)]
@@ -3553,8 +3554,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       beta.coef <- c(
         -logistic(Xb) + 
         ifelse(Y == J + 1, 1, 0) + 
-        ifelse(T == 0, logistic(Xb), 0) + 
-        ifelse(T == 1 & Y %in% 1:J, choose(J, Y - 1) * exp(Xb)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
+        ifelse(treat == 0, logistic(Xb), 0) + 
+        ifelse(treat == 1 & Y %in% 1:J, choose(J, Y - 1) * exp(Xb)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
        )
 
       beta.foc <- colMeans(X*beta.coef)
@@ -3563,25 +3564,25 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       gamma.coef <- c(
         -J*logistic(Xg) + 
         ifelse(Y == J + 1, J, 0) + 
-        ifelse(T == 0, Y, 0) + 
-        ifelse(T == 1 & Y %in% 1:J, (Y - 1) + choose(J, Y) * exp(Xg)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
+        ifelse(treat == 0, Y, 0) + 
+        ifelse(treat == 1 & Y %in% 1:J, (Y - 1) + choose(J, Y) * exp(Xg)/(choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg)), 0)
       )
       
       gamma.foc <- colMeans(X*gamma.coef)
 
       # vcov of moments
-      m.dim <- logistic(Xb) - n/n1 * T * Y + n/n0 * (1-T) * Y
+      m.dim <- n/n1 * treat * Y - n/n0 * (1-treat) * Y - logistic(Xb)
       F <- crossprod(cbind(X*beta.coef, X*gamma.coef, m.dim))/n
     
            
       # jacobian
       tmp1 <- -logistic(Xb)/(1 + exp(Xb)) + 
-        ifelse(T == 0, logistic(Xb)/(1 + exp(Xb)), 0) + 
-          ifelse(T == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
+        ifelse(treat == 0, logistic(Xb)/(1 + exp(Xb)), 0) + 
+          ifelse(treat == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
       tmp2 <- -J*logistic(Xg)/(1+exp(Xg)) + 
-        ifelse(T == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
-      tmp3 <- -ifelse(T == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
-      tmp4 <- logistic(Xb)/(1+exp(Xb))
+        ifelse(treat == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
+      tmp3 <- -ifelse(treat == 1 & Y %in% 1:J, choose(J, Y) * choose(J, Y - 1) * exp(Xbg)/((choose(J, Y - 1) * exp(Xb) + choose(J, Y) * exp(Xg))^2), 0)
+      tmp4 <- -logistic(Xb)/(1+exp(Xb))
 
       if (robust) {
         dcG <- 1/n * rbind(
@@ -3596,11 +3597,11 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         )
       }
 
-      return.mat <- solve(t(dcG) %*% solve(F, tol = 1e-20) %*% dcG, tol = 1e-20) # %*% 
-        # t(dcG) %*% ginv(cW) %*% F %*% t(ginv(cW)) %*% dcG %*% 
-          # ginv(t(dcG) %*% t(ginv(cW)) %*% dcG)
+      return.mat <- solve(t(dcG) %*% cW %*% dcG, tol=1e-20) %*% 
+        t(dcG) %*% cW %*% F %*% cW %*% dcG %*% 
+          solve(t(dcG) %*% cW %*% dcG, tol=1e-20)
 
-      return(return.mat)
+      return(return.mat/n)
 
     }
 
@@ -3611,27 +3612,28 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       Y  <- model.response(mf)
       X  <- model.matrix(formula, data)
-      T  <- data[row.names(mf), treat]
+      Tr <- data[row.names(mf), treat]
       k  <- ncol(X)
 
-      cW0   <- weightMatrix(params = par0, J = J, Y = Y, T = T, X = X, robust = robust)  
+      cW0   <- weightMatrix(params = par0, J = J, Y = Y, treat = Tr, X = X, robust = robust)  
       step1 <- optim(par = par0, fn = MLGMM, gr = MLGMM.Grad, robust, 
-        J = J, Y = Y, T = T, X = X, cW = cW0, 
+        J = J, Y = Y, treat = Tr, X = X, cW = cW0, 
         method = "BFGS", control = list(maxit = 5000))
       par1  <- step1$par
-      cW1   <- weightMatrix(params = par1, J = J, Y = Y, T = T, X = X, robust = robust)
+      cW1   <- weightMatrix(params = par1, J = J, Y = Y, treat = Tr, X = X, robust = robust)
 
       step2 <- optim(par = par1, fn = MLGMM, gr = MLGMM.Grad, robust, 
-        J = J, Y = Y, T = T, X = X, cW = cW1, 
+        J = J, Y = Y, treat = Tr, X = X, cW = cW1, 
         method = "BFGS", control = list(maxit = 5000))
       par2  <- step2$par
-      cW2   <- weightMatrix(params = par2, J = J, Y = Y, T = T, X = X, robust = robust)
+      cW2   <- weightMatrix(params = par2, J = J, Y = Y, treat = Tr, X = X, robust = robust)
 
       step3 <- optim(par = par2, fn = MLGMM, gr = MLGMM.Grad, robust, 
-        J = J, Y = Y, T = T, X = X, cW = cW2, 
+        J = J, Y = Y, treat = Tr, X = X, cW = cW2, 
         method = "BFGS", control = list(maxit = 5000))
+      cW3   <- weightMatrix(params = step3$par, J = J, Y = Y, treat = Tr, X = X, robust = robust)
 
-      vcov <- MLGMM.var(params = step3$par, J = J, Y = Y, T = T, X = X, robust = TRUE)/n
+      vcov <- MLGMM.var(params = step3$par, J = J, Y = Y, treat = Tr, X = X, robust = TRUE, cW = cW3)
 
       return(list(
         par = step3$par, 
@@ -3641,7 +3643,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         J.stat = ifelse(robust, n*step3$value, NA),
         p.val = ifelse(robust, 1 - pchisq(q = step3$value, df = 2*k), NA),
         est.mean = mean(logistic(X %*% step3$par[1:k])), 
-        diff.mean = mean(Y[T == 1]) - mean(Y[T == 0]), 
+        diff.mean = mean(Y[treat == 1]) - mean(Y[treat == 0]), 
         robust = robust, 
         message = step3$message
         )
@@ -3662,7 +3664,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
     par.control.robust <- ictrobust.par[1:ncol(x.all)]
     par.treat.robust <- ictrobust.par[(ncol(x.all)+1):(ncol(x.all)*2)]
-    llik.robust <- loglik(params = ictrobust.par, J = J, Y = y.all, T = treat, X = x.all)   
+    llik.robust <- loglik(params = c(par.control.robust, par.treat.robust), J = J, Y = y.all, treat = treat, X = x.all)   
 
   }
 
