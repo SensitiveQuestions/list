@@ -3301,19 +3301,19 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       cW0   <- weightMatrix(pars = par0, J = J, y = Y, treat = T, x = X)  
       step1 <- optim(par = par0, fn = NLSGMM, gr = NLSGMM.Grad,
         J = J, y = Y, treat = T, x = X, W = cW0, 
-        method = "L-BFGS-B", upper = 15, lower = -15, control = list(maxit = 5000))
+        method = "BFGS", control = list(maxit = 5000))
       par1  <- step1$par
       cW1   <- weightMatrix(pars = par1, J = J, y = Y, treat = T, x = X)
 
       step2 <- optim(par = par1, fn = NLSGMM, gr = NLSGMM.Grad,
         J = J, y= Y, treat = T, x = X, W = cW1, 
-        method = "L-BFGS-B", upper = 15, lower = -15, control = list(maxit = 5000))
+        method = "BFGS", control = list(maxit = 5000))
       par2  <- step2$par
       cW2   <- weightMatrix(pars = par2, J = J, y = Y, treat = T, x = X)
 
       step3 <- optim(par = par2, fn = NLSGMM, gr = NLSGMM.Grad,
         J = J, y= Y, treat = T, x = X, W = cW2, 
-        method = "L-BFGS-B", upper = 15, lower = -15, control = list(maxit = 5000))
+        method = "BFGS", control = list(maxit = 5000))
       par3  <- step3$par
       cW3   <- weightMatrix(pars = par3, J = J, y = Y, treat = T, x = X)
 
@@ -3618,19 +3618,19 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       cW0   <- weightMatrix(params = par0, J = J, Y = Y, treat = Tr, X = X, robust = robust)  
       step1 <- optim(par = par0, fn = MLGMM, gr = MLGMM.Grad, robust, 
         J = J, Y = Y, treat = Tr, X = X, cW = cW0, 
-        method = "L-BFGS-B", upper = 15, lower = -15, control = list(maxit = 5000))
+        method = "BFGS", control = list(maxit = 5000))
       par1  <- step1$par
       cW1   <- weightMatrix(params = par1, J = J, Y = Y, treat = Tr, X = X, robust = robust)
 
       step2 <- optim(par = par1, fn = MLGMM, gr = MLGMM.Grad, robust, 
         J = J, Y = Y, treat = Tr, X = X, cW = cW1, 
-        method = "L-BFGS-B", upper = 15, lower = -15, control = list(maxit = 5000))
+        method = "BFGS", control = list(maxit = 5000))
       par2  <- step2$par
       cW2   <- weightMatrix(params = par2, J = J, Y = Y, treat = Tr, X = X, robust = robust)
 
       step3 <- optim(par = par2, fn = MLGMM, gr = MLGMM.Grad, robust, 
         J = J, Y = Y, treat = Tr, X = X, cW = cW2, 
-        method = "L-BFGS-B", upper = 15, lower = -15, control = list(maxit = 5000))
+        method = "BFGS", control = list(maxit = 5000))
       cW3   <- weightMatrix(params = step3$par, J = J, Y = Y, treat = Tr, X = X, robust = robust)
 
       vcov <- MLGMM.var(params = step3$par, J = J, Y = Y, treat = Tr, X = X, robust = TRUE, cW = cW3)
