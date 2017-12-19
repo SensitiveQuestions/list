@@ -306,7 +306,7 @@
 #' }
 #' 
 ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = "ml", weights, 
-                   h = NULL, group = NULL, matrixMethod = "efficient", robust = FALSE, rweight = .01, error = "none", 
+                   h = NULL, group = NULL, matrixMethod = "efficient", robust = FALSE, error = "none", 
                    overdispersed = FALSE, constrained = TRUE, floor = FALSE, ceiling = FALSE, 
                    ceiling.fit = "glm", floor.fit = "glm", ceiling.formula = ~ 1, floor.formula = ~ 1, 
                    fit.start = "lm", fit.nonsensitive = "nls", multi.condition = "none", maxIter = 5000, verbose = FALSE, ...){
@@ -3243,9 +3243,10 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         logistic(x %*% delta)/(1 + exp(x %*% delta))) * treat * x
       m0 <- c((y - J * logistic(x %*% gamma)) * 
         J * logistic(x %*% gamma)/(1 + exp(x %*% gamma))) * (1-treat) * x
-      m.dim <- -logistic(x %*% delta) + n/n1 * treat * y - n/n0 * (1-treat) * y
-      
-      F <- crossprod(cbind(m1, m0, m.dim/(n*rweight)))/n
+      dim <- mean(y1) - mean(y0)
+      m.dim <- dim - logistic(x %*% delta)
+
+      F <- crossprod(cbind(m1, m0, m.dim))/n
 
       return(solve(F))
 
@@ -3526,11 +3527,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       )
       
       gamma.mat <- X*gamma.coef
+      Wtmp <- crossprod(cbind(beta.mat, gamma.mat))/n
 
-      # additional moment
-      m.dim <-  n/n1 * treat * Y - n/n0 * (1-treat) * Y - logistic(Xb)
-      Wtmp  <- crossprod(cbind(beta.mat, gamma.mat, m.dim/(n*rweight)))/n
-      # Wtmp  <- adiag(crossprod(beta.mat), crossprod(gamma.mat), sum(m.dim^2))/n
+      if (robust) {
+        # additional moment
+        m.dim <- mean(Y[treat==1]) - mean(Y[treat==0]) - logistic(Xb)
+        Wtmp  <- crossprod(cbind(beta.mat, gamma.mat, m.dim))/n
+      }
 
       # weight matrix    
       return(solve(Wtmp, tol=1e-20))
@@ -3572,9 +3575,12 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       gamma.foc <- colMeans(X*gamma.coef)
 
       # vcov of moments
-      m.dim <- n/n1 * treat * Y - n/n0 * (1-treat) * Y - logistic(Xb)
-      F <- crossprod(cbind(X*beta.coef, X*gamma.coef, m.dim))/n
-    
+      if (robust) {
+        m.dim <- n/n1 * treat * Y - n/n0 * (1-treat) * Y - logistic(Xb)
+        F <- crossprod(cbind(X*beta.coef, X*gamma.coef, m.dim))/n
+      } else {
+        F <- crossprod(cbind(X*beta.coef, X*gamma.coef))/n
+      }
            
       # jacobian
       tmp1 <- -logistic(Xb)/(1 + exp(Xb)) + 
@@ -3616,23 +3622,23 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       Tr <- data[row.names(mf), treat]
       k  <- ncol(X)
 
-      cW0   <- weightMatrix(params = par0, J = J, Y = Y, treat = Tr, X = X, robust = robust)  
+      cW0   <- weightMatrix(params = par0, J = J, Y = Y, treat = Tr, X = X, robust = TRUE)  
       step1 <- optim(par = par0, fn = MLGMM, gr = MLGMM.Grad, 
-        robust, J = J, Y = Y, treat = Tr, X = X, cW = cW0, 
-        method = "BFGS", control = list(maxit = 5000))
+        robust = TRUE, J = J, Y = Y, treat = Tr, X = X, cW = cW0, 
+        method = "L-BFGS-B", upper=20,lower=-20,control = list(maxit = 5000))
       par1  <- step1$par
-      cW1   <- weightMatrix(params = par1, J = J, Y = Y, treat = Tr, X = X, robust = robust)
+      cW1   <- weightMatrix(params = par1, J = J, Y = Y, treat = Tr, X = X, robust = TRUE)
 
       step2 <- optim(par = par1, fn = MLGMM, gr = MLGMM.Grad, 
-        robust, J = J, Y = Y, treat = Tr, X = X, cW = cW1, 
-        method = "BFGS", control = list(maxit = 5000))
+        robust = TRUE, J = J, Y = Y, treat = Tr, X = X, cW = cW1, 
+        method = "L-BFGS-B", upper=20,lower=-20,control = list(maxit = 5000))
       par2  <- step2$par
-      cW2   <- weightMatrix(params = par2, J = J, Y = Y, treat = Tr, X = X, robust = robust)
+      cW2   <- weightMatrix(params = par2, J = J, Y = Y, treat = Tr, X = X, robust = TRUE)
 
       step3 <- optim(par = par2, fn = MLGMM, gr = MLGMM.Grad, 
-        robust, J = J, Y = Y, treat = Tr, X = X, cW = cW2, 
-        method = "BFGS", control = list(maxit = 5000))
-      cW3   <- weightMatrix(params = step3$par, J = J, Y = Y, treat = Tr, X = X, robust = robust)
+        robust = TRUE, J = J, Y = Y, treat = Tr, X = X, cW = cW2, 
+        method = "L-BFGS-B", upper=20,lower=-20,control = list(maxit = 5000))
+      cW3   <- weightMatrix(params = step3$par, J = J, Y = Y, treat = Tr, X = X, robust = TRUE)
 
       vcov <- MLGMM.var(params = step3$par, J = J, Y = Y, treat = Tr, X = X, robust = TRUE, cW = cW3)
 
