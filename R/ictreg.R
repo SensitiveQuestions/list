@@ -321,7 +321,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     mf$treat <- mf$weights <- mf$constrained <- mf$overdispersed <- mf$floor <- 
     mf$ceiling <- mf$ceiling.fit <- mf$fit.nonsensitive <- mf$floor.fit <- 
     mf$multi.condition <- mf$floor.formula <- mf$ceiling.formula <- mf$h <-
-    mf$group <- mf$matrixMethod <- mf$robust <- mf$rweight <- mf$error <- NULL
+    mf$group <- mf$matrixMethod <- mf$robust <- mf$error <- NULL
   mf[[1]] <- as.name("model.frame")
   mf$na.action <- 'na.pass'
   mf <- eval.parent(mf)
