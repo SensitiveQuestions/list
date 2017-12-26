@@ -2699,7 +2699,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       yzeta <- yzeta0 + yzeta0y + yzeta1J + yzeta1y
 
-      return(list(xi = xi, eta = eta, yzeta = yzeta))
+      return(list(xi = signif(xi, 10), eta = signif(eta, 10), yzeta = signif(yzeta, 10)))
       
     }
 
@@ -2971,7 +2971,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       yzeta <- ifelse(Tr == 0, yzeta0, yzeta1)
 
-      return(list(xi = xi, eta = eta, yzeta = yzeta))
+      return(list(xi = signif(xi, 10), eta = signif(eta, 10), yzeta = signif(yzeta, 10)))
 
     }
 
