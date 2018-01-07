@@ -26,7 +26,7 @@ ict.hausman.test <- function(ml, nls, ginv = FALSE){
                    (coef(ml) - coef(nls)))
     if (stat < 0) stop("Hausman test statistic is negative, suggesting misspecification.  Set ginv = TRUE to compute anyway.")    
   }
-  df <- length(coef(ml)) - 1
+  df <- length(coef(ml))
   p <- pchisq(q = stat, df = df, lower.tail = FALSE)
   return(structure(list(stat = stat, df = df, p = p), class = "ict.hausman.test"))
 }
