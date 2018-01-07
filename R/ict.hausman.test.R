@@ -9,25 +9,18 @@
 #' @export
 #'
 #' @examples
-ict.hausman.test <- function(ml, nls, ginv = FALSE){
+ict.hausman.test <- function(ml, nls, abs = FALSE){
+  require(MASS)
   if(length(coef(ml)) != length(coef(nls))){
     stop("Please provide two ictreg fit objects that used the same number of covariates.")
   }
-  if (ginv) {
-    require(MASS)
-    stat <-
-      as.numeric((coef(ml) - coef(nls)) %*%
-                   ginv((vcov(nls) - vcov(ml))) %*%
-                   (coef(ml) - coef(nls))) 
-  } else {
-    stat <-
-      as.numeric((coef(ml) - coef(nls)) %*%
-                   solve((vcov(nls) - vcov(ml))) %*%
-                   (coef(ml) - coef(nls)))
-    if (stat < 0) stop("Hausman test statistic is negative, suggesting misspecification.  Set ginv = TRUE to compute anyway.")    
-  }
+  stat <-
+    as.numeric((coef(ml) - coef(nls)) %*%
+                 ginv((vcov(nls) - vcov(ml))) %*%
+                 (coef(ml) - coef(nls)))
+  if (stat < 0 & !abs) stop("Hausman test statistic is negative, suggesting possible misspecification.  Set abs = TRUE to compute anyway.")  
   df <- length(coef(ml))
-  p <- pchisq(q = stat, df = df, lower.tail = FALSE)
+  p <- pchisq(q = abs(stat), df = df, lower.tail = FALSE)
   return(structure(list(stat = stat, df = df, p = p), class = "ict.hausman.test"))
 }
 
