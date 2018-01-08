@@ -9,15 +9,17 @@
 #' @export
 #'
 #' @examples
-ict.hausman.test <- function(ml, nls, abs = FALSE){
+ict.hausman.test <- function(ml, nls, abs = FALSE, psd = TRUE){
   require(MASS)
   if(length(coef(ml)) != length(coef(nls))){
     stop("Please provide two ictreg fit objects that used the same number of covariates.")
   }
+  psd.check <- min(eigen(vcov(nls) - vcov(ml))$values) < 0
   stat <-
     as.numeric((coef(ml) - coef(nls)) %*%
                  ginv((vcov(nls) - vcov(ml))) %*%
                  (coef(ml) - coef(nls)))
+  if (psd.check & psd) stop("The variance-covariance difference is non-positive semidefinite, suggesting misspecification.  Set psd = FALSE to compute anyway.")  
   if (stat < 0 & !abs) stop("Hausman test statistic is negative, suggesting possible misspecification.  Set abs = TRUE to compute anyway.")  
   df <- length(coef(ml))
   p <- pchisq(q = abs(stat), df = df, lower.tail = FALSE)
