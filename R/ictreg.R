@@ -350,6 +350,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       w.all <- rep(1, length(y.all))
   }
 
+  if (method == "oneway") fit.start <- "lm"
   if (method == "nls") fit.start <- "nls"
   
   # extract number of non-sensitive items from the response matrix
@@ -620,7 +621,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         fit.control.coef <- coef(fit.glm.control)
       } else if (fit.start == "lm") {
         fit.control <- lm(y.control ~ x.control - 1, weights = w.control)
-        fit.control.coef <- coef(fit.glm.control)
+        fit.control.coef <- coef(fit.control)
       }
       
       fit.treat <- vcov.nls <- se.twostep <- par.treat.nls.std <- list()
@@ -2586,6 +2587,84 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     
   } # end modified design
   
+  # one-step estimator
+  if (method == "onestep") {
+
+    if(error!="none") stop("Measurement error models not implemented for this method.")
+    if(robust) stop("Robust functionality not implemented for this method")
+    if(!is.null(h)|!is.null(group)) stop("Auxiliary info functionality not implemented for this method")
+
+    start.par <- c(coef(fit.treat), fit.control.coef)/5
+
+    nls.objective <- function(params, J, Tr, Y, X) {
+      
+      k  <- length(params)/2
+      beta  <- params[1:k]
+      gamma <- params[(k + 1):(2*k)]
+
+      Xb <- X %*% beta
+      Xg <- X %*% gamma
+
+      tmp1 <- c(Tr * (Y - logistic(Xb) - J * logistic(Xg)) * logistic(Xb)/(1 + exp(Xb))) * X
+      tmp0 <- c((1 - Tr) * (Y - J * logistic(Xg)) * J * logistic(Xg)/(1 + exp(Xg))) * X
+    
+      m1 <- colMeans(tmp1)
+      m0 <- colMeans(tmp0)
+
+      W  <- ginv(adiag(t(tmp1) %*% tmp1/n, t(tmp0) %*% tmp0/n))
+      
+      as.numeric(t(c(m1, m0)) %*% W %*% c(m1, m0))
+
+    }
+
+    vcov.twostep.std <- function(params, J, Tr, Y, X) {
+    
+        n  <- length(Y)
+        k  <- length(params)/2
+        beta  <- params[1:k]
+        gamma <- params[(k + 1):(2*k)]
+
+        Xb <- X %*% beta
+        Xg <- X %*% gamma
+
+        tmp1 <- c(Tr * (Y - logistic(Xb) - J * logistic(Xg)) * logistic(Xb)/(1 + exp(Xb))) * X
+        tmp0 <- c((1 - Tr) * (Y - J * logistic(Xg)) * J * logistic(Xg)/(1 + exp(Xg))) * X
+        Em1 <- t(tmp1) %*% tmp1 / n
+        Em0 <- t(tmp0) %*% tmp0 / n
+        F <- adiag(Em1, Em0)
+        Gtmp <- c(Tr * logistic(Xb)/(1 + exp(Xb))) * X
+        G1 <- -t(Gtmp) %*% Gtmp / n  
+        Gtmp <- c(sqrt(J*Tr*logistic(Xb)*logistic(Xg)/
+                       ((1 + exp(Xb))*(1 + exp(Xg))))) * X
+        G2 <- -t(Gtmp) %*% Gtmp / n
+        Gtmp <- c(J*(1-Tr)*logistic(Xg)/(1 + exp(Xg))) * X
+        G3 <- -t(Gtmp) %*% Gtmp / n
+        invG1 <- ginv(G1)
+        invG3 <- ginv(G3)
+        invG <- rbind(cbind(invG1, - invG1 %*% G2 %*% invG3),
+                      cbind(matrix(0, ncol = ncol(G1), nrow = nrow(G3)), invG3))
+        
+        return(invG %*% F %*% t(invG) / n)
+        
+      }
+  
+      optim.out <- optim(fn = nls.objective,
+        par = start.par, J = J, Tr = t, Y = y.all, X = x.all, 
+        control = list(maxit = 5000))
+
+      vcov <- vcov.twostep.std(params = optim.out$par, J = J, Tr = t, Y = y.all, X = x.all)
+      rownames(vcov) <- colnames(vcov) <- rep(colnames(x.all), 2)
+      k <- ncol(x.all)
+
+      onestep.par.treat <- optim.out$par[1:k]
+      onestep.par.control <- optim.out$par[(k+1):(2*k)]
+      onestep.vcov <- vcov
+      onestep.se.treat <- sqrt(diag(vcov))[1:k]
+      onestep.se.control <- sqrt(diag(vcov))[(k+1):(2*k)]
+      onestep.convergence <- optim.out$convergence
+
+  }
+
   # measurement error models
   if (error == "topcode" & method == "ml") {
     
@@ -3978,93 +4057,6 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
      
   }
 
-  # one-step estimator
-  if (method == "onestep") {
-
-    nls.objective <- function(params, J, Tr, Y, X) {
-      
-      k  <- length(params)/2
-      beta  <- params[1:k]
-      gamma <- params[(k + 1):(2*k)]
-
-      Xb <- X %*% beta
-      Xg <- X %*% gamma
-
-      tmp1 <- c(Tr * (Y - logistic(Xb) - J * logistic(Xg)) * logistic(Xb)/(1 + exp(Xb))) * X
-      tmp0 <- c((1 - Tr) * (Y - J * logistic(Xg)) * J * logistic(Xg)/(1 + exp(Xg))) * X
-    
-      m1 <- colMeans(tmp1)
-      m0 <- colMeans(tmp0)
-
-      W  <- solve(adiag(t(tmp1) %*% tmp1/n, t(tmp0) %*% tmp0/n), tol=1e-20)
-      
-      as.numeric(t(c(m1, m0)) %*% W %*% c(m1, m0))
-
-    }
-
-    vcov.twostep.std <- function(params, J, Tr, Y, X) {
-    
-        n  <- length(Y)
-        k  <- length(params)/2
-        beta  <- params[1:k]
-        gamma <- params[(k + 1):(2*k)]
-
-        Xb <- X %*% beta
-        Xg <- X %*% gamma
-
-        tmp1 <- c(Tr * (Y - logistic(Xb) - J * logistic(Xg)) * logistic(Xb)/(1 + exp(Xb))) * X
-        tmp0 <- c((1 - Tr) * (Y - J * logistic(Xg)) * J * logistic(Xg)/(1 + exp(Xg))) * X
-        Em1 <- t(tmp1) %*% tmp1 / n
-        Em0 <- t(tmp0) %*% tmp0 / n
-        F <- adiag(Em1, Em0)
-        Gtmp <- c(Tr * logistic(Xb)/(1 + exp(Xb))) * X
-        G1 <- -t(Gtmp) %*% Gtmp / n  
-        Gtmp <- c(sqrt(J*Tr*logistic(Xb)*logistic(Xg)/
-                       ((1 + exp(Xb))*(1 + exp(Xg))))) * X
-        G2 <- -t(Gtmp) %*% Gtmp / n
-        Gtmp <- c(J*(1-Tr)*logistic(Xg)/(1 + exp(Xg))) * X
-        G3 <- -t(Gtmp) %*% Gtmp / n
-        invG1 <- ginv(G1)
-        invG3 <- ginv(G3)
-        invG <- rbind(cbind(invG1, - invG1 %*% G2 %*% invG3),
-                      cbind(matrix(0, ncol = ncol(G1), nrow = nrow(G3)), invG3))
-        
-        return(invG %*% F %*% t(invG) / n)
-        
-      }
-
-    mf <- model.frame(formula, data)
-    n  <- nrow(mf)
-
-    Y  <- model.response(mf)
-    X  <- model.matrix(formula, data)
-    Tr <- data[row.names(mf), treat]
-    k  <- ncol(X)
-
-    par0   <- c(par.treat.nls.std, par.control.nls.std)
-    
-    optim.out <- optim(fn = nls.objective,
-      par = par0, J = J, Tr = Tr, Y = Y, X = X, 
-      control = list(maxit = 5000))
-
-    onestep.vcov <- vcov.twostep.std(params = optim.out$par, J = J, Tr = Tr, Y = Y, X = X)
-    onestep.se <- sqrt(diag(onestep.vcov))
-
-    onestep.par <- optim.out$par
-    onestep.convergence <- optim.out$convergence
-    if (onestep.convergence != 1) warning("Optimization routine did not converge.")
-    names(onestep.par) <- rep(names(x.all), 2)
-    names(onestep.se)  <- rep(names(x.all), 2)
-
-    par.treat.onestep <- onestep.par[1:ncol(x.all)]
-    par.control.onestep <- onestep.par[(ncol(x.all)+1):(ncol(x.all)*2)]
-
-    se.treat.onestep <- onestep.se[1:ncol(x.all)]
-    se.control.onestep <- onestep.se[(ncol(x.all)+1):(ncol(x.all)*2)]
-
-
-  }
-
   ## 
   ## Set up return object
   
@@ -4073,6 +4065,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     if (error == "topcode") {
       return.object <-
         list(
+          coef = setNames(nm = rep(coef.names, 2), c(par.treat, par.control)), 
           par.treat = par.treat,
           se.treat = se.treat,
           par.control = par.control,
@@ -4098,6 +4091,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     } else if (error == "uniform"){
       return.object <-
         list(
+          coef = setNames(nm = rep(coef.names, 2), c(par.treat, par.control)), 
           par.treat = par.treat,
           se.treat = se.treat,
           par.control = par.control,
@@ -4352,7 +4346,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     dim  <- mean(y.all[t==1]) - mean(y.all[t==0])
     dim.se <- sqrt(sd(y.all[t==1])^2/sum(t) + sd(y.all[t==0])^2/sum(1-t))
 
-    return.object <- list(par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, 
+    return.object <- list(coef = setNames(nm = rep(coef.names, 2), c(par.treat, par.control)),  
+      par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, 
       vcov=ictrobust.vcov, treat.labels = treatment.labels, control.label = control.label, 
         J=J, coef.names=coef.names, design = design, method = method, robust = robust, dim = dim, dim.se = dim.se, 
           overdispersed=overdispersed, constrained=constrained, boundary = boundary, multi = multi, 
@@ -4375,7 +4370,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     se.control <- topcode.se.control
     p.est <- topcode.p
 
-    return.object <- list(par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, 
+    return.object <- list(coef = setNames(nm = rep(coef.names, 2), c(par.treat, par.control)), 
+      par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, 
       vcov=topcode.vcov, treat.labels = treatment.labels, control.label = control.label, 
         llik=llik.topcode, J=J, coef.names=coef.names, design = design, method = method, robust = robust, 
           overdispersed=overdispersed, constrained=constrained, boundary = boundary, multi = multi, 
@@ -4395,7 +4391,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     p0.est <- uniform.p0
     p1.est <- uniform.p1
 
-    return.object <- list(par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, 
+    return.object <- list(coef = setNames(nm = rep(coef.names, 2), c(par.treat, par.control)), 
+      par.treat=par.treat, se.treat=se.treat, par.control=par.control, se.control=se.control, 
       vcov=uniform.vcov, treat.labels = treatment.labels, control.label = control.label, 
         llik=llik.uniform, J=J, coef.names=coef.names, design = design, method = method, robust = robust, 
           overdispersed=overdispersed, constrained=constrained, boundary = boundary, multi = multi, 
@@ -4408,15 +4405,16 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
   if (method == "onestep") {
 
-    return.object <- list(par.treat=par.treat.onestep, se.treat.onestep=se.treat.onestep, 
-      par.control.onestep=par.control.onestep, se.control.onestep = se.control.onestep, 
+    return.object <- list(coef = setNames(nm = rep(coef.names, 2), c(onestep.par.treat, onestep.par.control)), 
+      par.treat=onestep.par.treat, se.treat=onestep.se.treat, 
+      par.control=onestep.par.control, se.control = onestep.se.control, 
       vcov=onestep.vcov, treat.labels = treatment.labels, control.label = control.label, 
         J=J, coef.names=coef.names, design = design, method = method, robust = robust, 
           overdispersed=overdispersed, constrained=constrained, boundary = boundary, multi = multi, 
             ceiling = ceiling, floor = floor, call = match.call(), data = data, x = x.all, y = y.all, treat = t) 
   
-    resid <- y.treatment - logistic(x.treatment %*% par.treat.onestep)
-    return.object$resid.df <- nrow(x.treatment) - length(par.treat.onestep)
+    resid <- y.treatment - logistic(x.treatment %*% onestep.par.treat)
+    return.object$resid.df <- nrow(x.treatment) - length(onestep.par.treat)
     return.object$resid.se <- 1/return.object$resid.df * sum(resid^2)
 
   }
