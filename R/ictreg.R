@@ -877,7 +877,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
             }
             
             if (fit.sensitive == "bayesglm") {
-              p.prior.sensitive <- sum(dcauchy(x = coef.g, scale = rep(2.5, length(coef.g)-1), log = TRUE))
+              p.prior.sensitive <- sum(dcauchy(x = coef.g, scale = c(10, rep(2.5, length(coef.g)-1)), log = TRUE))
             } else {
               p.prior.sensitive <- 0
             }
@@ -935,7 +935,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
             }
             
             if (fit.sensitive == "bayesglm") {
-              p.prior.sensitive <- sum(dcauchy(x = coef.g, scale = rep(2.5, length(coef.g)-1), log = TRUE))
+              p.prior.sensitive <- sum(dcauchy(x = coef.g, scale = c(10, rep(2.5, length(coef.g)-1)), log = TRUE))
             } else {
               p.prior.sensitive <- 0
             }
