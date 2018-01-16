@@ -9,7 +9,7 @@
 #' @export
 #'
 #' @examples
-ict.hausman.test <- function(ml, nls, abs = FALSE, psd = TRUE){
+ict.hausman.test <- function(ml, nls, abs = FALSE, psd = FALSE){
   require(MASS)
   if(length(coef(ml)) != length(coef(nls))){
     stop("Please provide two ictreg fit objects that used the same number of covariates.")
@@ -19,6 +19,8 @@ ict.hausman.test <- function(ml, nls, abs = FALSE, psd = TRUE){
     as.numeric((coef(ml) - coef(nls)) %*%
                  ginv((vcov(nls) - vcov(ml))) %*%
                  (coef(ml) - coef(nls)))
+  # we found that the following check for positive semi-definiteness led to 
+  # significant overrejection of the null
   if (psd.check & psd) stop("The variance-covariance difference is non-positive semidefinite, suggesting misspecification.  Set psd = FALSE to compute anyway.")  
   if (stat < 0 & !abs) stop("Hausman test statistic is negative, suggesting possible misspecification.  Set abs = TRUE to compute anyway.")  
   df <- length(coef(ml))
