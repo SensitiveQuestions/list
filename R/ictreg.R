@@ -1009,7 +1009,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
           }
           
           ## Mstep 1: weighted MLE for logistic regression
-          wlogit.fit.std <- function(y, treat, x, w, par = NULL, wt) {
+          wlogit.fit.std <- function(y, treat, x, w, par = NULL, wt, fit.sensitive) {
               ## wt is survey weights
               
             yrep <- rep(c(1,0), each = length(y))
@@ -1020,7 +1020,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
             if(fit.sensitive == "glm"){
               fit <- glm(cbind(yrep, 1-yrep) ~ xrep - 1, weights = wrep * wtrep, family = binomial(logit), start = par)
             } else if (fit.sensitive == "bayesglm"){
-              fit <- bayesglm.internal(cbind(yrep, 1-yrep) ~ xrep - 1,
+              fit <- bayesglm(cbind(yrep, 1-yrep) ~ xrep - 1,
                                         weights = wrep * wtrep, family = binomial(logit),
                                         start = par, control = glm.control(maxit = maxIter), scaled = F)
             } else {
