@@ -309,8 +309,9 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                    h = NULL, group = NULL, matrixMethod = "efficient", robust = FALSE, error = "none", 
                    overdispersed = FALSE, constrained = TRUE, floor = FALSE, ceiling = FALSE, 
                    ceiling.fit = "glm", floor.fit = "glm", ceiling.formula = ~ 1, floor.formula = ~ 1, 
-                   fit.start = "lm", fit.nonsensitive = "nls", multi.condition = "none", maxIter = 5000, verbose = FALSE, ...){
-
+                   fit.start = "lm", fit.sensitive = "glm", 
+                   fit.nonsensitive = "nls", multi.condition = "none", maxIter = 5000, verbose = FALSE, ...){
+  
   ictreg.call <- match.call()
 
   # set up data frame, with support for standard and modified responses
@@ -318,7 +319,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
   
   # make all other call elements null in mf <- NULL in next line
   mf$method <- mf$maxIter <- mf$verbose <- mf$fit.start <- mf$J <- mf$design <- 
-    mf$treat <- mf$weights <- mf$constrained <- mf$overdispersed <- mf$floor <- 
+    mf$treat <- mf$weights <- mf$constrained <- mf$fit.sensitive <- mf$overdispersed <- mf$floor <- 
     mf$ceiling <- mf$ceiling.fit <- mf$fit.nonsensitive <- mf$floor.fit <- 
     mf$multi.condition <- mf$floor.formula <- mf$ceiling.formula <- mf$h <-
     mf$group <- mf$matrixMethod <- mf$robust <- mf$error <- NULL
@@ -820,7 +821,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
           ##
           ## observed-data log-likelihood for beta binomial
           ##
-          obs.llik.std <- function(par, J, y, treat, x, wt, const = FALSE) {
+          obs.llik.std <- function(par, J, y, treat, x, wt, const = FALSE, fit.sensitive) {
             
             k <- ncol(x)
             if (const) {
@@ -875,14 +876,20 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
               p0y <- 0
             }
             
-            return(p10+p1J1+p1y+p0y)
+            if (fit.sensitive == "bayesglm") {
+              p.prior.sensitive <- sum(dcauchy(x = coef.g, scale = rep(2.5, length(coef.g)), log = TRUE))
+            } else {
+              p.prior.sensitive <- 0
+            }
+            
+            return(p10+p1J1+p1y+p0y+p.prior.sensitive)
             
           }
           
           ##
           ##  Observed data log-likelihood for binomial
           ##
-          obs.llik.binom.std <- function(par, J, y, treat, x, wt, const = FALSE) {
+          obs.llik.binom.std <- function(par, J, y, treat, x, wt, const = FALSE, fit.sensitive) {
             
             k <- ncol(x)
             if (const) {
@@ -927,7 +934,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
               p0y <- 0
             }
             
-            return(p10+p1J1+p1y+p0y)
+            if (fit.sensitive == "bayesglm") {
+              p.prior.sensitive <- sum(dcauchy(x = coef.g, scale = rep(2.5, length(coef.g)), log = TRUE))
+            } else {
+              p.prior.sensitive <- 0
+            }
+            
+            return(p10+p1J1+p1y+p0y+p.prior.sensitive)
           }
           
           ##
@@ -1003,7 +1016,18 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
             xrep <- rbind(x, x)
             wrep <- c(w, 1-w)
             wtrep <- c(wt, wt)
-            return(glm(cbind(yrep, 1-yrep) ~ xrep - 1, weights = wrep * wtrep, family = binomial(logit), start = par))
+            
+            if(fit.sensitive == "glm"){
+              fit <- glm(cbind(yrep, 1-yrep) ~ xrep - 1, weights = wrep * wtrep, family = binomial(logit), start = par)
+            } else if (fit.sensitive == "bayesglm"){
+              fit <- bayesglm.internal(cbind(yrep, 1-yrep) ~ xrep - 1,
+                                        weights = wrep * wtrep, family = binomial(logit),
+                                        start = par, control = glm.control(maxit = maxIter), scaled = F)
+            } else {
+              error("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
+            }
+            
+            return(fit)
             
           }
           
@@ -1065,9 +1089,9 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
             pllik <- -Inf
             
             if (overdispersed==T) {
-              llik <- obs.llik.std(par, J = J, y = y.all, treat = t, x = x.all, wt = w.all)
+              llik <- obs.llik.std(par, J = J, y = y.all, treat = t, x = x.all, wt = w.all, fit.sensitive = fit.sensitive)
             } else {
-              llik <- obs.llik.binom.std(par, J = J, y = y.all, treat = t, x = x.all, wt = w.all)
+              llik <- obs.llik.binom.std(par, J = J, y = y.all, treat = t, x = x.all, wt = w.all, fit.sensitive = fit.sensitive)
             }
             
             Not0 <- (t & (y.all == (J+1)))
@@ -1080,7 +1104,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                 
                 w <- Estep.std(par, J, y.all, t, x.all)
                 
-                lfit <- wlogit.fit.std(y.all, t, x.all, w, par = par[(nPar*2+3):length(par)], wt = w.all)
+                lfit <- wlogit.fit.std(y.all, t, x.all, w, par = par[(nPar*2+3):length(par)], wt = w.all, fit.sensitive = fit.sensitive)
               
                 y1 <- y.all
                 
@@ -1108,7 +1132,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                 
                 w <- Estep.binom.std(par, J, y.all, t, x.all)
 
-                lfit <- wlogit.fit.std(y.all, t, x.all, w, par = par[(nPar*2+1):length(par)], wt = w.all)
+                lfit <- wlogit.fit.std(y.all, t, x.all, w, par = par[(nPar*2+1):length(par)], wt = w.all, fit.sensitive = fit.sensitive)
                 
                 fit0 <- glm(cbind(y.all[!Not0], J-y.all[!Not0]) ~ x.all[!Not0,] - 1,
                             family = binomial(logit), weights = (1-w[!Not0]) * w.all[!Not0], start = par[1:(nPar)])
@@ -1131,9 +1155,9 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                 cat(paste(counter, round(llik, 4), "\n"))
               
               if (overdispersed==T) {
-                llik <- obs.llik.std(par, J = J, y = y.all, treat = t, x = x.all, wt = w.all)
+                llik <- obs.llik.std(par, J = J, y = y.all, treat = t, x = x.all, wt = w.all, fit.sensitive = fit.sensitive)
               } else {
-                llik <- obs.llik.binom.std(par, J = J, y = y.all, treat = t, x = x.all, wt = w.all)
+                llik <- obs.llik.binom.std(par, J = J, y = y.all, treat = t, x = x.all, wt = w.all, fit.sensitive = fit.sensitive)
               }
               
               counter <- counter + 1
@@ -1151,12 +1175,12 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
             
             if (overdispersed==T) {
               MLEfit <- optim(par, obs.llik.std, method = "BFGS", J = J, y = y.all,
-                              treat = t, x = x.all, wt = w.all, hessian = TRUE, control = list(maxit = 0))
+                              treat = t, x = x.all, wt = w.all, fit.sensitive = fit.sensitive, hessian = TRUE, control = list(maxit = 0))
               vcov.mle <- solve(-MLEfit$hessian, tol = 1e-20)
               se.mle <- sqrt(diag(vcov.mle))
             } else {
               MLEfit <- optim(par, obs.llik.binom.std, method = "BFGS", J = J, y = y.all,
-                              treat = t, x = x.all, wt = w.all, hessian = TRUE, control = list(maxit = 0))
+                              treat = t, x = x.all, wt = w.all, fit.sensitive = fit.sensitive, hessian = TRUE, control = list(maxit = 0))
               vcov.mle <- solve(-MLEfit$hessian, tol = 1e-20)
               se.mle <- sqrt(diag(vcov.mle))
             }
@@ -1175,10 +1199,10 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
             
             if (overdispersed==T) {
               llik.const <- obs.llik.std(par, J = J, y = y.all, treat = t,
-                                         x = x.all, wt = w.all, const = TRUE)
+                                         x = x.all, wt = w.all, fit.sensitive = fit.sensitive, const = TRUE)
             } else {
               llik.const <- obs.llik.binom.std(par, J = J, y = y.all, treat = t,
-                                               x = x.all, wt = w.all, const = TRUE)
+                                               x = x.all, wt = w.all, fit.sensitive = fit.sensitive, const = TRUE)
             }
             
             counter <- 0
@@ -1187,12 +1211,14 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
               if (overdispersed==T) {
                 
                 w <- Estep.std(par, J, y.all, t, x.all, const = TRUE)
-                lfit <- wlogit.fit.std(y.all, t, x.all, w, par = par[(nPar+2):(nPar*2+1)], wt = w.all)
+                
+                lfit <- wlogit.fit.std(y.all, t, x.all, w, par = par[(nPar+2):(nPar*2+1)], wt = w.all, fit.sensitive = fit.sensitive)
                 
               } else {
                 
                 w <- Estep.binom.std(par, J, y.all, t, x.all, const = TRUE)
-                lfit <- wlogit.fit.std(y.all, t, x.all, w, par = par[(nPar+1):(nPar*2)], wt = w.all)
+                
+                lfit <- wlogit.fit.std(y.all, t, x.all, w, par = par[(nPar+1):(nPar*2)], wt = w.all, fit.sensitive = fit.sensitive)
                 
               }
               
@@ -1256,10 +1282,10 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
               
               if (overdispersed==T) {
                 llik.const <- obs.llik.std(par, J = J, y = y.all, treat = t,
-                                           x = x.all, wt = w.all, const = TRUE)
+                                           x = x.all, wt = w.all, const = TRUE, fit.sensitive = fit.sensitive)
               } else {
                 llik.const <- obs.llik.binom.std(par, J = J, y = y.all, treat = t,
-                                                 x = x.all, wt = w.all, const = TRUE)
+                                                 x = x.all, wt = w.all, const = TRUE, fit.sensitive = fit.sensitive)
               }
               
               counter <- counter + 1
@@ -1275,7 +1301,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
             if (overdispersed==T) {
               
               MLEfit <- optim(par, obs.llik.std, method = "BFGS", J = J,
-                              y = y.all, treat = t, x = x.all, wt = w.all, const = TRUE,
+                              y = y.all, treat = t, x = x.all, wt = w.all, const = TRUE, fit.sensitive = fit.sensitive,
                               hessian = TRUE, control = list(maxit = 0))
               
               vcov.mle <- solve(-MLEfit$hessian, tol = 1e-20)
@@ -1284,7 +1310,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
             } else {
               
               MLEfit <- optim(par, obs.llik.binom.std, method = "BFGS", J = J,
-                              y = y.all, treat = t,  x = x.all, wt = w.all, const = TRUE,
+                              y = y.all, treat = t,  x = x.all, wt = w.all, const = TRUE, fit.sensitive = fit.sensitive,
                               hessian = TRUE, control = list(maxit = 0))
               
               vcov.mle <- solve(-MLEfit$hessian, tol = 1e-20)
