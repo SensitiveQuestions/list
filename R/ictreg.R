@@ -2110,14 +2110,14 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
             } else if(ceiling.fit=="bayesglm") {
               
               if (intercept.only.ceiling == F) {
-                qufit <- bayesglm.internal(as.formula(paste("cbind(", y.var, ", 1-", y.var, ") ~ ",
+                qufit <- bayesglm(as.formula(paste("cbind(", y.var, ", 1-", y.var, ") ~ ",
                                                    paste(x.vars.ceiling, collapse=" + "))),
                                   weights = dtmpC$w, family = binomial(logit),
                                   start = coef.qufit.start, data = dtmpC,
                                   control = glm.control(maxit = maxIter), scaled = F)
                 
               } else {
-                qufit <- bayesglm.internal(as.formula(paste("cbind(", y.var, ", 1-", y.var, ") ~ 1")),
+                qufit <- bayesglm(as.formula(paste("cbind(", y.var, ", 1-", y.var, ") ~ 1")),
                                   weights = dtmpC$w, family = binomial(logit),
                                   start = coef.qufit.start, data = dtmpC,
                                   control = glm.control(maxit = maxIter), scaled = F)
@@ -2141,13 +2141,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                            control = glm.control(maxit = maxIter))
             } else if(floor.fit=="bayesglm") {
               if (intercept.only.floor == F) {
-                qlfit <- bayesglm.internal(as.formula(paste("cbind(", y.var, ", 1-", y.var, ") ~ ",
+                qlfit <- bayesglm(as.formula(paste("cbind(", y.var, ", 1-", y.var, ") ~ ",
                                                    paste(x.vars.floor, collapse=" + "))),
                                   weights = dtmpF$w, family = binomial(logit),
                                   start = coef.qlfit.start, data = dtmpF,
                                   control = glm.control(maxit = maxIter), scaled = F)
               } else {
-                qlfit <- bayesglm.internal(as.formula(paste("cbind(", y.var, ", 1-", y.var, ") ~ 1")),
+                qlfit <- bayesglm(as.formula(paste("cbind(", y.var, ", 1-", y.var, ") ~ 1")),
                                   weights = dtmpF$w, family = binomial(logit),
                                   start = coef.qlfit.start, data = dtmpF,
                                   control = glm.control(maxit = maxIter), scaled = F)
