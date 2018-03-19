@@ -347,7 +347,11 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       w.all <- data[, paste(weights)]
   } else {
       weighted <- FALSE
-      w.all <- rep(1, length(y.all))
+      if(class(y.all) == "matrix"){
+        w.all <- rep(1, nrow(y.all))
+      } else {
+        w.all <- rep(1, length(y.all))
+      }
   }
 
   if (method == "nls") fit.start <- "nls"
