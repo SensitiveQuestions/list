@@ -1,10 +1,7 @@
 #' Regression Models for Misreporting
 #' 
-#' Note: This function is in development.  The ratio, NLS, and ML estimators 
-#' for list experiments with the standard wording (i.e., the treatment item 
-#' directly gauges the sensitive item prevalence) without floor effects are 
-#' implemented. 
-#' 
+#' NOTE: This function is in development.  Currently, the ratio, NLS, and one-way ML 
+#' estimators for list experiments with and without floor and ceiling effects are implemented.  
 #' This function implements the methods introduced in Chou (N.d.) and 
 #' Eady (2017) for estimating multiple regression models of misreporting. 
 #' The methods can be applied to survey designs that combine direct 
@@ -30,7 +27,7 @@
 
 #' @author Winston Chou, Princeton University, \email{wchou@princeton.edu}
 #' @references Chou, Winston. (2018) ``Lying on Surveys.'' Technical report, Princeton University.
-
+#' Eady, Gregory (2017) ``The Statistical Analysis of Misreporting on Sensitive Survey Questions.'' Political Analysis.
 #' @return \code{misreg} returns an object of class "misreg". 
 
 misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRUE, 
@@ -276,12 +273,12 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
     }
 
     # initial values 
-    init.fit    <-  ictreg(formula = list.formula, data, treat, J, method = "lm")
+    init.fit    <-  ictreg(formula = list.formula, data, treat, J = J, method = "lm")
     gamma.start <-  1/5 * init.fit$par.control
     delta.start <-  1/5 * init.fit$par.treat
     beta.start  <- -1/5 * coef(lm(formula = dir.formula, data = data))
 
-    fit.control <- optim(fn = ss0, par = gamma.start, y = Y[Tr == 0], J, X = X[Tr == 0, ])
+    fit.control <- optim(fn = ss0, par = gamma.start, y = Y[Tr == 0], J = J, X = X[Tr == 0, ])
     y.hat <- J*logistic(X %*% fit.control$par)
 
     fit.treat <- optim(fn = ss1, par = delta.start, gamma = fit.control$par, 
@@ -289,106 +286,207 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
     z.hat <- logistic(X %*% fit.treat$par)
 
     fit.lying <- optim(fn = ss2, par = beta.start, delta = fit.treat$par, 
-      d = D[Tr == 0], J, X = X[Tr == 0, ])
+      d = D[Tr == 0], J = J, X = X[Tr == 0, ])
 
     return.obj <- list()
+    class(return.obj) <- c("misreg", "nls")
 
     return.obj$par.treat      <- fit.treat$par
     return.obj$par.control    <- fit.control$par
     return.obj$par.misreport  <- fit.lying$par
     
     return.obj$vcov <- nls.var(delta = fit.treat$par, gamma = fit.control$par, beta = fit.lying$par, 
-      y = Y, J, X, d = D, t = Tr)
-    return.obj$se   <- sqrt(diag(return.obj$vcov))  
+      y = Y, J = J, X, d = D, t = Tr)
+
+    k <- ncol(X)
+    return.obj$se.treat <- sqrt(diag(return.obj$vcov))[1:k]
+    return.obj$se.control <- sqrt(diag(return.obj$vcov))[(k+1):(2*k)]
+    return.obj$se.misreport <- sqrt(diag(return.obj$vcov))[(2*k+1):(3*k)]
 
   } # end nls estimator
 
-  if (method == "ml") {
+  # standard ml estimator
+  if (method == "ml" & sensitive.treatment & !two.way) {
 
     # begin ml estimator
     # ml functions 
-    obs.llik <- function(par, X, treat, dir, y, J, bayes = FALSE) {
+    if (model.extremes) {
 
-      n     <- nrow(X)
-      k     <- ncol(X)
+      # ceiling effects
+      obs.llik <- function(par, X, treat, dir, y, J, bayes = FALSE) {
 
-      delta <- par[1:k]
-      gamma <- par[(k+1):(2*k)]
-      beta  <- par[(2*k+1):(3*k)]
+        n     <- nrow(X)
+        k     <- ncol(X)
 
-      f <- logistic(X %*% gamma)
-      g <- logistic(X %*% delta)
-      h <- logistic(X %*% beta)
+        delta <- par[1:k]
+        gamma <- par[(k+1):(2*k)]
+        beta  <- par[(2*k+1):(3*k)]
 
-      lik <- rep(NA, n)
+        f <- logistic(X %*% gamma)
+        g <- logistic(X %*% delta)
+        h <- logistic(X %*% beta)
 
-      lik[treat ==  0 & dir == 0] <- ((1-g*(1-h))*choose(J,y)*f^y*(1-f)^(J-y))[treat ==  0 & dir == 0]
-      lik[treat ==  0 & dir == 1] <- (g*(1-h)*choose(J,y)*f^y*(1-f)^(J-y))[treat ==  0 & dir == 1]
-      lik[treat ==  1 & y == 0]   <- ((1-g)*(1-f)^J)[treat ==  1 & y == 0]
-      lik[treat ==  1 & y > 0 & y <= J] <- (g*choose(J, y-1)*f^(y-1)*(1-f)^(J-y+1) + 
-        (1-g)*choose(J, y)*f^y*(1-f)^(J-y))[treat ==  1 & y > 0 & y <= J]
-      lik[treat ==  1 & y == J+1] <- (g*f^J)[treat ==  1 & y == J+1]
+        lik <- rep(NA, n)
 
-      intercept.index <- c(1, 1 + k, 1 + 2*k)
-      bayes.adjust <- ifelse(bayes, 
-        sum(dcauchy(x = par[intercept.index], scale = rep(10, 3), log = TRUE)) +  
-        sum(dcauchy(x = par[-intercept.index], scale = rep(2.5, length(par)-3), log = TRUE)), 0)
+        lik[treat ==  0 & dir == 0] <- ((1-g*(1-h))*choose(J,y)*f^y*(1-f)^(J-y))[treat ==  0 & dir == 0]
+        lik[treat ==  0 & dir == 1] <- (g*(1-h)*choose(J,y)*f^y*(1-f)^(J-y))[treat ==  0 & dir == 1]
+        lik[treat ==  1 & y == 0]   <- ((1-g)*(1-f)^J)[treat ==  1 & y == 0]
+        lik[treat ==  1 & y > 0 & y < J] <- (g*choose(J, y-1)*f^(y-1)*(1-f)^(J-y+1) + 
+          (1-g)*choose(J, y)*f^y*(1-f)^(J-y))[treat ==  1 & y > 0 & y < J]
+        lik[treat ==  1 & y == J] <- (g*J*f^(J-1)*(1-f) + 
+          (1-g)*f^J + g*h*f^J)[treat ==  1 & y == J]
+        lik[treat ==  1 & y == J+1] <- (g*(1-h)*f^J)[treat ==  1 & y == J+1]
 
-      return(-sum(log(lik)) - bayes.adjust)
+        intercept.index <- c(1, 1 + k, 1 + 2*k)
+        bayes.adjust <- ifelse(bayes, 
+          sum(dcauchy(x = par[intercept.index], scale = rep(10, 3), log = TRUE)) +  
+          sum(dcauchy(x = par[-intercept.index], scale = rep(2.5, length(par)-3), log = TRUE)), 0)
+
+        return(-sum(log(lik)) - bayes.adjust)
+
+      }
+
+      eZ.step <- function(par, X, treat, dir, y, J) {
+
+        n     <- nrow(X)
+        k     <- ncol(X)
+
+        delta <- par[1:k]
+        gamma <- par[(k+1):(2*k)]
+        beta  <- par[(2*k+1):(3*k)]
+
+        f <- logistic(X %*% gamma)
+        g <- logistic(X %*% delta)
+        h <- logistic(X %*% beta)
+
+        z.update <- rep(NA, n)
+
+        z.update[treat ==  0 & dir == 0] <- ((g*h)/(1-g*(1-h)))[treat ==  0 & dir == 0]
+        z.update[treat ==  0 & dir == 1] <- 1
+        z.update[treat ==  1 & y == 0]   <- 0
+        z.update[treat ==  1 & y > 0 & y < J] <- 
+          ((g * choose(J, y-1) * f^(y-1) * (1-f)^(J-y+1))/(g * choose(J, y-1) * f^(y-1) * (1-f)^(J-y+1) + 
+            (1-g) * choose(J, y) * f^y * (1-f)^(J-y)))[treat ==  1 & y > 0 & y < J]
+        z.update[treat ==  1 & y == J]  <- (g*(J*f^(J-1)*(1-f) + h*f^J)/
+          (g*(J*f^(J-1)*(1-f) + h*f^J) + (1-g)*f^J))[treat ==  1 & y == J]
+        z.update[treat ==  1 & y == J+1] <- 1
+
+        return(z.update)
+
+      }
+
+      eS.step <- function(par, X, treat, dir, y, J) {
+
+        n     <- nrow(X)
+        k     <- ncol(X)
+
+        delta <- par[1:k]
+        gamma <- par[(k+1):(2*k)]
+        beta  <- par[(2*k+1):(3*k)]
+
+        f <- logistic(X %*% gamma)
+        g <- logistic(X %*% delta)
+        h <- logistic(X %*% beta)
+        
+        s.update <- rep(NA, n)
+
+        s.update[treat ==  0 & dir == 0] <- 1
+        s.update[treat ==  0 & dir == 1] <- 0
+        s.update[treat ==  1 & y == 0]   <- 0 # can be anything
+        s.update[treat ==  1 & y > 0 & y < J] <- h[treat ==  1 & y > 0 & y < J]
+        s.update[treat ==  1 & y == J] <- (g*h*f^J/
+          (g*(J*f^(J-1)*(1-f) + h*f^J)))[treat ==  1 & y == J]
+        s.update[treat ==  1 & y == J + 1] <- 0
+
+        return(s.update)
+
+      }
+
+    } else { 
+
+      obs.llik <- function(par, X, treat, dir, y, J, bayes = FALSE) {
+
+        n     <- nrow(X)
+        k     <- ncol(X)
+
+        delta <- par[1:k]
+        gamma <- par[(k+1):(2*k)]
+        beta  <- par[(2*k+1):(3*k)]
+
+        f <- logistic(X %*% gamma)
+        g <- logistic(X %*% delta)
+        h <- logistic(X %*% beta)
+
+        lik <- rep(NA, n)
+
+        lik[treat ==  0 & dir == 0] <- ((1-g*(1-h))*choose(J,y)*f^y*(1-f)^(J-y))[treat ==  0 & dir == 0]
+        lik[treat ==  0 & dir == 1] <- (g*(1-h)*choose(J,y)*f^y*(1-f)^(J-y))[treat ==  0 & dir == 1]
+        lik[treat ==  1 & y == 0]   <- ((1-g)*(1-f)^J)[treat ==  1 & y == 0]
+        lik[treat ==  1 & y > 0 & y <= J] <- (g*choose(J, y-1)*f^(y-1)*(1-f)^(J-y+1) + 
+          (1-g)*choose(J, y)*f^y*(1-f)^(J-y))[treat ==  1 & y > 0 & y <= J]
+        lik[treat ==  1 & y == J+1] <- (g*f^J)[treat ==  1 & y == J+1]
+
+        intercept.index <- c(1, 1 + k, 1 + 2*k)
+        bayes.adjust <- ifelse(bayes, 
+          sum(dcauchy(x = par[intercept.index], scale = rep(10, 3), log = TRUE)) +  
+          sum(dcauchy(x = par[-intercept.index], scale = rep(2.5, length(par)-3), log = TRUE)), 0)
+
+        return(-sum(log(lik)) - bayes.adjust)
+
+      }
+
+      eZ.step <- function(par, X, treat, dir, y, J) {
+
+        n     <- nrow(X)
+        k     <- ncol(X)
+
+        delta <- par[1:k]
+        gamma <- par[(k+1):(2*k)]
+        beta  <- par[(2*k+1):(3*k)]
+
+        f <- logistic(X %*% gamma)
+        g <- logistic(X %*% delta)
+        h <- logistic(X %*% beta)
+
+        z.update <- rep(NA, n)
+
+        z.update[treat ==  0 & dir == 0] <- ((g*h)/(1-g*(1-h)))[treat ==  0 & dir == 0]
+        z.update[treat ==  0 & dir == 1] <- 1
+        z.update[treat ==  1 & y == 0]   <- 0
+        z.update[treat ==  1 & y > 0 & y <= J] <- 
+          ((g * choose(J, y-1) * f^(y-1) * (1-f)^(J-y+1))/(g * choose(J, y-1) * f^(y-1) * (1-f)^(J-y+1) + 
+            (1-g) * choose(J, y) * f^y * (1-f)^(J-y)))[treat ==  1 & y > 0 & y <= J]
+        z.update[treat ==  1 & y == J+1] <- 1
+
+        return(z.update)
+
+      }
+
+      eS.step <- function(par, X, treat, dir, y, J) {
+
+        n     <- nrow(X)
+        k     <- ncol(X)
+
+        delta <- par[1:k]
+        gamma <- par[(k+1):(2*k)]
+        beta  <- par[(2*k+1):(3*k)]
+
+        f <- logistic(X %*% gamma)
+        g <- logistic(X %*% delta)
+        h <- logistic(X %*% beta)
+        
+        s.update <- rep(NA, n)
+
+        s.update[treat ==  0 & dir == 0] <- 1
+        s.update[treat ==  0 & dir == 1] <- 0
+        s.update[treat ==  1 & y == 0]   <- 0 # can be anything
+        s.update[treat ==  1 & y > 0] <- h[treat ==  1 & y > 0]
+
+        return(s.update)
+
+      }
 
     }
-
-    eZ.step <- function(par, X, treat, dir, y, J) {
-
-      n     <- nrow(X)
-      k     <- ncol(X)
-
-      delta <- par[1:k]
-      gamma <- par[(k+1):(2*k)]
-      beta  <- par[(2*k+1):(3*k)]
-
-      f <- logistic(X %*% gamma)
-      g <- logistic(X %*% delta)
-      h <- logistic(X %*% beta)
-
-      z.update <- rep(NA, n)
-
-      z.update[treat ==  0 & dir == 0] <- ((g*h)/(1-g*(1-h)))[treat ==  0 & dir == 0]
-      z.update[treat ==  0 & dir == 1] <- 1
-      z.update[treat ==  1 & y == 0]   <- 0
-      z.update[treat ==  1 & y > 0 & y <= J] <- 
-        ((g * choose(J, y-1) * f^(y-1) * (1-f)^(J-y+1))/(g * choose(J, y-1) * f^(y-1) * (1-f)^(J-y+1) + 
-          (1-g) * choose(J, y) * f^y * (1-f)^(J-y)))[treat ==  1 & y > 0 & y <= J]
-      z.update[treat ==  1 & y == J+1] <- 1
-
-      return(z.update)
-
-    }
-
-    eS.step <- function(par, X, treat, dir, y, J) {
-
-      n     <- nrow(X)
-      k     <- ncol(X)
-
-      delta <- par[1:k]
-      gamma <- par[(k+1):(2*k)]
-      beta  <- par[(2*k+1):(3*k)]
-
-      f <- logistic(X %*% gamma)
-      g <- logistic(X %*% delta)
-      h <- logistic(X %*% beta)
-      
-      s.update <- rep(NA, n)
-
-      s.update[treat ==  0 & dir == 0] <- 1
-      s.update[treat ==  0 & dir == 1] <- 0
-      s.update[treat ==  1 & y == 0]   <- 0 # can be anything
-      s.update[treat ==  1 & y > 0] <- h[treat ==  1 & y > 0]
-
-      return(s.update)
-
-    }
-
 
     # start of algorithm
     fit0.list <- ictreg(list.formula, data, J, treat = treat, method = "lm")
@@ -406,7 +504,6 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
     iter <- 1
 
     # initial variables
-
     dat          <- rbind(data, data)
     dat$y        <- rep(1:0, each = nrow(data))
     dat$y.hat    <- c(ifelse(Tr == 1, Y-1, Y), Y)
@@ -451,15 +548,337 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
       method = "BFGS", hessian = TRUE, control = list(maxit = 8))
 
     return.obj <- list()
+    class(return.obj) <- c("misreg", "ml")
 
     return.obj$par.treat      <- delta.update
     return.obj$par.control    <- gamma.update
     return.obj$par.misreport  <- beta.update
     
     return.obj$vcov <- solve(optim.out$hessian)
-    return.obj$se   <- sqrt(diag(return.obj$vcov))  
+    k <- ncol(X)
+    return.obj$se.treat <- sqrt(diag(return.obj$vcov))[1:k]
+    return.obj$se.control <- sqrt(diag(return.obj$vcov))[(k+1):(2*k)]
+    return.obj$se.misreport <- sqrt(diag(return.obj$vcov))[(2*k+1):(3*k)]
 
   }
+
+  # standard ml estimator with reverse coded lists
+  if (method == "ml" & !sensitive.treatment & !two.way) {
+
+    if (model.extremes) {
+
+      eZ.step <- function(par, y, dir, X, treat, J) {
+
+        k <- ncol(X)
+        delta <- par[1:k]
+        gamma <- par[(k+1):(2*k)]
+        beta  <- par[(2*k+1):length(par)]
+
+        return.obj <- rep(NA, length(y))
+
+        # control observations (no modification)
+        return.obj[treat == 0 & dir == 1] <- 1
+        return.obj[treat == 0 & dir == 0] <- 
+          ((choose(J, y) * 
+            logistic(X %*% gamma)^y * 
+              (1 - logistic(X %*% gamma))^(J-y) * 
+                logistic(X %*% delta) * 
+                  logistic(X %*% beta))/
+              (choose(J, y) * 
+                logistic(X %*% gamma)^y * 
+                  (1 - logistic(X %*% gamma))^(J-y) * 
+                    ((1 - logistic(X %*% delta)) + 
+                      logistic(X %*% delta) * 
+                        logistic(X %*% beta))))[treat == 0 & dir == 0]
+
+        # treated observations (reverse coding + floor effects)
+        return.obj[treat == 1 & y == 0] <- 1
+        return.obj[treat == 1 & y == 1] <- 
+          ((logistic(X %*% delta) * logistic(X %*% beta) * (1 - logistic(X %*% gamma))^J + 
+            logistic(X %*% delta) * J * logistic(X %*% gamma) * (1 - logistic(X %*% gamma))^(J-1))/
+          (logistic(X %*% delta) * logistic(X %*% beta) * (1 - logistic(X %*% gamma))^J + 
+            logistic(X %*% delta) * J * logistic(X %*% gamma) * (1 - logistic(X %*% gamma))^(J-1) + 
+              (1 - logistic(X %*% delta)) * (1 - logistic(X %*% gamma))^J))[treat == 1 & y == 1]
+        return.obj[treat == 1 & y %in% 2:J] <- 
+          ((choose(J, y) * 
+            logistic(X %*% gamma)^y * 
+              (1 - logistic(X %*% gamma))^(J-y) * 
+                logistic(X %*% delta))/
+              (choose(J, y) * 
+                logistic(X %*% gamma)^y * 
+                  (1 - logistic(X %*% gamma))^(J-y) * 
+                    logistic(X %*% delta) + 
+              choose(J, y-1) * 
+                logistic(X %*% gamma)^(y-1) * 
+                  (1 - logistic(X %*% gamma))^(J-y+1) * 
+                    (1-logistic(X %*% delta))))[treat == 1 & y %in% 2:J]
+        return.obj[treat == 1 & y == J+1] <- 0
+
+        return.obj
+
+      }
+
+
+      eS.step <- function(par, y, dir, X, treat, J) {
+
+        k <- ncol(X)
+        delta <- par[1:k]
+        gamma <- par[(k+1):(2*k)]
+        beta  <- par[(2*k+1):length(par)]
+
+        return.obj <- rep(NA, length(y))
+
+        # control observations (no change)
+        return.obj[treat == 0 & dir == 1] <- 0
+        return.obj[treat == 0 & dir == 0] <- 1
+
+        # treated observations
+        return.obj[treat == 1 & y == 0] <- 0
+        return.obj[treat == 1 & y == 1] <- 
+          ((logistic(X %*% delta) * logistic(X %*% beta) * ((1 - logistic(X %*% gamma))^J + 
+            J * logistic(X %*% gamma) * (1 - logistic(X %*% gamma))^(J-1)))/
+          (logistic(X %*% delta) * logistic(X %*% beta) * (1 - logistic(X %*% gamma))^J + 
+            logistic(X %*% delta) * J * logistic(X %*% gamma) * (1 - logistic(X %*% gamma))^(J-1)))[treat == 1 & y == 1]
+        return.obj[treat == 1 & y %in% 2:J] <- 
+          logistic(X %*% beta)[treat == 1 & y %in% 2:J]
+        return.obj[treat == 1 & y == J+1] <- 0 # can be anything; NA returns error in bayesglm
+
+        return.obj
+
+      }
+
+      obs.llik <- function(par, y, dir, X, treat, J, bayes = FALSE) {
+
+        k <- ncol(X)
+        delta <- par[1:k]
+        gamma <- par[(k+1):(2*k)]
+        beta <- par[(2*k+1):length(par)]
+
+        Xd <- X %*% delta
+        Xg <- X %*% gamma
+        Xb <- X %*% beta
+
+        return.obj <- 
+          ifelse(treat == 0 & dir == 0, 
+            log(choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J-y)) + 
+              log(logistic(Xd) * logistic(Xb) + 1 - logistic(Xd)), 
+            ifelse(treat == 0 & dir == 1, 
+              log(choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J-y)) + 
+                log(logistic(Xd) * (1 - logistic(Xb))), 
+              ifelse(treat == 1 & y == 0, 
+                log((1 - logistic(Xg))^J * logistic(Xd) * (1 - logistic(Xb))), 
+                ifelse(treat == 1 & y == 1, 
+                  log((1 - logistic(Xg))^J * logistic(Xd) * logistic(Xb) + 
+                    (1 - logistic(Xd)) * (1 - logistic(Xg))^J + 
+                      logistic(Xd) * J * logistic(Xg) * (1 - logistic(Xg))^(J-1)), 
+              ifelse(treat == 1 & y == J+1, 
+                log(logistic(Xg)^J * (1 - logistic(Xd))), 
+              log(logistic(Xd) * choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J-y) + 
+                  (1 - logistic(Xd)) * choose(J, y-1) * 
+                    logistic(Xg)^(y-1) * (1 - logistic(Xg))^(J-y+1)))))))
+
+        intercept.index <- c(1, 1 + k, 1 + 2*k)
+        bayes.adjust <- ifelse(bayes, 
+          sum(dcauchy(x = par[intercept.index], scale = rep(10, 3), log = TRUE)) +  
+          sum(dcauchy(x = par[-intercept.index], scale = rep(2.5, length(par)-3), log = TRUE)), 0)
+
+        return(-sum(return.obj)-bayes.adjust)
+
+      }
+
+    } else {
+
+      obs.llik <- function(par, y, dir, X, treat, J, bayes = FALSE) {
+
+        k <- ncol(X)
+        delta <- par[1:k]
+        gamma <- par[(k+1):(2*k)]
+        beta  <- par[(2*k+1):length(par)]
+
+        Xd <- X %*% delta
+        Xg <- X %*% gamma
+        Xb <- X %*% beta
+
+        return.obj <- 
+          ifelse(treat == 0 & dir == 0, 
+            log(choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J-y)) + 
+              log(logistic(Xd) * logistic(Xb) + 1 - logistic(Xd)), 
+            ifelse(treat == 0 & dir == 1, 
+              log(choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J-y)) + 
+                log(logistic(Xd) * (1 - logistic(Xb))), 
+              ifelse(treat == 1 & y == 0, 
+                log((1 - logistic(Xg))^J * logistic(Xd)), 
+                ifelse(treat == 1 & y == J+1, 
+                  log(logistic(Xg)^J * (1 - logistic(Xd))), 
+              log(logistic(Xd) * choose(J, y) * logistic(Xg)^y * (1 - logistic(Xg))^(J-y) + 
+                  (1 - logistic(Xd)) * choose(J, y-1) * 
+                    logistic(Xg)^(Y-1) * (1 - logistic(Xg))^(J-Y+1))))))
+
+        intercept.index <- c(1, 1 + k, 1 + 2*k)
+        bayes.adjust <- ifelse(bayes, 
+          sum(dcauchy(x = par[intercept.index], scale = rep(10, 3), log = TRUE)) +  
+          sum(dcauchy(x = par[-intercept.index], scale = rep(2.5, length(par)-3), log = TRUE)), 0)
+
+        return(-sum(return.obj)-bayes.adjust)
+
+      }
+
+      eZ.step <- function(par, y, dir, X, treat, J) {
+
+        k <- ncol(X)
+        delta <- par[1:k]
+        gamma <- par[(k+1):(2*k)]
+        beta  <- par[(2*k+1):length(par)]
+
+        return.obj <- rep(NA, length(y))
+
+        # control observations (no modification)
+        return.obj[treat == 0 & dir == 1] <- 1
+        return.obj[treat == 0 & dir == 0] <- 
+          ((choose(J, y) * 
+            logistic(X %*% gamma)^y * 
+              (1 - logistic(X %*% gamma))^(J-y) * 
+                logistic(X %*% delta) * 
+                  logistic(X %*% beta))/
+              (choose(J, y) * 
+                logistic(X %*% gamma)^y * 
+                  (1 - logistic(X %*% gamma))^(J-y) * 
+                    ((1 - logistic(X %*% delta)) + 
+                      logistic(X %*% delta) * 
+                        logistic(X %*% beta))))[treat == 0 & dir == 0]
+
+        # treated observations (reverse coding)
+        return.obj[treat == 1 & y == 0] <- 1
+        return.obj[treat == 1 & y %in% 1:J] <- 
+          ((choose(J, y) * 
+            logistic(X %*% gamma)^y * 
+              (1 - logistic(X %*% gamma))^(J-y) * 
+                logistic(X %*% delta))/
+              (choose(J, y) * 
+                logistic(X %*% gamma)^y * 
+                  (1 - logistic(X %*% gamma))^(J-y) * 
+                    logistic(X %*% delta) + 
+              choose(J, y-1) * 
+                logistic(X %*% gamma)^(y-1) * 
+                  (1 - logistic(X %*% gamma))^(J-y+1) * 
+                    (1-logistic(X %*% delta))))[treat == 1 & y %in% 1:J]
+        return.obj[treat == 1 & y == J+1] <- 0
+
+        return.obj
+      }
+
+      eS.step <- function(par, y, dir, X, treat, J) {
+
+        k <- ncol(X)
+        delta <- par[1:k]
+        gamma <- par[(k+1):(2*k)]
+        beta  <- par[(2*k+1):length(par)]
+
+        return.obj <- rep(NA, length(y))
+
+        # control observations (no change)
+        return.obj[treat == 0 & dir == 1] <- 0
+        return.obj[treat == 0 & dir == 0] <- 1
+
+        # treated observations
+        return.obj[treat == 1 & y == J+1] <- 0 # can be anything
+        return.obj[treat == 1 & y < J+1] <- 
+          logistic(X %*% beta)[treat == 1 & y < J+1]
+
+        return.obj
+      }
+
+    }
+
+    # start of algorithm
+    fit0.list <- ictreg(list.formula, data, J, treat = treat, method = "lm")
+    fit0.dir  <- glm(dir.formula, data, family = binomial("logit"))
+
+    delta.update <- -1/5 * fit0.list$par.treat
+    gamma.update <- 1/5 * fit0.list$par.control
+    beta.update  <- -coef(fit0.dir)
+
+    init.llik <- obs.llik(par = c(delta.update, gamma.update, beta.update), 
+      X = X, treat = Tr, dir = D, y = Y, J = J, bayes = bayes)
+
+    lliks <- rep(init.llik, 2)
+
+    iter <- 1
+
+    # initial variables
+    dat          <- rbind(data, data)
+    dat$y        <- rep(1:0, each = nrow(data))
+    dat$y.hat    <- c(ifelse(Tr == 1, Y, Y), 
+      ifelse(Tr == 1, Y-1, Y)) # reverse coding adj.
+
+    while((iter < 10) | abs(lliks[iter] - lliks[iter+1]) > 1e-06) {
+
+      eZ <- eZ.step(par = c(delta.update, gamma.update, beta.update), 
+        X = X, treat = Tr, dir = D, y = Y, J = J)
+      eS <- eS.step(par = c(delta.update, gamma.update, beta.update), 
+        X = X, treat = Tr, dir = D, y = Y, J = J)
+
+      dat$z.weight <- c(eZ, 1-eZ)
+      dat$s.weight <- c(eZ, eZ) * c(eS, 1-eS)
+
+      delta.update <- coef(glm(as.formula(paste0("cbind(y, 1-y)", 
+          paste0(as.character(rhs), collapse = ""))), 
+        family = binomial("logit"), data = dat, weights = z.weight))
+      gamma.update <- coef(glm(as.formula(paste0("cbind(y.hat, J-y.hat)", 
+          paste0(as.character(rhs), collapse = ""))), 
+        family = binomial("logit"), data = subset(dat, z.weight > 0), 
+        weights = z.weight))
+      beta.update  <- coef(glm(as.formula(paste0("cbind(y, 1-y)", 
+          paste0(as.character(rhs), collapse = ""))), 
+        family = binomial("logit"), data = dat, weights = s.weight))
+
+      post.llik <- obs.llik(par = c(delta.update, gamma.update, beta.update), 
+        X = X, treat = Tr, dir = D, y = Y, J = J, bayes = bayes)
+
+      if (!(signif(post.llik, 6) <= signif(init.llik, 6))) {
+        warning("Observed data log-likelihood is not monotonically increasing.")
+      }
+
+      iter <- iter + 1
+
+      lliks <- c(lliks, post.llik)
+
+    }
+
+    optim.out <- optim(fn = obs.llik, 
+      par = c(delta.update, gamma.update, beta.update), 
+      X = X, treat = Tr, dir = D, y = Y, J = J, bayes = bayes, 
+      method = "BFGS", hessian = TRUE, control = list(maxit = 8))
+
+    return.obj <- list()
+    class(return.obj) <- c("misreg", "ml")
+
+    return.obj$par.treat      <- delta.update
+    return.obj$par.control    <- gamma.update
+    return.obj$par.misreport  <- beta.update
+    
+    return.obj$vcov <- solve(optim.out$hessian)
+    k <- ncol(X)
+    return.obj$se.treat <- sqrt(diag(return.obj$vcov))[1:k]
+    return.obj$se.control <- sqrt(diag(return.obj$vcov))[(k+1):(2*k)]
+    return.obj$se.misreport <- sqrt(diag(return.obj$vcov))[(2*k+1):(3*k)]
+
+  }
+
+  # EM algorithm for one-step misreporting models
+
+  # # labels
+  # if (method == "ml" | method == "nls") {
+
+  #   names(return.obj$par.treat) <- paste0("sensitive.", names(return.obj$par.treat))
+  #   names(return.obj$par.control) <- paste0("control.", names(return.obj$par.control))
+  #   names(return.obj$par.misreport) <- paste0("misreport.", names(return.obj$par.misreport))
+
+  #   names(return.obj$se.treat) <- paste0("sensitive.", names(return.obj$se.treat))
+  #   names(return.obj$se.control) <- paste0("control.", names(return.obj$se.control))
+  #   names(return.obj$se.misreport) <- paste0("misreport.", names(return.obj$se.misreport))
+
+  # }
 
   return(return.obj)
 
@@ -499,13 +918,76 @@ print.misreg <- function(obj) {
       )
   }
 
-  # if (class(obj)[2] == "nls") {
+  if (class(obj)[2] == "nls") {
 
-  #   row.labels <- paste0("\t", names(obj$par.treat))
+    cat("\nMisreporting Regression\n")
+    
+    # dput(obj$call)
 
-  # }
+    cat("Estimation by Nonlinear Least Squares.\n")
+
+    cat("\nSensitive Item Submodel:\n")
+
+    cat("\n")
+
+    print(obj$par.treat)
+
+    cat("\n")
+
+    cat("\nControl Items Submodel:\n")
+
+    cat("\n")
+
+    print(obj$par.control)
+
+    cat("\n")
+
+    cat("\nMisreporting Submodel:\n")
+
+    cat("\n")
+
+    print(obj$par.misreport)
+
+    cat("\n")
+    
+    invisible(x)
+
+  }
+
+  if (class(obj)[2] == "ml") {
+
+    cat("\nMisreporting Regression\n")
+    
+    # dput(obj$call)
+
+    cat("Estimation by Maximum Likelihood.\n")
+
+    cat("\nSensitive Item Submodel:\n")
+
+    cat("\n")
+
+    print(obj$par.treat)
+
+    cat("\n")
+
+    cat("\nControl Items Submodel:\n")
+
+    cat("\n")
+
+    print(obj$par.control)
+
+    cat("\n")
+
+    cat("\nMisreporting Submodel:\n")
+
+    cat("\n")
+
+    print(obj$par.misreport)
+
+    cat("\n")
+    
+    invisible(x)
+
+  }
 
 }
-
-# cat(paste(paste(c("Sensitive Item", 
-#   paste0("  ", names(m.out$par.treat))), collapse = "\n"), "\n"))

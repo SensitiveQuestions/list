@@ -46,12 +46,8 @@ misreg(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRUE,
 \code{misreg} returns an object of class "misreg".
 }
 \description{
-Note: This function is in development.  The ratio, NLS, and ML estimators 
-for list experiments with the standard wording (i.e., the treatment item 
-directly gauges the sensitive item prevalence) without floor effects are 
-implemented.
-}
-\details{
+NOTE: This function is in development.  Currently, the ratio, NLS, and one-way ML 
+estimators for list experiments with and without floor and ceiling effects are implemented.  
 This function implements the methods introduced in Chou (N.d.) and 
 Eady (2017) for estimating multiple regression models of misreporting. 
 The methods can be applied to survey designs that combine direct 
@@ -60,6 +56,7 @@ sensitive attitudes (see Blair and Imai 2011).
 }
 \references{
 Chou, Winston. (2018) ``Lying on Surveys.'' Technical report, Princeton University.
+Eady, Gregory (2017) ``The Statistical Analysis of Misreporting on Sensitive Survey Questions.'' Political Analysis.
 }
 \author{
 Winston Chou, Princeton University, \email{wchou@princeton.edu}
