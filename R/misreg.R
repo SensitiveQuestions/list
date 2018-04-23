@@ -33,12 +33,12 @@
 
 #' @return \code{misreg} returns an object of class "misreg". 
 
-logistic  <- function(x) exp(x)/(1+exp(x))
-dlogistic <- function(x) exp(x)/(1+exp(x))^2
-
 misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRUE, 
   method = "ratio", model.extremes = FALSE, two.way = FALSE, bayes = FALSE, 
   spec.test = FALSE, infer.design = TRUE, design, nls.options, ml.options) {
+
+  logistic  <- function(x) exp(x)/(1+exp(x))
+  dlogistic <- function(x) exp(x)/(1+exp(x))^2
 
   Y  <- data[, y]
   D  <- data[, dir]
