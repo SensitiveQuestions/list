@@ -339,6 +339,11 @@ summary(both.results)
 Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
 List Experiments."  Political Analysis. Forthcoming. available at
 \url{http://imai.princeton.edu/research/listP.html}
+
+Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item Count
+Technique.'' Journal of the American Statistical Association, Vol. 106, No.
+494 (June), pp. 407-416. available at
+\url{http://imai.princeton.edu/research/list.html}
 }
 \seealso{
 \code{\link{predict.ictreg}} for fitted values

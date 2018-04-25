@@ -194,11 +194,10 @@
 #' @author Graeme Blair, UCLA, \email{graeme.blair@ucla.edu}
 #' and Kosuke Imai, Princeton University, \email{kimai@princeton.edu}
 #' @seealso \code{\link{predict.ictreg}} for fitted values
+#' @export
 #' @references Blair, Graeme and Kosuke Imai. (2012) ``Statistical Analysis of
 #' List Experiments."  Political Analysis. Forthcoming. available at
 #' \url{http://imai.princeton.edu/research/listP.html}
-#' 
-#' @export
 #' 
 #' Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item Count
 #' Technique.'' Journal of the American Statistical Association, Vol. 106, No.
