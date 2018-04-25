@@ -198,6 +198,8 @@
 #' List Experiments."  Political Analysis. Forthcoming. available at
 #' \url{http://imai.princeton.edu/research/listP.html}
 #' 
+#' @export
+#' 
 #' Imai, Kosuke. (2011) ``Multivariate Regression Analysis for the Item Count
 #' Technique.'' Journal of the American Statistical Association, Vol. 106, No.
 #' 494 (June), pp. 407-416. available at

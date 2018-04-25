@@ -49,7 +49,9 @@ misreg(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRUE,
 NOTE: This function is in development.  The following models are 
 implemented: ratio estimator, NLS estimator with standard question wording, 
 one-way MLE with standard and reverse question wording, one-way MLE with 
-\code{bayesglm}. \\
+\code{bayesglm}.
+}
+\details{
 This function implements the methods introduced in Chou (N.d.) and 
 Eady (2017) for estimating multiple regression models of misreporting. 
 The methods can be applied to survey designs that combine direct 
@@ -58,6 +60,7 @@ sensitive attitudes (see Blair and Imai 2011).
 }
 \references{
 Chou, Winston. (2018) ``Lying on Surveys.'' Technical report, Princeton University.
+
 Eady, Gregory (2017) ``The Statistical Analysis of Misreporting on Sensitive Survey Questions.'' Political Analysis.
 }
 \author{
