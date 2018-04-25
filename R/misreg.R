@@ -1,7 +1,9 @@
 #' Regression Models for Misreporting
 #' 
-#' NOTE: This function is in development.  Currently, the ratio, NLS, and one-way ML 
-#' estimators for list experiments with and without floor and ceiling effects are implemented.  
+#' NOTE: This function is in development.  The following models are 
+#' implemented: ratio estimator, NLS estimator with standard question wording, 
+#' one-way MLE with standard and reverse question wording, one-way MLE with 
+#' \code{bayesglm}. \\
 #' This function implements the methods introduced in Chou (N.d.) and 
 #' Eady (2017) for estimating multiple regression models of misreporting. 
 #' The methods can be applied to survey designs that combine direct 
@@ -46,13 +48,13 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
     
     list.formula <- as.formula(paste0(y, paste0(as.character(rhs), collapse = "")))
     dir.formula  <- as.formula(paste0(dir, paste0(as.character(rhs), collapse = "")))
-    X <- model.matrix(rhs)
+    X <- model.matrix(rhs, data = data)
 
   }
 
   # direct estimate of sensitive trait
-  dir.est <- mean(d[t==0])
-  dir.var <- var(d[t==0])/sum(t==0)
+  dir.est <- mean(D[Tr==0])
+  dir.var <- var(D[Tr==0])/sum(Tr==0)
   dir.se  <- sqrt(dir.var)
 
   # list estimate of sensitive trait
@@ -88,10 +90,17 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
 
     # compute ratio
     r.est <- 1-ratio.est(y=Y, d=D, t=Tr, eZ = tau)
-    r.var  <- ratio.var(y=Y, d=D, t=Tr, eZ = tau)
+    r.var <- ratio.var(y=Y, d=D, t=Tr, eZ = tau)
+
+    # compute difference
+    diff.est <- tau - dir.est
+    diff.var <- tau.var + dir.var - 
+      2*cov(Y, D, use = "pairwise.complete.obs")/
+        sum(!is.na(Y)|is.na(D))
 
     # return object
     return.obj <- list("s.est" = r.est, "s.var" = r.var, 
+      "diff.est" = diff.est, "diff.var" = diff.var, 
       "z.est" = tau, "z.var" = tau.var, 
       "d.est" = dir.est, "d.var" = dir.var)
     class(return.obj) <- c("misreg", "ratio")
@@ -121,27 +130,51 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
         sum(resid^2)
       }
 
-      ss1 <- function(delta, gamma, z, J, X) {
-        resid <- z - logistic(X %*% delta)
-        sum(resid^2)
-      }
-
       ss2 <- function(beta, delta, d, J, X) {
         resid <- (1-d/logistic(X %*% delta)) - logistic(X %*% beta)
         sum(resid^2)
       }
 
-      m1 <- function(y, J, delta, gamma, beta, X, d, t) {
-        n <- nrow(X)
-        Xd <- X %*% delta
-        Xg <- X %*% gamma
-        Xb <- X %*% beta
-        Xbd <- X %*% (delta + beta)
+      if (sensitive.treatment) {
 
-        resid1 <- c(y - J*logistic(Xg) - logistic(Xb))[t==1]
+        ss1 <- function(delta, z, J, X) {
+          resid <- z - logistic(X %*% delta)
+          sum(resid^2)
+        }
 
-        m1 <- c(resid1 * dlogistic(Xd[t==1, ])) * X[t==1, ]
-        m1
+        m1 <- function(y, J, delta, gamma, beta, X, d, t) {
+          n <- nrow(X)
+          Xd <- X %*% delta
+          Xg <- X %*% gamma
+          Xb <- X %*% beta
+          Xbd <- X %*% (delta + beta)
+
+          resid1 <- c(y - J*logistic(Xg) - logistic(Xd))[t==1]
+
+          m1 <- c(resid1 * dlogistic(Xd[t==1, ])) * X[t==1, ]
+          m1
+        }
+
+      } else {
+
+        ss1 <- function(delta, z, J, X) {
+          resid <- z - (1-logistic(X %*% delta))
+          sum(resid^2)
+        }
+
+        m1 <- function(y, J, delta, gamma, beta, X, d, t) {
+          n <- nrow(X)
+          Xd <- X %*% delta
+          Xg <- X %*% gamma
+          Xb <- X %*% beta
+          Xbd <- X %*% (delta + beta)
+
+          resid1 <- c(y - J*logistic(Xg) - (1-logistic(Xd)))[t==1]
+
+          m1 <- c(resid1 * dlogistic(Xd[t==1, ])) * X[t==1, ]
+          m1
+        }
+
       }
 
       m0 <- function(y, J, delta, gamma, beta, X, d, t) {
@@ -242,8 +275,6 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
             cbind(G4, z.mat, G5))
       }
 
-      br <- bread(delta, gamma, beta, X, d, t)
-
       meat <- function(y, J, delta, gamma, beta, X, d, t) {
 
         n <- nrow(X)
@@ -281,7 +312,7 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
     fit.control <- optim(fn = ss0, par = gamma.start, y = Y[Tr == 0], J = J, X = X[Tr == 0, ])
     y.hat <- J*logistic(X %*% fit.control$par)
 
-    fit.treat <- optim(fn = ss1, par = delta.start, gamma = fit.control$par, 
+    fit.treat <- optim(fn = ss1, par = delta.start, 
       z = Y[Tr == 1] - y.hat[Tr == 1], J , X = X[Tr == 1, ])
     z.hat <- logistic(X %*% fit.treat$par)
 
@@ -313,7 +344,7 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
     if (model.extremes) {
 
       # ceiling effects
-      obs.llik <- function(par, X, treat, dir, y, J, bayes = FALSE) {
+      obs.llik <- function(par, X, treat, dir, y, J, bayes = bayes) {
 
         n     <- nrow(X)
         k     <- ncol(X)
@@ -328,13 +359,14 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
 
         lik <- rep(NA, n)
 
-        lik[treat ==  0 & dir == 0] <- ((1-g*(1-h))*choose(J,y)*f^y*(1-f)^(J-y))[treat ==  0 & dir == 0]
-        lik[treat ==  0 & dir == 1] <- (g*(1-h)*choose(J,y)*f^y*(1-f)^(J-y))[treat ==  0 & dir == 1]
+        # lik[treat == -1 & dir == 0] <- (1 - g*(1 - h))[treat == -1 & dir == 0]
+        # lik[treat == -1 & dir == 1] <- (g*(1 - h))[treat == -1 & dir == 1]
+        lik[treat ==  0 & dir == 0] <- ((1-g*(1-h)) * choose(J,y) * f^y * (1-f)^(J-y))[treat ==  0 & dir == 0]
+        lik[treat ==  0 & dir == 1] <- (g*(1-h) * choose(J,y) * f^y * (1-f)^(J-y))[treat ==  0 & dir == 1]
         lik[treat ==  1 & y == 0]   <- ((1-g)*(1-f)^J)[treat ==  1 & y == 0]
-        lik[treat ==  1 & y > 0 & y < J] <- (g*choose(J, y-1)*f^(y-1)*(1-f)^(J-y+1) + 
-          (1-g)*choose(J, y)*f^y*(1-f)^(J-y))[treat ==  1 & y > 0 & y < J]
-        lik[treat ==  1 & y == J] <- (g*J*f^(J-1)*(1-f) + 
-          (1-g)*f^J + g*h*f^J)[treat ==  1 & y == J]
+        lik[treat ==  1 & y > 0 & y < J] <- (g * choose(J, y-1) * f^(y-1) * (1-f)^(J-y+1) + 
+          (1-g) * choose(J, y) * f^y * (1-f)^(J-y))[treat ==  1 & y > 0 & y < J]
+        lik[treat ==  1 & y == J]   <- (g * J * f^(J-1) * (1-f) + (1-g) * f^J + g*h*f^J)[treat ==  1 & y == J]
         lik[treat ==  1 & y == J+1] <- (g*(1-h)*f^J)[treat ==  1 & y == J+1]
 
         intercept.index <- c(1, 1 + k, 1 + 2*k)
@@ -361,19 +393,21 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
 
         z.update <- rep(NA, n)
 
+        # z.update[treat == -1 & dir == 0] <- ((g*h)/(1-g*(1-h)))[treat == -1 & dir == 0]
+        # z.update[treat == -1 & dir == 1] <- 1
         z.update[treat ==  0 & dir == 0] <- ((g*h)/(1-g*(1-h)))[treat ==  0 & dir == 0]
         z.update[treat ==  0 & dir == 1] <- 1
         z.update[treat ==  1 & y == 0]   <- 0
         z.update[treat ==  1 & y > 0 & y < J] <- 
           ((g * choose(J, y-1) * f^(y-1) * (1-f)^(J-y+1))/(g * choose(J, y-1) * f^(y-1) * (1-f)^(J-y+1) + 
             (1-g) * choose(J, y) * f^y * (1-f)^(J-y)))[treat ==  1 & y > 0 & y < J]
-        z.update[treat ==  1 & y == J]  <- (g*(J*f^(J-1)*(1-f) + h*f^J)/
-          (g*(J*f^(J-1)*(1-f) + h*f^J) + (1-g)*f^J))[treat ==  1 & y == J]
+        z.update[treat ==  1 & y == J]   <- ((g*(J * f^(J-1) * (1-f) + h * f^J))/(g * J * f^(J-1) * (1-f) + (1-g) * f^J + g*h*f^J))[treat ==  1 & y == J]
         z.update[treat ==  1 & y == J+1] <- 1
 
         return(z.update)
 
       }
+
 
       eS.step <- function(par, X, treat, dir, y, J) {
 
@@ -390,13 +424,14 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
         
         s.update <- rep(NA, n)
 
+        # s.update[treat == -1 & dir == 0] <- 1
+        # s.update[treat == -1 & dir == 1] <- 0
         s.update[treat ==  0 & dir == 0] <- 1
         s.update[treat ==  0 & dir == 1] <- 0
         s.update[treat ==  1 & y == 0]   <- 0 # can be anything
         s.update[treat ==  1 & y > 0 & y < J] <- h[treat ==  1 & y > 0 & y < J]
-        s.update[treat ==  1 & y == J] <- (g*h*f^J/
-          (g*(J*f^(J-1)*(1-f) + h*f^J)))[treat ==  1 & y == J]
-        s.update[treat ==  1 & y == J + 1] <- 0
+        s.update[treat ==  1 & y == J]   <- ((h*(J*f^(J-1)*(1-f) + f^J))/(J*f^(J-1)*(1-f) + h*f^J))[treat ==  1 & y == J]
+        s.update[treat ==  1 & y == J+1] <- 0
 
         return(s.update)
 
@@ -490,14 +525,18 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
 
     # start of algorithm
     fit0.list <- ictreg(list.formula, data, J, treat = treat, method = "lm")
-    fit0.dir  <- glm(dir.formula, data, family = binomial("logit"))
+    if (bayes) {
+      fit0.dir  <- bayesglm(dir.formula, data, family = binomial("logit"))
+    } else {
+      fit0.dir  <- glm(dir.formula, data, family = binomial("logit"))
+    }
 
     delta.update <- 1/5 * fit0.list$par.treat
     gamma.update <- 1/5 * fit0.list$par.control
     beta.update  <- -coef(fit0.dir)
 
     init.llik <- obs.llik(par = c(delta.update, gamma.update, beta.update), 
-      X = X, treat = Tr, dir = D, y = Y, J, bayes = bayes)
+      X = X, treat = Tr, dir = D, y = Y, J = J, bayes = bayes)
 
     lliks <- rep(init.llik, 2)
 
@@ -518,16 +557,29 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
       dat$z.weight <- c(eZ, 1-eZ)
       dat$s.weight <- c(eZ, eZ) * c(eS, 1-eS)
 
-      delta.update <- coef(glm(as.formula(paste0("cbind(y, 1-y)", 
-          paste0(as.character(rhs), collapse = ""))), 
-        family = binomial("logit"), data = dat, weights = z.weight))
-      gamma.update <- coef(glm(as.formula(paste0("cbind(y.hat, J-y.hat)", 
-          paste0(as.character(rhs), collapse = ""))), 
-        family = binomial("logit"), data = subset(dat, z.weight > 0), 
-        weights = z.weight))
-      beta.update  <- coef(glm(as.formula(paste0("cbind(y, 1-y)", 
-          paste0(as.character(rhs), collapse = ""))), 
-        family = binomial("logit"), data = dat, weights = s.weight))
+      if (bayes) {
+        delta.update <- coef(bayesglm(as.formula(paste0("cbind(y, 1-y)", 
+            paste0(as.character(rhs), collapse = ""))), 
+          family = binomial("logit"), data = dat, weights = z.weight))
+        gamma.update <- coef(bayesglm(as.formula(paste0("cbind(y.hat, J-y.hat)", 
+            paste0(as.character(rhs), collapse = ""))), 
+          family = binomial("logit"), data = subset(dat, z.weight > 0), 
+          weights = z.weight))
+        beta.update  <- coef(bayesglm(as.formula(paste0("cbind(y, 1-y)", 
+            paste0(as.character(rhs), collapse = ""))), 
+          family = binomial("logit"), data = dat, weights = s.weight))
+      } else {
+        delta.update <- coef(glm(as.formula(paste0("cbind(y, 1-y)", 
+            paste0(as.character(rhs), collapse = ""))), 
+          family = binomial("logit"), data = dat, weights = z.weight))
+        gamma.update <- coef(glm(as.formula(paste0("cbind(y.hat, J-y.hat)", 
+            paste0(as.character(rhs), collapse = ""))), 
+          family = binomial("logit"), data = subset(dat, z.weight > 0), 
+          weights = z.weight))
+        beta.update  <- coef(glm(as.formula(paste0("cbind(y, 1-y)", 
+            paste0(as.character(rhs), collapse = ""))), 
+          family = binomial("logit"), data = dat, weights = s.weight))
+      }
 
       post.llik <- obs.llik(par = c(delta.update, gamma.update, beta.update), 
         X = X, treat = Tr, dir = D, y = Y, J = J, bayes = bayes)
@@ -562,7 +614,7 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
 
   }
 
-  # standard ml estimator with reverse coded lists
+  # standard ml estimator with reverse coded lists (e.g., coffman et al. 2016)
   if (method == "ml" & !sensitive.treatment & !two.way) {
 
     if (model.extremes) {
@@ -791,25 +843,28 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
     }
 
     # start of algorithm
-    fit0.list <- ictreg(list.formula, data, J, treat = treat, method = "lm")
-    fit0.dir  <- glm(dir.formula, data, family = binomial("logit"))
+    fit0.list <- ictreg(list.formula, data = data, J = J, treat = treat, method = "lm")
+    if (bayes) {
+      fit0.dir  <- bayesglm(dir.formula, data, family = binomial("logit"))
+    } else {
+      fit0.dir  <- glm(dir.formula, data, family = binomial("logit"))
+    }
 
     delta.update <- -1/5 * fit0.list$par.treat
-    gamma.update <- 1/5 * fit0.list$par.control
+    gamma.update <-  1/5 * fit0.list$par.control
     beta.update  <- -coef(fit0.dir)
 
     init.llik <- obs.llik(par = c(delta.update, gamma.update, beta.update), 
       X = X, treat = Tr, dir = D, y = Y, J = J, bayes = bayes)
 
-    lliks <- rep(init.llik, 2)
+    lliks <- c(2*init.llik, init.llik)
 
     iter <- 1
 
     # initial variables
     dat          <- rbind(data, data)
     dat$y        <- rep(1:0, each = nrow(data))
-    dat$y.hat    <- c(ifelse(Tr == 1, Y, Y), 
-      ifelse(Tr == 1, Y-1, Y)) # reverse coding adj.
+    dat$y.hat    <- c(Y, ifelse(Tr == 1, Y-1, Y)) # reverse coding adj.
 
     while((iter < 10) | abs(lliks[iter] - lliks[iter+1]) > 1e-06) {
 
@@ -821,16 +876,29 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
       dat$z.weight <- c(eZ, 1-eZ)
       dat$s.weight <- c(eZ, eZ) * c(eS, 1-eS)
 
-      delta.update <- coef(glm(as.formula(paste0("cbind(y, 1-y)", 
-          paste0(as.character(rhs), collapse = ""))), 
-        family = binomial("logit"), data = dat, weights = z.weight))
-      gamma.update <- coef(glm(as.formula(paste0("cbind(y.hat, J-y.hat)", 
-          paste0(as.character(rhs), collapse = ""))), 
-        family = binomial("logit"), data = subset(dat, z.weight > 0), 
-        weights = z.weight))
-      beta.update  <- coef(glm(as.formula(paste0("cbind(y, 1-y)", 
-          paste0(as.character(rhs), collapse = ""))), 
-        family = binomial("logit"), data = dat, weights = s.weight))
+      if (bayes) {
+        delta.update <- coef(bayesglm(as.formula(paste0("cbind(y, 1-y)", 
+            paste0(as.character(rhs), collapse = ""))), 
+          family = binomial("logit"), data = dat, weights = z.weight))
+        gamma.update <- coef(bayesglm(as.formula(paste0("cbind(y.hat, J-y.hat)", 
+            paste0(as.character(rhs), collapse = ""))), 
+          family = binomial("logit"), data = subset(dat, z.weight > 0), 
+          weights = z.weight))
+        beta.update  <- coef(bayesglm(as.formula(paste0("cbind(y, 1-y)", 
+            paste0(as.character(rhs), collapse = ""))), 
+          family = binomial("logit"), data = dat, weights = s.weight))
+      } else {
+        delta.update <- coef(glm(as.formula(paste0("cbind(y, 1-y)", 
+            paste0(as.character(rhs), collapse = ""))), 
+          family = binomial("logit"), data = dat, weights = z.weight))
+        gamma.update <- coef(glm(as.formula(paste0("cbind(y.hat, J-y.hat)", 
+            paste0(as.character(rhs), collapse = ""))), 
+          family = binomial("logit"), data = subset(dat, z.weight > 0), 
+          weights = z.weight))
+        beta.update  <- coef(glm(as.formula(paste0("cbind(y, 1-y)", 
+            paste0(as.character(rhs), collapse = ""))), 
+          family = binomial("logit"), data = dat, weights = s.weight))
+      }
 
       post.llik <- obs.llik(par = c(delta.update, gamma.update, beta.update), 
         X = X, treat = Tr, dir = D, y = Y, J = J, bayes = bayes)
@@ -894,6 +962,7 @@ print.misreg <- function(obj) {
     s.se <- sqrt(obj$s.var)
     z.se <- sqrt(obj$z.var)
     d.se <- sqrt(obj$d.var)
+    diff.se <- sqrt(obj$diff.var)
 
     cat(paste0(
       "\n", 
@@ -909,6 +978,10 @@ print.misreg <- function(obj) {
       "    Misreporting Rate           ", 
       sprintf("%0.4f", round(obj$s.est, 4)), 
         "  (", sprintf("%0.4f", round(s.se, 4)), ")", 
+      "\n", 
+      "    Simple Difference           ", 
+      sprintf("%0.4f", round(obj$diff.est, 4)), 
+        "  (", sprintf("%0.4f", round(diff.se, 4)), ")", 
       "\n"), 
         paste0(ifelse(obj$s.flag == 1, 
           "\n    WARNING: Ratio estimate does not lie between 0 and 1.", "")), 
@@ -950,8 +1023,6 @@ print.misreg <- function(obj) {
 
     cat("\n")
     
-    invisible(x)
-
   }
 
   if (class(obj)[2] == "ml") {
@@ -986,8 +1057,6 @@ print.misreg <- function(obj) {
 
     cat("\n")
     
-    invisible(x)
-
   }
 
 }

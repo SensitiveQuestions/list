@@ -46,8 +46,10 @@ misreg(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRUE,
 \code{misreg} returns an object of class "misreg".
 }
 \description{
-NOTE: This function is in development.  Currently, the ratio, NLS, and one-way ML 
-estimators for list experiments with and without floor and ceiling effects are implemented.  
+NOTE: This function is in development.  The following models are 
+implemented: ratio estimator, NLS estimator with standard question wording, 
+one-way MLE with standard and reverse question wording, one-way MLE with 
+\code{bayesglm}. \\
 This function implements the methods introduced in Chou (N.d.) and 
 Eady (2017) for estimating multiple regression models of misreporting. 
 The methods can be applied to survey designs that combine direct 
