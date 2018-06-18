@@ -48,7 +48,7 @@ data(affirm)
 data(race)
 
 # Conduct test with null hypothesis that there is no design effect
-# Replicates results on Blair and Imai (2010) pg. 30
+# Replicates results on Blair and Imai (2012) pg. 69
 
 test.value.affirm <- ict.test(affirm$y, affirm$treat, J = 3, gms = TRUE)
 print(test.value.affirm)
