@@ -6,13 +6,14 @@
 \alias{list}
 \title{Item Count Technique}
 \usage{
-ictreg(formula, data = parent.frame(), treat = "treat", J, method = "ml",
-  weights, h = NULL, group = NULL, matrixMethod = "efficient",
+ictreg(formula, data = parent.frame(), treat = "treat", J,
+  method = "ml", weights, h = NULL, group = NULL,
+  matrixMethod = "efficient", robust = FALSE, error = "none",
   overdispersed = FALSE, constrained = TRUE, floor = FALSE,
   ceiling = FALSE, ceiling.fit = "glm", floor.fit = "glm",
   ceiling.formula = ~1, floor.formula = ~1, fit.start = "lm",
-  fit.nonsensitive = "nls", multi.condition = "none", maxIter = 5000,
-  verbose = FALSE, ...)
+  fit.sensitive = "glm", fit.nonsensitive = "nls",
+  multi.condition = "none", maxIter = 5000, verbose = FALSE, ...)
 }
 \arguments{
 \item{formula}{An object of class "formula": a symbolic description of the
@@ -49,6 +50,17 @@ optimal weighting matrix for generalized method of moments. One of
 "efficient" for two-step feasible and "cue" for continuously updating.
 Default is "efficient". Only relevant if \code{h} and \code{group} are
 specified.}
+
+\item{robust}{Robust NLS and ML models that ensure that the estimated 
+proportion of the sensitive trait is close to difference-in-means estimate.}
+
+\item{error}{ML models that model response error processes proposed in
+Blair, Chou, and Imai (2018). Select either \code{none} (standard ML), the
+default; \code{topcode}, which models an error process in which a random 
+subset of respondents chooses the maximal (ceiling) response value, 
+regardless of their truthful response; and \code{uniform}, which models an 
+error process in which a subset of respondents chooses their responses at 
+random.}
 
 \item{overdispersed}{Indicator for the presence of overdispersion. If
 \code{TRUE}, the beta-binomial model is used in the EM algorithm, if
@@ -89,6 +101,11 @@ be a subset of the covariates used in \code{formula}.}
 \code{ml} model. The options are \code{lm}, \code{glm}, and \code{nls},
 which use OLS, logistic regression, and non-linear least squares to generate
 starting values, respectively. The default is \code{nls}.}
+
+\item{fit.sensitive}{Fit method for the sensitive item fit for maximum likelihood
+models. \code{glm} uses standard logistic regression, while
+\code{bayesglm} uses logistic regression with a weakly informative prior
+over the parameters.}
 
 \item{fit.nonsensitive}{Fit method for the non-sensitive item fit for the
 \code{nls} method and the starting values for the \code{ml} method for the

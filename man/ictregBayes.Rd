@@ -5,12 +5,13 @@
 \title{Item Count Technique}
 \usage{
 ictregBayes(formula, data = parent.frame(), treat = "treat", J,
-  constrained.single = "full", constrained.multi = TRUE, fit.start = "lm",
-  n.draws = 10000, burnin = 5000, thin = 0, delta.start, psi.start,
-  Sigma.start, Phi.start, delta.mu0, psi.mu0, delta.A0, psi.A0, Sigma.df,
-  Sigma.scale, Phi.df, Phi.scale, delta.tune, psi.tune, gamma.tune, zeta.tune,
-  formula.mixed, group.mixed, verbose = TRUE, sensitive.model = "logit",
-  df = 5, endorse.options, ...)
+  constrained.single = "full", constrained.multi = TRUE,
+  fit.start = "lm", n.draws = 10000, burnin = 5000, thin = 0,
+  delta.start, psi.start, Sigma.start, Phi.start, delta.mu0, psi.mu0,
+  delta.A0, psi.A0, Sigma.df, Sigma.scale, Phi.df, Phi.scale, delta.tune,
+  psi.tune, gamma.tune, zeta.tune, formula.mixed, group.mixed,
+  verbose = TRUE, sensitive.model = "logit", df = 5, endorse.options,
+  ...)
 }
 \arguments{
 \item{formula}{An object of class "formula": a symbolic description of the

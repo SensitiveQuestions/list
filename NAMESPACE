@@ -9,6 +9,9 @@ export(ictreg.joint, predict.ictreg.joint)
 export(combinedListDirect)
 export(ict.hausman.test)
 
+importFrom(stats, runif)
+importFrom(stats, setNames)
+
 importFrom(arm, bayesglm)
 importFrom(VGAM, betabinomial)
 importFrom(VGAM, vglm)

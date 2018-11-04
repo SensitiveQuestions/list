@@ -4,8 +4,8 @@
 \alias{comp.listEndorse}
 \title{Comparing List and Endorsement Experiment Data}
 \usage{
-comp.listEndorse(y.endorse, y.list, treat, n.draws = 10000, alpha = 0.05,
-  endorse.mean = FALSE, method = "pearson")
+comp.listEndorse(y.endorse, y.list, treat, n.draws = 10000,
+  alpha = 0.05, endorse.mean = FALSE, method = "pearson")
 }
 \arguments{
 \item{y.endorse}{A numerical matrix containing the response data for the

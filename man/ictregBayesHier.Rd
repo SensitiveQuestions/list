@@ -4,17 +4,19 @@
 \alias{ictregBayesHier}
 \title{Item Count Technique}
 \usage{
-ictregBayesHier(formula, data = parent.frame(), group.level.2, group.level.3,
-  group.level.4, formula.level.2, formula.level.3, formula.level.4,
-  treat = "treat", J, fit.start = "lm", n.draws = 10000, burnin = 5000,
-  thin = 0, delta.start.level.1, delta.mu0.level.1, delta.A0.level.1,
-  delta.start.level.2, delta.mu0.level.2, delta.A0.level.2, delta.start.level.3,
-  delta.mu0.level.3, delta.A0.level.3, delta.start.level.4, delta.mu0.level.4,
-  delta.A0.level.4, sigma.start.level.1, sigma.df.level.1, sigma.scale.level.1,
-  sigma.start.level.2, sigma.df.level.2, sigma.scale.level.2,
-  sigma.start.level.3, sigma.df.level.3, sigma.scale.level.3,
-  sigma.start.level.4, sigma.df.level.4, sigma.scale.level.4, delta.tune,
-  alpha.tune, verbose = TRUE, ...)
+ictregBayesHier(formula, data = parent.frame(), group.level.2,
+  group.level.3, group.level.4, formula.level.2, formula.level.3,
+  formula.level.4, treat = "treat", J, fit.start = "lm",
+  n.draws = 10000, burnin = 5000, thin = 0, delta.start.level.1,
+  delta.mu0.level.1, delta.A0.level.1, delta.start.level.2,
+  delta.mu0.level.2, delta.A0.level.2, delta.start.level.3,
+  delta.mu0.level.3, delta.A0.level.3, delta.start.level.4,
+  delta.mu0.level.4, delta.A0.level.4, sigma.start.level.1,
+  sigma.df.level.1, sigma.scale.level.1, sigma.start.level.2,
+  sigma.df.level.2, sigma.scale.level.2, sigma.start.level.3,
+  sigma.df.level.3, sigma.scale.level.3, sigma.start.level.4,
+  sigma.df.level.4, sigma.scale.level.4, delta.tune, alpha.tune,
+  verbose = TRUE, ...)
 }
 \arguments{
 \item{formula}{An object of class "formula": a symbolic description of the

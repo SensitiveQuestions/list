@@ -4,10 +4,11 @@
 \alias{predict.ictreg.joint}
 \title{Predict Method for Item Count Technique, Outcome Regressions}
 \usage{
-\method{predict}{ictreg.joint}(object, newdata, newdata.diff, se.fit = FALSE,
-  interval = c("none", "confidence"), level = 0.95, avg = FALSE,
-  sensitive.value = c("0", "1", "both"), sensitive.diff = FALSE,
-  return.draws = FALSE, predict.sensitive = FALSE, ...)
+\method{predict}{ictreg.joint}(object, newdata, newdata.diff,
+  se.fit = FALSE, interval = c("none", "confidence"), level = 0.95,
+  avg = FALSE, sensitive.value = c("0", "1", "both"),
+  sensitive.diff = FALSE, return.draws = FALSE,
+  predict.sensitive = FALSE, ...)
 }
 \arguments{
 \item{object}{Object of class inheriting from "ictreg.joint"}

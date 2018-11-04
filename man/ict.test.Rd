@@ -4,8 +4,8 @@
 \alias{ict.test}
 \title{Item Count Technique}
 \usage{
-ict.test(y, treat, J = NA, alpha = 0.05, n.draws = 250000, gms = TRUE,
-  pi.table = TRUE)
+ict.test(y, treat, J = NA, alpha = 0.05, n.draws = 250000,
+  gms = TRUE, pi.table = TRUE)
 }
 \arguments{
 \item{y}{A numerical vector containing the response data for a list
@@ -48,7 +48,7 @@ data(affirm)
 data(race)
 
 # Conduct test with null hypothesis that there is no design effect
-# Replicates results on Blair and Imai (2010) pg. 30
+# Replicates results on Blair and Imai (2012) pg. 69
 
 test.value.affirm <- ict.test(affirm$y, affirm$treat, J = 3, gms = TRUE)
 print(test.value.affirm)
