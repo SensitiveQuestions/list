@@ -36,19 +36,20 @@ Description: Allows researchers to conduct multivariate
     Blair, Imai, and Lyall (2013) <doi:10.1111/ajps.12086>, 
     Imai, Park, and Greene (2014) <doi:10.1093/pan/mpu017>,
     Aronow, Coppock, Crawford, and Green (2015) <doi:10.1093/jssam/smu023>, 
-    and Chou, Imai, and Rosenfeld (2016) 
-    <http://imai.princeton.edu/research/files/auxiliary.pdf>. 
+    Chou, Imai, and Rosenfeld (2017) <doi:10.1177/0049124117729711>, and 
+    Blair, Chou, and Imai (2018) <https://imai.fas.harvard.edu/research/files/listerror.pdf>. 
     This includes a Bayesian MCMC implementation of regression for the 
     standard and multiple sensitive item list experiment designs and a 
     random effects setup, a Bayesian MCMC hierarchical regression model 
     with up to three hierarchical groups, the combined list experiment 
     and endorsement experiment regression model, a joint model of the 
     list experiment that enables the analysis of the list experiment as 
-    a predictor in outcome regression models, and a method for combining 
-    list experiments with direct questions. In addition, the package
-    implements the statistical test that is designed to detect
-    certain failures of list experiments, and a placebo test
-    for the list experiment using data from direct questions.
+    a predictor in outcome regression models, a method for combining 
+    list experiments with direct questions, and models for list experiments 
+    with measurement errors. In addition, the package implements the 
+    statistical test that is designed to detect certain failures of list 
+    experiments, and a placebo test for the list experiment using data from 
+    direct questions.
 LazyLoad: yes
 LazyData: yes
 License: GPL (>= 2)
