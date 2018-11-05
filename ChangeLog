@@ -19,4 +19,5 @@ version      date  description
 8.1  07/26/16  Bug fix
 8.2  08/15/16  Minor changes
 8.3  10/25/16  Added functionality for including auxiliary information by generalized method of moments
+9.0  11/4/18   Added functionality for addressing response error in list experiments from Blair, Chou, and Imai (2018) including new models and a Hausman test for model misspecification in maximum likelihood models
 

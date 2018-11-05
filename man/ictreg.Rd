@@ -349,6 +349,27 @@ both.results <- ictreg(y ~ age + college + male + south, treat = "treat",
 
 summary(both.results)
 
+# Response error models (Blair, Imai, and Chou 2018)
+
+top.coded.error <- ictreg(
+   y ~ age + college + male + south, treat = "treat",
+   J = 3, data = race, method = "ml", error = "topcoded")
+   
+uniform.error <- ictreg(
+   y ~ age + college + male + south, treat = "treat",
+   J = 3, data = race, method = "ml", error = "topcoded")
+   
+# Robust models, which constrain sensitive item proportion
+#   to difference-in-means estimate
+
+robust.ml <- ictreg(
+   y ~ age + college + male + south, treat = "treat",
+   J = 3, data = affirm, method = "ml", robust = TRUE)
+
+robust.nls <- ictreg(
+   y ~ age + college + male + south, treat = "treat",
+   J = 3, data = affirm, method = "nls", robust = TRUE)
+   
 }
 
 }
