@@ -7,3 +7,4 @@ _pkgdown.yml
 vignettes/list-experiment-examples.Rmd
 vignettes/list-experiment-examples.bib
 ^_pkgdown\.yml$
+^cran-comments\.md$
