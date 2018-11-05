@@ -51,4 +51,5 @@ Description: Allows researchers to conduct multivariate
 LazyLoad: yes
 LazyData: yes
 License: GPL (>= 2)
+Encoding: UTF-8
 RoxygenNote: 6.1.0
