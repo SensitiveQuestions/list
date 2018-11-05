@@ -3,7 +3,7 @@ Version: 9.0
 Title: Statistical Methods for the Item Count Technique and List Experiment
 Authors@R: c(person("Graeme", "Blair", email = "graeme.blair@ucla.edu", role = c("aut", "cre")),
              person("Winston", "Chou", email = "wchou@princeton.edu", role = c("aut")),
-             person("Kosuke", "Imai", email = "kimai@princeton.edu", role = c("aut")),
+             person("Kosuke", "Imai", email = "imai@harvard.edu", role = c("aut")),
              person("Bethany", "Park", email = "bapark@princeton.edu", role = c("ctb")),
              person("Alexander", "Coppock", email = "alex.coppock@yale.edu", role = c("ctb")))
 Depends:
@@ -35,9 +35,8 @@ Description: Allows researchers to conduct multivariate
     Blair, Imai, and Lyall (2013) <doi:10.1111/ajps.12086>, 
     Imai, Park, and Greene (2014) <doi:10.1093/pan/mpu017>,
     Aronow, Coppock, Crawford, and Green (2015) <doi:10.1093/jssam/smu023>, 
-    Chou, Imai, and Rosenfeld (2016) <doi:10.1177/0049124117729711>,
-    and Blair, Chou, and Imai (2018) 
-    <https://graemeblair.com/papers/listerror.pdf>.
+    Chou, Imai, and Rosenfeld (2017) <doi:10.1177/0049124117729711>, and 
+    Blair, Chou, and Imai (2018) <https://imai.fas.harvard.edu/research/files/listerror.pdf>. 
     This includes a Bayesian MCMC implementation of regression for the 
     standard and multiple sensitive item list experiment designs and a 
     random effects setup, a Bayesian MCMC hierarchical regression model 
