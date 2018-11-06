@@ -57,6 +57,15 @@
 #' "efficient" for two-step feasible and "cue" for continuously updating.
 #' Default is "efficient". Only relevant if \code{h} and \code{group} are
 #' specified.
+#' @param robust Robust NLS and ML models that ensure that the estimated 
+#' proportion of the sensitive trait is close to difference-in-means estimate.
+#' @param error ML models that model response error processes proposed in
+#' Blair, Chou, and Imai (2018). Select either \code{none} (standard ML), the
+#' default; \code{topcode}, which models an error process in which a random 
+#' subset of respondents chooses the maximal (ceiling) response value, 
+#' regardless of their truthful response; and \code{uniform}, which models an 
+#' error process in which a subset of respondents chooses their responses at 
+#' random.
 #' @param overdispersed Indicator for the presence of overdispersion. If
 #' \code{TRUE}, the beta-binomial model is used in the EM algorithm, if
 #' \code{FALSE} the binomial model is used. Not relevant for the \code{NLS} or
@@ -88,6 +97,10 @@
 #' \code{ml} model. The options are \code{lm}, \code{glm}, and \code{nls},
 #' which use OLS, logistic regression, and non-linear least squares to generate
 #' starting values, respectively. The default is \code{nls}.
+#' @param fit.sensitive Fit method for the sensitive item fit for maximum likelihood
+#' models. \code{glm} uses standard logistic regression, while
+#' \code{bayesglm} uses logistic regression with a weakly informative prior
+#' over the parameters.
 #' @param fit.nonsensitive Fit method for the non-sensitive item fit for the
 #' \code{nls} method and the starting values for the \code{ml} method for the
 #' \code{modified} design. Options are \code{glm} and \code{nls}, and the
@@ -303,6 +316,27 @@
 #' 
 #' summary(both.results)
 #' 
+#' # Response error models (Blair, Imai, and Chou 2018)
+#' 
+#' top.coded.error <- ictreg(
+#'    y ~ age + college + male + south, treat = "treat",
+#'    J = 3, data = race, method = "ml", error = "topcoded")
+#'    
+#' uniform.error <- ictreg(
+#'    y ~ age + college + male + south, treat = "treat",
+#'    J = 3, data = race, method = "ml", error = "topcoded")
+#'    
+#' # Robust models, which constrain sensitive item proportion
+#' #   to difference-in-means estimate
+#' 
+#' robust.ml <- ictreg(
+#'    y ~ age + college + male + south, treat = "treat",
+#'    J = 3, data = affirm, method = "ml", robust = TRUE)
+#'
+#' robust.nls <- ictreg(
+#'    y ~ age + college + male + south, treat = "treat",
+#'    J = 3, data = affirm, method = "nls", robust = TRUE)
+#'    
 #' }
 #' 
 ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = "ml", weights, 
@@ -2643,7 +2677,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
     }
 
-    vcov.twostep.std <- function(params, J, Tr, Y, X) {
+    vcov.twostep.std.onestep <- function(params, J, Tr, Y, X) {
     
         n  <- length(Y)
         k  <- length(params)/2
@@ -2678,7 +2712,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         par = start.par, J = J, Tr = t, Y = y.all, X = x.all, 
         control = list(maxit = 5000))
 
-      vcov <- vcov.twostep.std(params = optim.out$par, J = J, Tr = t, Y = y.all, X = x.all)
+      vcov <- vcov.twostep.std.onestep(params = optim.out$par, J = J, Tr = t, Y = y.all, X = x.all)
       rownames(vcov) <- colnames(vcov) <- rep(colnames(x.all), 2)
       k <- ncol(x.all)
 
@@ -3329,7 +3363,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     }
 
     # weight matrix
-    weightMatrix <- function(pars, J, y, treat, x) {
+    weightMatrix.nlsRobust <- function(pars, J, y, treat, x) {
        
       n <- length(y)
       n1 <- sum(treat)
@@ -3404,24 +3438,24 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       T  <- data[row.names(mf), treat]
       k  <- ncol(X)
 
-      cW0   <- weightMatrix(pars = par0, J = J, y = Y, treat = T, x = X)  
+      cW0   <- weightMatrix.nlsRobust(pars = par0, J = J, y = Y, treat = T, x = X)  
       step1 <- optim(par = par0, fn = NLSGMM, gr = NLSGMM.Grad,
         J = J, y = Y, treat = T, x = X, W = cW0, 
         method = "BFGS", control = list(maxit = 5000))
       par1  <- step1$par
-      cW1   <- weightMatrix(pars = par1, J = J, y = Y, treat = T, x = X)
+      cW1   <- weightMatrix.nlsRobust(pars = par1, J = J, y = Y, treat = T, x = X)
 
       step2 <- optim(par = par1, fn = NLSGMM, gr = NLSGMM.Grad,
         J = J, y= Y, treat = T, x = X, W = cW1, 
         method = "BFGS", control = list(maxit = 5000))
       par2  <- step2$par
-      cW2   <- weightMatrix(pars = par2, J = J, y = Y, treat = T, x = X)
+      cW2   <- weightMatrix.nlsRobust(pars = par2, J = J, y = Y, treat = T, x = X)
 
       step3 <- optim(par = par2, fn = NLSGMM, gr = NLSGMM.Grad,
         J = J, y= Y, treat = T, x = X, W = cW2, 
         method = "BFGS", control = list(maxit = 5000))
       par3  <- step3$par
-      cW3   <- weightMatrix(pars = par3, J = J, y = Y, treat = T, x = X)
+      cW3   <- weightMatrix.nlsRobust(pars = par3, J = J, y = Y, treat = T, x = X)
 
       vcov <- NLSGMM.var(par3, J = J, y= Y, treat = T, x = X, W = cW3)
 
@@ -3460,7 +3494,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
   # robust ml functionality 
   if (robust & method == "ml") { 
 
-    sweepCross <- function(M, x) t(M) %*% sweep(M, MAR = 1, STATS = x, "*")
+    sweepCross <- function(M, x) t(M) %*% sweep(M, MARGIN = 1, STATS = x, "*")
 
     loglik <- function(params, J, Y, treat, X) {
       
@@ -3584,7 +3618,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         dcG <- 1/n * rbind(
           cbind(sweepCross(M = X, x = tmp1), sweepCross(M = X, x = tmp3)), 
           cbind(t(sweepCross(M = X, x = tmp3)), sweepCross(M = X, x = tmp2)), 
-          cbind(t(colSums(X*c(tmp4))), matrix(0, nc = K/2, nr = 1))
+          cbind(t(colSums(X*c(tmp4))), matrix(0, ncol = K/2, nrow = 1))
         )
       } else {
         dcG <- 1/n * rbind(
@@ -3599,7 +3633,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
     }
 
-    weightMatrix <- function(params, J, Y, treat, X, robust) {
+    weightMatrix.MLRobust <- function(params, J, Y, treat, X, robust) {
       
       n     <- length(Y)
       n1    <- sum(treat == 1)
@@ -3700,7 +3734,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         dcG <- 1/n * rbind(
           cbind(sweepCross(M = X, x = tmp1), sweepCross(M = X, x = tmp3)), 
           cbind(t(sweepCross(M = X, x = tmp3)), sweepCross(M = X, x = tmp2)), 
-          cbind(t(colSums(X*c(tmp4))), matrix(0, nc = K/2, nr = 1))
+          cbind(t(colSums(X*c(tmp4))), matrix(0, ncol = K/2, nrow = 1))
         )
       } else {
         dcG <- 1/n * rbind(
@@ -3727,23 +3761,23 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       Tr <- data[row.names(mf), treat]
       k  <- ncol(X)
 
-      cW0   <- weightMatrix(params = par0, J = J, Y = Y, treat = Tr, X = X, robust = TRUE)  
+      cW0   <- weightMatrix.MLRobust(params = par0, J = J, Y = Y, treat = Tr, X = X, robust = TRUE)  
       step1 <- optim(par = par0, fn = MLGMM, gr = MLGMM.Grad, 
         robust = TRUE, J = J, Y = Y, treat = Tr, X = X, cW = cW0, 
         method = "BFGS", control = list(maxit = 5000))
       par1  <- step1$par
-      cW1   <- weightMatrix(params = par1, J = J, Y = Y, treat = Tr, X = X, robust = TRUE)
+      cW1   <- weightMatrix.MLRobust(params = par1, J = J, Y = Y, treat = Tr, X = X, robust = TRUE)
 
       step2 <- optim(par = par1, fn = MLGMM, gr = MLGMM.Grad, 
         robust = TRUE, J = J, Y = Y, treat = Tr, X = X, cW = cW1, 
         method = "BFGS", control = list(maxit = 5000))
       par2  <- step2$par
-      cW2   <- weightMatrix(params = par2, J = J, Y = Y, treat = Tr, X = X, robust = TRUE)
+      cW2   <- weightMatrix.MLRobust(params = par2, J = J, Y = Y, treat = Tr, X = X, robust = TRUE)
 
       step3 <- optim(par = par2, fn = MLGMM, gr = MLGMM.Grad, 
         robust = TRUE, J = J, Y = Y, treat = Tr, X = X, cW = cW2, 
         method = "BFGS", control = list(maxit = 5000))
-      cW3   <- weightMatrix(params = step3$par, J = J, Y = Y, treat = Tr, X = X, robust = TRUE)
+      cW3   <- weightMatrix.MLRobust(params = step3$par, J = J, Y = Y, treat = Tr, X = X, robust = TRUE)
 
       vcov <- MLGMM.var(params = step3$par, J = J, Y = Y, treat = Tr, X = X, robust = TRUE, cW = cW3)
 

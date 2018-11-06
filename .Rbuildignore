@@ -4,6 +4,7 @@
 LICENSE
 ^docs$
 _pkgdown.yml
-vignettes/published-list-experiments.Rmd
-vignettes/published-list-experiments.bib
+vignettes/list-experiment-examples.Rmd
+vignettes/list-experiment-examples.bib
 ^_pkgdown\.yml$
+^cran-comments\.md$

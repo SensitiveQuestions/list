@@ -2,15 +2,13 @@
 
 #' Hausman Specification Test for Two List Experiment Regression Fit Objects
 #'
-#' @param ml 
-#' @param nls 
+#' @param ml Maximum likelihood model fit, for example from ictreg(method = "nls")
+#' @param nls NLS model fit, for example from ictreg(method = "nls")
+#' @param abs Flag to override error when Hausman statistic is negative, which may indicate misspecification. Set to \code{FALSE} to override.
+#' @param psd Flag to override error when variance-covariance difference is non-positive semidefinite, suggesting misspecification.  Set to \code{TRUE} to override.
 #'
-#' @return
-#' @export
-#'
-#' @examples
+#' @return List containing Hausman statistic, p-value, and the degrees of freedom of the test.
 ict.hausman.test <- function(ml, nls, abs = FALSE, psd = FALSE){
-  require(MASS)
   if(length(coef(ml)) != length(coef(nls))){
     stop("Please provide two ictreg fit objects that used the same number of covariates.")
   }
@@ -28,7 +26,6 @@ ict.hausman.test <- function(ml, nls, abs = FALSE, psd = FALSE){
   return(structure(list(stat = stat, df = df, p = p), class = "ict.hausman.test"))
 }
 
-#' @export
 print.ict.hausman.test <- function(x, ...){
   
   cat("\nTest for List Experiment Model Misspecification\n\n")
