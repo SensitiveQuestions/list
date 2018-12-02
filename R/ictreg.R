@@ -2731,7 +2731,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     ####################
     # TOP CODING ERROR #
     ####################
-    obs.llik.top <- function(all.pars, formula, data, treat, J) {
+    obs.llik.top <- function(all.pars, formula, data, treat, J, fit.sensitive) {
 
       mf <- model.frame(formula, data)
       n  <- nrow(mf)
@@ -2756,8 +2756,14 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
           (1 - p0) * (logistic(Xb) * choose(J, Y-1) * logistic(Xg)^(Y-1) * (1 - logistic(Xg))^(J-Y+1) + 
             (1 - logistic(Xb)) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J-Y))), 
           log((1 - p0) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J-Y))))))
-     
-     sum(lliks) 
+      
+      if (fit.sensitive == "bayesglm") {
+        p.prior.sensitive <- sum(dcauchy(x = gamma, scale = rep(2.5, length(gamma)), log = TRUE))
+      } else {
+        p.prior.sensitive <- 0
+      }
+      
+      sum(lliks + p.prior.sensitive) 
 
     }
 
@@ -2863,9 +2869,17 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         gammaX <- rbind(X, X)
         gammaY <- rep(0:1, each = n)
 
-        gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
-          family = binomial("logit"), control = list(maxit = 5000))
-
+        if(fit.sensitive == "glm"){
+          gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
+                           family = binomial("logit"), control = list(maxit = 5000))
+        } else if (fit.sensitive == "bayesglm"){
+          gamma.fit <- bayesglm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
+                                family = binomial(logit), 
+                                control = glm.control(maxit = 5000), scaled = FALSE)
+        } else {
+          error("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
+        }
+        
       } else {
 
         betaX <- rbind(X[Tr == 1, ], X[Tr == 1, ])
@@ -2876,9 +2890,19 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
         gammaX <- rbind(X, X)
         gammaY <- rep(0:1, each = n)
+        
+        if(fit.sensitive == "glm"){
+          gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
+                           family = binomial("logit"), control = list(maxit = 5000))
+        } else if (fit.sensitive == "bayesglm"){
+          gamma.fit <- bayesglm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
+                                family = binomial(logit), 
+                                control = glm.control(maxit = 5000), scaled = FALSE)
+        } else {
+          error("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
+        }
 
-        gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
-          family = binomial("logit"), control = list(maxit = 5000))
+        
       }
 
       return(list(beta.fit = beta.fit, gamma.fit = gamma.fit, 
@@ -2886,7 +2910,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
     }
 
-    topcodeEM <- function(formula, data, treat, J, p0 = 0.05, params = NULL, eps = 1e-08, maxIter) {
+    topcodeEM <- function(formula, data, treat, J, p0 = 0.05, params = NULL, eps = 1e-08, maxIter, fit.sensitive) {
 
       mf <- model.frame(formula, data)
       n  <- nrow(mf)
@@ -2908,11 +2932,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       Estep0 <- topcodeE(formula, data, treat, J, p0, params)
       Mstep0 <- topcodeM(formula, data, treat, J, 
-        eta = Estep0$eta, yzeta = Estep0$yzeta, xi = Estep0$xi)
+        eta = Estep0$eta, yzeta = Estep0$yzeta, xi = Estep0$xi, 
+        fit.sensitive = fit.sensitive)
 
       Estep <- topcodeE(formula, data, treat, J, p0, params)
       Mstep <- topcodeM(formula, data, treat, J, 
-        eta = Estep$eta, yzeta = Estep$yzeta, xi = Estep$xi)
+        eta = Estep$eta, yzeta = Estep$yzeta, xi = Estep$xi,
+        fit.sensitive = fit.sensitive)
 
       par.holder <- c(Mstep$pars, Mstep$p0)
 
@@ -2924,14 +2950,14 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         par.holder <- c(Mstep$pars, Mstep$p0)
 
         obs.llik0 <- obs.llik.top(all.pars = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0))), 
-          formula, data, treat, J)
+          formula, data, treat, J, fit.sensitive = fit.sensitive)
 
         Estep <- topcodeE(formula, data, treat, J, p0 = Mstep$p0, params = Mstep$pars)
         Mstep <- topcodeM(formula, data, treat, J, 
-          eta = Estep$eta, yzeta = Estep$yzeta, xi = Estep$xi)
+          eta = Estep$eta, yzeta = Estep$yzeta, xi = Estep$xi, fit.sensitive = fit.sensitive)
 
         obs.llik1 <- obs.llik.top(all.pars = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0))), 
-          formula, data, treat, J)
+          formula, data, treat, J, fit.sensitive = fit.sensitive)
 
         if(signif(obs.llik1) < signif(obs.llik0)) warning("Observed-data likelihood is not monotonically increasing.")
         iteration <- iteration + 1
@@ -2943,6 +2969,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       optim.out <- optim(fn = obs.llik.top, hessian = TRUE, 
         par = c(Mstep$pars, log(Mstep$p0/(1 - Mstep$p0))), 
         formula = formula, data = data, treat = treat, J = J, 
+        fit.sensitive = fit.sensitive,
         control = list(fnscale = -1))
 
       vcov <- vcov.flip <- solve(-optim.out$hessian)
@@ -2969,7 +2996,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
     }
 
-    topcode.out <- topcodeEM(formula = formula, data = data, treat = treat, J = J, maxIter = maxIter)
+    topcode.out <- topcodeEM(formula = formula, data = data, treat = treat, J = J, maxIter = maxIter, fit.sensitive = fit.sensitive)
     topcode.par.treat <- topcode.out$par.treat
     topcode.par.control <- topcode.out$par.control
     topcode.vcov <- topcode.out$vcov
@@ -2990,7 +3017,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     ########################
     # UNIFORM CODING ERROR #
     ########################
-    obs.llik.uniform <- function(all.pars, formula, data, treat, J) {
+    obs.llik.uniform <- function(all.pars, formula, data, treat, J, fit.sensitive) {
 
       mf <- model.frame(formula, data)
       n  <- nrow(mf)
@@ -3018,7 +3045,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
             (1 - logistic(Xb)) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J-Y)) + p1/(J + 2)), 
         log((1 - p0) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J-Y) + p0/(J+1)))))
 
-      sum(lliks)
+      if (fit.sensitive == "bayesglm") {
+        p.prior.sensitive <- sum(dcauchy(x = gamma, scale = rep(2.5, length(gamma)), log = TRUE))
+      } else {
+        p.prior.sensitive <- 0
+      }
+      
+      sum(lliks + p.prior.sensitive) 
 
     }
 
@@ -3138,8 +3171,16 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         gammaX <- rbind(X, X)
         gammaY <- rep(0:1, each = n)
 
-        gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
-          family = binomial("logit"), control = list(maxit = 100))
+        if(fit.sensitive == "glm"){
+          gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
+                           family = binomial("logit"), control = list(maxit = 5000))
+        } else if (fit.sensitive == "bayesglm"){
+          gamma.fit <- bayesglm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
+                                family = binomial(logit), 
+                                control = glm.control(maxit = 5000), scaled = FALSE)
+        } else {
+          error("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
+        }
 
       # models with covariates
       } else {
@@ -3153,8 +3194,16 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         gammaX <- rbind(X, X)
         gammaY <- rep(0:1, each = n)
 
-        gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
-          family = binomial("logit"), control = list(maxit = 100))
+        if(fit.sensitive == "glm"){
+          gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
+                           family = binomial("logit"), control = list(maxit = 5000))
+        } else if (fit.sensitive == "bayesglm"){
+          gamma.fit <- bayesglm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
+                                family = binomial(logit), 
+                                control = glm.control(maxit = 5000), scaled = FALSE)
+        } else {
+          error("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
+        }
       }
 
       return(list(beta.fit = beta.fit, gamma.fit = gamma.fit, 
@@ -3164,7 +3213,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
 
     uniformEM <- function(formula, data, treat, J, p0 = 0.05, p1 = 0.05, params = NULL, eps = 1e-08, 
-      maxIter) {
+      maxIter, fit.sensitive) {
 
       mf <- model.frame(formula, data)
       n  <- nrow(mf)
@@ -3186,11 +3235,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       Estep0 <- uniformE(formula, data, treat, J, p0, p1, params)
       Mstep0 <- uniformM(formula, data, treat, J, 
-        eta = Estep0$eta, yzeta = Estep0$yzeta, xi = Estep0$xi)
+        eta = Estep0$eta, yzeta = Estep0$yzeta, xi = Estep0$xi,
+        fit.sensitive = fit.sensitive)
 
       Estep <- uniformE(formula, data, treat, J, p0, p1, params)
       Mstep <- uniformM(formula, data, treat, J, 
-        eta = Estep$eta, yzeta = Estep$yzeta, xi = Estep$xi)
+        eta = Estep$eta, yzeta = Estep$yzeta, xi = Estep$xi,
+        fit.sensitive = fit.sensitive)
 
       par.holder <- c(Mstep$pars, Mstep$p0, Mstep$p1)
 
@@ -3203,16 +3254,17 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
         obs.llik0 <- obs.llik.uniform(
           all.pars = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0)), log(Mstep$p1/(1-Mstep$p1))), 
-          formula, data, treat, J)
+          formula, data, treat, J, fit.sensitive = fit.sensitive)
 
         Estep <- uniformE(formula, data, treat, J, 
           p0 = Mstep$p0, p1 = Mstep$p1, params = Mstep$pars)
         Mstep <- uniformM(formula, data, treat, J, 
-          eta = Estep$eta, yzeta = Estep$yzeta, xi = Estep$xi)
+          eta = Estep$eta, yzeta = Estep$yzeta, xi = Estep$xi,
+          fit.sensitive = fit.sensitive)
 
         obs.llik1 <- obs.llik.uniform(
           all.pars = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0)), log(Mstep$p1/(1-Mstep$p1))), 
-          formula, data, treat, J)
+          formula, data, treat, J, fit.sensitive = fit.sensitive)
 
         if (signif(obs.llik1) < signif(obs.llik0)) warning("Observed-data likelihood is not monotonically increasing.")
         iteration <- iteration + 1
@@ -3224,6 +3276,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       optim.out <- optim(fn = obs.llik.uniform, hessian = TRUE, 
         par = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0)), log(Mstep$p1/(1-Mstep$p1))), 
         formula = formula, data = data, treat = treat, J = J, 
+        fit.sensitive = fit.sensitive,
         control = list(fnscale = -1))
 
       vcov <- vcov.flip <- solve(-optim.out$hessian)
@@ -3255,7 +3308,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
     }
 
-    uniform.out <- uniformEM(formula = formula, data = data, treat = treat, J = J, maxIter = maxIter)
+    uniform.out <- uniformEM(formula = formula, data = data, treat = treat, J = J, maxIter = maxIter, fit.sensitive = fit.sensitive)
     uniform.par.treat <- uniform.out$par.treat
     uniform.par.control <- uniform.out$par.control
     uniform.vcov <- uniform.out$vcov
