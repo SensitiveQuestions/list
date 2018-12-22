@@ -911,7 +911,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
             }
             
             if (fit.sensitive == "bayesglm") {
-              p.prior.sensitive <- sum(dcauchy(x = coef.g, scale = rep(2.5, length(coef.g)), log = TRUE))
+              p.prior.sensitive <- sum(dcauchy(x = coef.g, scale = bayesglm_priors(gX), log = TRUE))
             } else {
               p.prior.sensitive <- 0
             }
@@ -969,7 +969,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
             }
             
             if (fit.sensitive == "bayesglm") {
-              p.prior.sensitive <- sum(dcauchy(x = coef.g, scale = rep(2.5, length(coef.g)), log = TRUE))
+              p.prior.sensitive <- sum(dcauchy(x = coef.g, scale = bayesglm_priors(gX), log = TRUE))
             } else {
               p.prior.sensitive <- 0
             }
@@ -1732,14 +1732,14 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
           
           if (ceiling.fit=="bayesglm" & ceiling == TRUE) {
             p.prior.ceiling <- sum(dcauchy(x = coef.qu,
-                                           scale = rep(2.5, length(coef.qu)), log = TRUE))
+                                           scale = bayesglm_priors(quX), log = TRUE))
           } else {
             p.prior.ceiling <- 0
           }
           
           if (floor.fit=="bayesglm" & floor == TRUE) {
             p.prior.floor <- sum(dcauchy(x = coef.ql,
-                                         scale = rep(2.5, length(coef.ql)), log = TRUE))
+                                         scale = bayesglm_priors(qlX), log = TRUE))
           } else {
             p.prior.floor <- 0
           }
@@ -1814,14 +1814,14 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
           
           if(ceiling.fit=="bayesglm" & ceiling==TRUE) {
             p.prior.ceiling <- sum(dcauchy(x = coef.qu,
-                                         scale = rep(2.5, length(coef.qu)), log = TRUE))
+                                         scale = bayesglm_priors(quX), log = TRUE))
           } else {
             p.prior.ceiling <- 0
           }
           
           if(floor.fit=="bayesglm" & floor==TRUE) {
             p.prior.floor <- sum(dcauchy(x = coef.ql,
-                                         scale = rep(2.5, length(coef.ql)), log = TRUE))
+                                         scale = bayesglm_priors(qlX), log = TRUE))
           } else {
             p.prior.floor <- 0
           }
@@ -2232,14 +2232,14 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         
         if(ceiling.fit=="bayesglm" & ceiling==TRUE) {
           p.prior.ceiling <- sum(dcauchy(x = coef(qufit),
-                                         scale = rep(2.5, length(coef(qufit))), log = TRUE))
+                                         scale = bayesglm_priors_from_fit(qufit), log = TRUE))
         } else {
           p.prior.ceiling <- 0
         }
         
         if(floor.fit=="bayesglm" & floor==TRUE) {
           p.prior.floor <- sum(dcauchy(x = coef(qlfit),
-                                       scale = rep(2.5, length(coef(qlfit))), log = TRUE))
+                                       scale = bayesglm_priors_from_fit(qlfit), log = TRUE))
         } else {
           p.prior.floor <- 0
         }
@@ -2758,7 +2758,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
           log((1 - p0) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J-Y))))))
       
       if (fit.sensitive == "bayesglm") {
-        p.prior.sensitive <- sum(dcauchy(x = gamma, scale = rep(2.5, length(gamma)), log = TRUE))
+        p.prior.sensitive <- sum(dcauchy(x = gamma, scale = bayesglm_priors(X), log = TRUE))
       } else {
         p.prior.sensitive <- 0
       }
@@ -3046,7 +3046,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         log((1 - p0) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J-Y) + p0/(J+1)))))
 
       if (fit.sensitive == "bayesglm") {
-        p.prior.sensitive <- sum(dcauchy(x = gamma, scale = rep(2.5, length(gamma)), log = TRUE))
+        p.prior.sensitive <- sum(dcauchy(x = gamma, scale = bayesglm_priors(X), log = TRUE))
       } else {
         p.prior.sensitive <- 0
       }
@@ -5835,4 +5835,25 @@ print.summary.ictreg <- function(x, ...){
 
   invisible(x)
   
+}
+
+
+# utility functions for calculating the scale parameters (priors) used in bayesglm models
+# intercept: 10; other coefficients: 2.5
+
+is_intercept <- function(data){
+  unname(apply(data, 2, function(x) length(unique(x))==1 & x[1] == 1))
+}
+
+bayesglm_priors <- function(data){
+  int <- is_intercept(data)
+  if(sum(int) > 1) stop("More than one intercept found in data.")
+  ifelse(int == 1, 10, 2.5)
+}
+
+bayesglm_priors_from_fit <- function(fit) {
+  has_intercept <- attr(fit$terms, "intercept")
+  coef_length <- length(coef(fit))
+  intercept_scale <- if(has_intercept == TRUE) 10 else NULL
+  c(intercept_scale, rep(2.5, coef_length - has_intercept))
 }
