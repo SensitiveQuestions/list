@@ -2848,7 +2848,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       
     }
 
-    topcodeM <- function(formula, data, treat, J, xi, eta, yzeta) {
+    topcodeM <- function(formula, data, treat, J, xi, eta, yzeta, fit.sensitive) {
 
       mf <- model.frame(formula, data)
       n  <- nrow(mf)
