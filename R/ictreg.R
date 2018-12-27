@@ -1058,7 +1058,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                                         weights = wrep * wtrep, family = binomial(logit),
                                         start = par, control = glm.control(maxit = maxIter), scaled = F)
             } else {
-              error("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
+              stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
             }
             
             return(fit)
@@ -2877,7 +2877,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                                 family = binomial(logit), 
                                 control = glm.control(maxit = 5000), scaled = FALSE)
         } else {
-          error("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
+          stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
         }
         
       } else {
@@ -2899,7 +2899,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                                 family = binomial(logit), 
                                 control = glm.control(maxit = 5000), scaled = FALSE)
         } else {
-          error("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
+          stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
         }
 
         
@@ -3179,7 +3179,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                                 family = binomial(logit), 
                                 control = glm.control(maxit = 5000), scaled = FALSE)
         } else {
-          error("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
+          stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
         }
 
       # models with covariates
@@ -3202,7 +3202,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                                 family = binomial(logit), 
                                 control = glm.control(maxit = 5000), scaled = FALSE)
         } else {
-          error("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
+          stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
         }
       }
 
