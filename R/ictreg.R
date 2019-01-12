@@ -2992,7 +2992,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         par = c(Mstep$pars, log(Mstep$p0/(1 - Mstep$p0))), 
         formula = formula, data = data, treat = treat, J = J, 
         fit.sensitive = fit.sensitive,
-        control = list(fnscale = -1))
+        control = list(fnscale = -1, maxit = 0))
 
       vcov <- vcov.flip <- solve(-optim.out$hessian)
       std.errors <- sqrt(diag(vcov))
@@ -3321,7 +3321,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         par = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0)), log(Mstep$p1/(1-Mstep$p1))), 
         formula = formula, data = data, treat = treat, J = J, 
         fit.sensitive = fit.sensitive,
-        control = list(fnscale = -1))
+        control = list(fnscale = -1, maxit = 0))
 
       vcov <- vcov.flip <- solve(-optim.out$hessian)
       std.errors <- sqrt(diag(vcov))
