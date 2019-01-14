@@ -2766,6 +2766,65 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       sum(lliks + p.prior.sensitive) 
 
     }
+    
+    gr.top <- function(all.pars, formula, data, treat, J, fit.sensitive) {
+      
+      mf <- model.frame(formula, data)
+      n  <- nrow(mf)
+      
+      Y  <- model.response(mf)
+      X  <- model.matrix(formula, data)
+      Tr <- data[row.names(mf), treat]
+      k  <- ncol(X)
+      beta <- all.pars[1:k]
+      gamma <- all.pars[(k+1):(2*k)]
+      
+      log.odds <- all.pars[2*k + 1]
+      p0 <- logistic(log.odds)
+      
+      Xb <- X %*% beta
+      Xg <- X %*% gamma
+      
+      logistic <- function(x) exp(x)/(1 + exp(x))
+      dlogistic <- function(x) exp(x)/(1 + exp(x))^2
+      binomial <- function(y) {
+        dbinom(y, J, logistic(Xg))
+      }
+      binomial_deriv <- function(y) {
+        choose(J, y) * dlogistic(Xg) * (1 - logistic(Xg))^(J - y - 1) * logistic(Xg)^(y - 1) * (1 - J * dlogistic(Xg))
+      }
+      
+      treated <- Tr == 1
+      not_treated <- Tr == 0
+      
+      # treatment group wrt beta (NxK matrix)
+      gradient_treatment_beta  <- ifelse(treated & Y == 0, -dlogistic(Xb)/(1-logistic(Xb)), 
+                                         ifelse(treated & Y %in% 1:J, (binomial(Y-1) - binomial(Y)) * dlogistic(Xb)/(logistic(Xb) * binomial(Y-1) + (1 - logistic(Xb)) * binomial(Y)),
+                                                ifelse(treated & Y == J + 1, (1-p0) * dlogistic(Xg)^J * logistic(Xb)/(p0 + (1-p0) * logistic(Xb) * logistic(Xg)^J), 0))) * X
+      
+      # treatment group wrt gamma (NxK matrix)
+      gradient_treatment_gamma <- ifelse(treated & Y == 0, - J * dlogistic(Xb)/(1 - logistic(Xb)), 
+                                         ifelse(treated & Y %in% 1:J, (logistic(Xb) * binomial_deriv(Y-1) + (1 - logistic(Xb)) * binomial_deriv(Y))/(logistic(Xb) * binomial(Y-1) + (1 - logistic(Xb)) * binomial(Y)), 
+                                                ifelse(treated & Y == J + 1, (1-p0) * logistic(Xb) * J * logistic(Xg)^(J-1) * dlogistic(Xg)/(p0 + (1-p0) * logistic(Xb) * logistic(Xg)^J), 0))) * X
+      
+      # treatment group wrt p0 (N vector)
+      gradient_treatment_p0 <- ifelse(treated & Y %in% 0:J, -1/(1-p0), 
+                                      ifelse(treated & Y == J + 1, (1 - logistic(Xb) * logistic(Xg)^J)/(p0 + (1-p0) * logistic(Xb) * logistic(Xg)^J), 0))
+      
+      
+      # control group wrt gamma (NxK matrix)
+      gradient_control_gamma <- ifelse(not_treated & Y == 0, - J * dlogistic(Xg)/(1 - logistic(Xg)), 
+                                       ifelse(not_treated & Y %in% 1:(J-1), (Y/logistic(Xg) - (J-Y)/(1 - logistic(Xg))) * dlogistic(Xg),
+                                              ifelse(not_treated & Y == J, J * logistic(Xg)^(J-1)/(p0 + (1-p0) * logistic(Xg)^J) * dlogistic(Xg), 0))) * X
+      
+      # control group wrt p0 (N vector)
+      gradient_control_p0 <- ifelse(not_treated & Y %in% 0:(J-1), -1/(1-p0), 
+                                    ifelse(not_treated & Y == J, (1 - logistic(Xg)^J)/(p0 + (1-p0) * logistic(Xg)^J), 0))
+      
+      # K row vector
+      c(colSums(gradient_treatment_beta), colSums(gradient_treatment_gamma + gradient_control_gamma), sum(gradient_treatment_p0 + gradient_control_p0))/n
+      
+    }
 
     topcodeE <- function(formula, data, treat, J, p0, params) {
       
@@ -2988,13 +3047,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       if (iteration == maxIter) warning("Maximum number of iterations reached.")
 
-      optim.out <- optim(fn = obs.llik.top, hessian = TRUE, 
+      optim.out <- optim(fn = obs.llik.top, hessian = TRUE, method = "BFGS", gr = gr.top,
         par = c(Mstep$pars, log(Mstep$p0/(1 - Mstep$p0))), 
         formula = formula, data = data, treat = treat, J = J, 
         fit.sensitive = fit.sensitive,
-        control = list(fnscale = -1, maxit = 0))
+        control = list(maxit = 0))
 
-      vcov <- vcov.flip <- solve(-optim.out$hessian)
+      vcov <- vcov.flip <- solve(-optim.out$hessian, tol = 1e-20)
       std.errors <- sqrt(diag(vcov))
       vcov.flip[(1:k), (1:k)] <- vcov[(k+1):(2*k), (k+1):(2*k)] 
       vcov.flip[(k+1):(2*k), (k+1):(2*k)] <- vcov[(1:k), (1:k)]
@@ -3076,7 +3135,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       sum(lliks + p.prior.sensitive) 
 
     }
-
+    
     uniformE <- function(formula, data, treat, J, p0, p1, params) {
 
       mf <- model.frame(formula, data)
@@ -3317,13 +3376,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       if (iteration == maxIter) warning("Maximum number of iterations reached.")
 
-      optim.out <- optim(fn = obs.llik.uniform, hessian = TRUE, 
+      optim.out <- optim(fn = obs.llik.uniform, hessian = TRUE, method = "BFGS", #gr = gr.uniform,
         par = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0)), log(Mstep$p1/(1-Mstep$p1))), 
         formula = formula, data = data, treat = treat, J = J, 
         fit.sensitive = fit.sensitive,
-        control = list(fnscale = -1, maxit = 0))
+        control = list(maxit = 0))
 
-      vcov <- vcov.flip <- solve(-optim.out$hessian)
+      vcov <- vcov.flip <- solve(-optim.out$hessian, tol = 1e-20)
       std.errors <- sqrt(diag(vcov))
       vcov.flip[(1:k), (1:k)] <- vcov[(k+1):(2*k), (k+1):(2*k)] 
       vcov.flip[(k+1):(2*k), (k+1):(2*k)] <- vcov[(1:k), (1:k)]
