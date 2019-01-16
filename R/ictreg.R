@@ -2787,9 +2787,11 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       
       logistic <- function(x) exp(x)/(1 + exp(x))
       dlogistic <- function(x) exp(x)/(1 + exp(x))^2
+      
       binomial <- function(y) {
         dbinom(y, J, logistic(Xg))
       }
+      
       binomial_deriv <- function(y) {
         choose(J, y) * dlogistic(Xg) * (1 - logistic(Xg))^(J - y - 1) * logistic(Xg)^(y - 1) * (1 - J * dlogistic(Xg))
       }
@@ -2800,7 +2802,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       # treatment group wrt beta (NxK matrix)
       gradient_treatment_beta  <- ifelse(treated & Y == 0, -dlogistic(Xb)/(1-logistic(Xb)), 
                                          ifelse(treated & Y %in% 1:J, (binomial(Y-1) - binomial(Y)) * dlogistic(Xb)/(logistic(Xb) * binomial(Y-1) + (1 - logistic(Xb)) * binomial(Y)),
-                                                ifelse(treated & Y == J + 1, (1-p0) * dlogistic(Xg)^J * logistic(Xb)/(p0 + (1-p0) * logistic(Xb) * logistic(Xg)^J), 0))) * X
+                                                ifelse(treated & Y == J + 1, (1-p0) * logistic(Xg)^J * dlogistic(Xb)/(p0 + (1-p0) * logistic(Xb) * logistic(Xg)^J), 0))) * X
       
       # treatment group wrt gamma (NxK matrix)
       gradient_treatment_gamma <- ifelse(treated & Y == 0, - J * dlogistic(Xb)/(1 - logistic(Xb)), 
@@ -2813,9 +2815,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       
       
       # control group wrt gamma (NxK matrix)
-      gradient_control_gamma <- ifelse(not_treated & Y == 0, - J * dlogistic(Xg)/(1 - logistic(Xg)), 
-                                       ifelse(not_treated & Y %in% 1:(J-1), (Y/logistic(Xg) - (J-Y)/(1 - logistic(Xg))) * dlogistic(Xg),
-                                              ifelse(not_treated & Y == J, J * logistic(Xg)^(J-1)/(p0 + (1-p0) * logistic(Xg)^J) * dlogistic(Xg), 0))) * X
+      gradient_control_gamma <- ifelse(not_treated & Y %in% 0:(J-1), (Y/logistic(Xg) - (J-Y)/(1 - logistic(Xg))) * dlogistic(Xg),
+                                       ifelse(not_treated & Y == J, J * logistic(Xg)^(J-1)/(p0 + (1-p0) * logistic(Xg)^J) * dlogistic(Xg), 0)) * X
       
       # control group wrt p0 (N vector)
       gradient_control_p0 <- ifelse(not_treated & Y %in% 0:(J-1), -1/(1-p0), 
