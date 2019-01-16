@@ -2768,7 +2768,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
     }
     
     gr.top <- function(all.pars, formula, data, treat, J, fit.sensitive) {
-      
+
       mf <- model.frame(formula, data)
       n  <- nrow(mf)
       
@@ -2789,11 +2789,15 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       dlogistic <- function(x) exp(x)/(1 + exp(x))^2
       
       binomial <- function(y) {
-        dbinom(y, J, logistic(Xg))
+        dbinom(x = y, size = J, prob = logistic(Xg))
       }
       
       binomial_deriv <- function(y) {
-        choose(J, y) * dlogistic(Xg) * (1 - logistic(Xg))^(J - y - 1) * logistic(Xg)^(y - 1) * (1 - J * dlogistic(Xg))
+        choose(J, y) * dlogistic(Xg) * (1 - logistic(Xg))^(J - y - 1) * logistic(Xg)^(y - 1) * (y - J * logistic(Xg))
+      }
+      
+      log_dcauchy_deriv <- function(coef, scale) {
+        -2 * coef/(scale^2 + coef^2)
       }
       
       treated <- Tr == 1
@@ -2803,6 +2807,9 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       gradient_treatment_beta  <- ifelse(treated & Y == 0, -dlogistic(Xb)/(1-logistic(Xb)), 
                                          ifelse(treated & Y %in% 1:J, (binomial(Y-1) - binomial(Y)) * dlogistic(Xb)/(logistic(Xb) * binomial(Y-1) + (1 - logistic(Xb)) * binomial(Y)),
                                                 ifelse(treated & Y == J + 1, (1-p0) * logistic(Xg)^J * dlogistic(Xb)/(p0 + (1-p0) * logistic(Xb) * logistic(Xg)^J), 0))) * X
+      
+      # cauchy wrt beta
+      gradient_cauchy_beta <- log_dcauchy_deriv(beta, bayesglm_priors(X))
       
       # treatment group wrt gamma (NxK matrix)
       gradient_treatment_gamma <- ifelse(treated & Y == 0, - J * dlogistic(Xb)/(1 - logistic(Xb)), 
@@ -2823,7 +2830,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                                     ifelse(not_treated & Y == J, (1 - logistic(Xg)^J)/(p0 + (1-p0) * logistic(Xg)^J), 0))
       
       # K row vector
-      c(colSums(gradient_treatment_beta), colSums(gradient_treatment_gamma + gradient_control_gamma), sum(gradient_treatment_p0 + gradient_control_p0))/n
+      c(colSums(gradient_treatment_beta) + gradient_cauchy_beta, colSums(gradient_treatment_gamma + gradient_control_gamma), sum(gradient_treatment_p0 + gradient_control_p0))
       
     }
 
@@ -3052,7 +3059,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         par = c(Mstep$pars, log(Mstep$p0/(1 - Mstep$p0))), 
         formula = formula, data = data, treat = treat, J = J, 
         fit.sensitive = fit.sensitive,
-        control = list(maxit = 0))
+        control = list(fnscale = -1, maxit = 0))
 
       vcov <- vcov.flip <- solve(-optim.out$hessian, tol = 1e-20)
       std.errors <- sqrt(diag(vcov))
