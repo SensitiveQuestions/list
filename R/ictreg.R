@@ -2814,11 +2814,11 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       # treatment group wrt gamma (NxK matrix)
       gradient_treatment_gamma <- ifelse(treated & Y == 0, - J * dlogistic(Xb)/(1 - logistic(Xb)), 
                                          ifelse(treated & Y %in% 1:J, (logistic(Xb) * binomial_deriv(Y-1) + (1 - logistic(Xb)) * binomial_deriv(Y))/(logistic(Xb) * binomial(Y-1) + (1 - logistic(Xb)) * binomial(Y)), 
-                                                ifelse(treated & Y == J + 1, (1-p0) * logistic(Xb) * J * logistic(Xg)^(J-1) * dlogistic(Xg)/(p0 + (1-p0) * logistic(Xb) * logistic(Xg)^J), 0))) * X
+                                                ifelse(treated & Y == (J + 1), (1-p0) * logistic(Xb) * J * logistic(Xg)^(J-1) * dlogistic(Xg)/(p0 + (1-p0) * logistic(Xb) * logistic(Xg)^J), 0))) * X
       
       # treatment group wrt p0 (N vector)
-      gradient_treatment_p0 <- ifelse(treated & Y %in% 0:J, -1/(1-p0), 
-                                      ifelse(treated & Y == J + 1, (1 - logistic(Xb) * logistic(Xg)^J)/(p0 + (1-p0) * logistic(Xb) * logistic(Xg)^J), 0))
+      gradient_treatment_p0 <- ifelse(treated & Y %in% 0:J, -1/(1-p0) * dlogistic(log.odds), 
+                                      ifelse(treated & Y == (J + 1), (1 - logistic(Xb) * logistic(Xg)^J)/(p0 + (1-p0) * logistic(Xb) * logistic(Xg)^J) * dlogistic(log.odds), 0))
       
       
       # control group wrt gamma (NxK matrix)
@@ -2826,8 +2826,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                                        ifelse(not_treated & Y == J, J * logistic(Xg)^(J-1)/(p0 + (1-p0) * logistic(Xg)^J) * dlogistic(Xg), 0)) * X
       
       # control group wrt p0 (N vector)
-      gradient_control_p0 <- ifelse(not_treated & Y %in% 0:(J-1), -1/(1-p0), 
-                                    ifelse(not_treated & Y == J, (1 - logistic(Xg)^J)/(p0 + (1-p0) * logistic(Xg)^J), 0))
+      gradient_control_p0 <- ifelse(not_treated & Y %in% 0:(J-1), -1/(1-p0) * dlogistic(log.odds), 
+                                    ifelse(not_treated & Y == J, (1 - logistic(Xg)^J)/(p0 + (1-p0) * logistic(Xg)^J) * dlogistic(log.odds), 0))
       
       # K row vector
       c(colSums(gradient_treatment_beta) + gradient_cauchy_beta, colSums(gradient_treatment_gamma + gradient_control_gamma), sum(gradient_treatment_p0 + gradient_control_p0))
