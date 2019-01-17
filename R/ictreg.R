@@ -3055,6 +3055,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       if (iteration == maxIter) warning("Maximum number of iterations reached.")
 
+      # browser()
       optim.out <- optim(fn = obs.llik.top, hessian = TRUE, method = "BFGS", gr = gr.top,
         par = c(Mstep$pars, log(Mstep$p0/(1 - Mstep$p0))), 
         formula = formula, data = data, treat = treat, J = J, 
