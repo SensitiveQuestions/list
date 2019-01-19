@@ -3055,7 +3055,6 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       if (iteration == maxIter) warning("Maximum number of iterations reached.")
 
-      # browser()
       optim.out <- optim(fn = obs.llik.top, hessian = TRUE, method = "BFGS", gr = gr.top,
         par = c(Mstep$pars, log(Mstep$p0/(1 - Mstep$p0))), 
         formula = formula, data = data, treat = treat, J = J, 
@@ -3143,6 +3142,111 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       
       sum(lliks + p.prior.sensitive) 
 
+    }
+    
+    gr.uniform <- function(all.pars, formula, data, treat, J, fit.sensitive) {
+      
+      mf <- model.frame(formula, data)
+      n  <- nrow(mf)
+      
+      Y  <- model.response(mf)
+      X  <- model.matrix(formula, data)
+      Tr <- data[row.names(mf), treat]
+      k  <- ncol(X)
+      
+      beta <- all.pars[1:k]
+      gamma <- all.pars[(k+1):(2*k)]
+      
+      Xb <- X %*% beta
+      Xg <- X %*% gamma
+      
+      p0 <- logistic(all.pars[2*k + 1])
+      p1 <- logistic(all.pars[2*k + 2])
+      
+      logistic <- function(x) exp(x)/(1 + exp(x))
+      dlogistic <- function(x) exp(x)/(1 + exp(x))^2
+      
+      binomial <- function(y) {
+        dbinom(x = y, size = J, prob = logistic(Xg))
+      }
+      
+      binomial_deriv <- function(y) {
+        choose(J, y) * dlogistic(Xg) * (1 - logistic(Xg))^(J - y - 1) * logistic(Xg)^(y - 1) * (y - J * logistic(Xg))
+      }
+      
+      log_dcauchy_deriv <- function(coef, scale) {
+        -2 * coef/(scale^2 + coef^2)
+      }
+      
+      treated <- Tr == 1
+      not_treated <- Tr == 0
+      
+      # treatment group wrt beta (NxK matrix)
+      gradient_treatment_beta  <- 
+        ifelse(treated & Y == 0, 
+               - ((1-p1) * (1 - logistic(Xg))^J * dlogistic(Xb)) / 
+                 ( p1/(J+2) + (1-p1) * (1-logistic(Xb)) * (1-logistic(Xg))^J ),
+               ifelse(treated & Y %in% 1:J, 
+                      ((1 - p1) * ( binomial(Y - 1) - binomial(Y) * dlogistic(Xb))) / 
+                        ( p1/(J + 2) + (1 - p1) *  logistic(Xb) * binomial(Y - 1) + (1 - logistic(Xb)) * binomial(Y) ),
+                      ifelse(treated & Y == J + 1, 
+                             ((1 - p1) * logistic(Xg)^J * dlogistic(Xb))/
+                               ( p1 / (J + 2) + (1 - p1) * logistic(Xb) * logistic(Xg)^J ),
+                             0
+                      )
+               )
+        ) * X
+      
+      # cauchy wrt beta
+      gradient_cauchy_beta <- log_dcauchy_deriv(beta, bayesglm_priors(X))
+      
+      # treatment group wrt gamma (NxK matrix)
+      gradient_treatment_gamma <- 
+        ifelse(treated & Y == 0, 
+               - ((1 - p1) * (1 - logistic(Xb)) * J * (1 - logistic(Xg))^(J - 1) * dlogistic(Xg)) / 
+                 ( (p1 / (J + 2)) + (1 - p1) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J ),
+               
+               ifelse(treated & Y %in% 1:J, 
+                      ((1 - p1) * (logistic(Xb) * binomial_deriv(Y - 1) - (1 - logistic(Xb)) * binomial_deriv(Y))) / 
+                        ( (p1 / (J + 2)) + (1 - p1) * ( logistic(Xb) * binomial(Y - 1) + (1 - logistic(Xb)) * binomial(Y)) ),
+                      
+                      ifelse(treated & Y == J + 1, 
+                             ((1-p1) * logistic(Xb) * J * logistic(Xg)^(J-1) * dlogistic(Xg)) /
+                               (p1 / (J + 2) + (1 - p1) * logistic(Xb) * logistic(Xg)^J), 
+                             0
+                      )
+               )
+        ) * X
+      
+      # treatment group wrt p0 (N vector)
+      gradient_treatment_p0 <- 
+        ifelse(treat & Y == 0, 
+               ( 1/(J + 2) - (1 - logistic(Xb)) * (1 - logistic(Xg))^J) / 
+                 ( p1/(J + 2) + (1 - p1) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J ),
+               ifelse(treated & Y %in% 0:J, 
+                      ( 1/(J + 2) - ( logistic(Xb) * binomial(Y - 1) + (1 - logistic(Xb)) * binomial(Y) ) ) / 
+                        ( p1/(J + 2) + (1 - p1) * ( logistic(Xb) * binomial(Y - 1) + (1 - logistic(Xb)) * binomial(Y) ) ), 
+                      ifelse(treated & Y == J + 1, 
+                             ( 1/(J + 2) - logistic(Xb) * logistic(Xg)^J ) / 
+                               ( p1 / (J + 2) + (1 - p1) * logistic(Xb) * logistic(Xg)^J ), 
+                             0
+                      )
+               )
+        ) 
+      
+      # control group wrt gamma (NxK matrix)
+      gradient_control_gamma <- 
+        (( p0 * binomial_deriv(Y) ) / 
+           ( p0/(J + 1) + p0 * binomial(Y) )) * X
+      
+      # control group wrt p0 (N vector)
+      gradient_control_p0 <- 
+        (( p0 * binomial_deriv(Y) ) / 
+           ( p0 / (J + 1) + p0 * binomial(Y)) ) * X
+      
+      # K row vector
+      c(colSums(gradient_treatment_beta) + gradient_cauchy_beta, colSums(gradient_treatment_gamma + gradient_control_gamma), sum(gradient_treatment_p0 + gradient_control_p0))
+      
     }
     
     uniformE <- function(formula, data, treat, J, p0, p1, params) {
@@ -3385,11 +3489,11 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       if (iteration == maxIter) warning("Maximum number of iterations reached.")
 
-      optim.out <- optim(fn = obs.llik.uniform, hessian = TRUE, method = "BFGS", #gr = gr.uniform,
+      optim.out <- optim(fn = obs.llik.uniform, hessian = TRUE, method = "BFGS", gr = gr.uniform,
         par = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0)), log(Mstep$p1/(1-Mstep$p1))), 
         formula = formula, data = data, treat = treat, J = J, 
         fit.sensitive = fit.sensitive,
-        control = list(maxit = 0))
+        control = list(fnscale = -1, maxit = 0))
 
       vcov <- vcov.flip <- solve(-optim.out$hessian, tol = 1e-20)
       std.errors <- sqrt(diag(vcov))
