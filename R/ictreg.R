@@ -3181,6 +3181,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       treated <- Tr == 1
       not_treated <- Tr == 0
       
+      # browser()
+      
       # treatment group wrt beta (NxK matrix)
       gradient_treatment_beta  <- 
         ifelse(treated & Y == 0, 
@@ -3220,7 +3222,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       
       # treatment group wrt p0 (N vector)
       gradient_treatment_p0 <- 
-        ifelse(treat & Y == 0, 
+        ifelse(treated & Y == 0, 
                ( 1/(J + 2) - (1 - logistic(Xb)) * (1 - logistic(Xg))^J) / 
                  ( p1/(J + 2) + (1 - p1) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J ),
                ifelse(treated & Y %in% 0:J, 
