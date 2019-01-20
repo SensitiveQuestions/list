@@ -3181,16 +3181,15 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       treated <- Tr == 1
       not_treated <- Tr == 0
       
-      # browser()
-      
       # treatment group wrt beta (NxK matrix)
       gradient_treatment_beta  <- 
         ifelse(treated & Y == 0, 
                - ((1-p1) * (1 - logistic(Xg))^J * dlogistic(Xb)) / 
                  ( p1/(J+2) + (1-p1) * (1-logistic(Xb)) * (1-logistic(Xg))^J ),
                ifelse(treated & Y %in% 1:J, 
-                      ((1 - p1) * ( binomial(Y - 1) - binomial(Y) * dlogistic(Xb))) / 
+                      ((1 - p1) * ( binomial(Y - 1) - binomial(Y)) * dlogistic(Xb)) / 
                         ( p1/(J + 2) + (1 - p1) *  logistic(Xb) * binomial(Y - 1) + (1 - logistic(Xb)) * binomial(Y) ),
+                      
                       ifelse(treated & Y == J + 1, 
                              ((1 - p1) * logistic(Xg)^J * dlogistic(Xb))/
                                ( p1 / (J + 2) + (1 - p1) * logistic(Xb) * logistic(Xg)^J ),
@@ -3206,10 +3205,10 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       gradient_treatment_gamma <- 
         ifelse(treated & Y == 0, 
                - ((1 - p1) * (1 - logistic(Xb)) * J * (1 - logistic(Xg))^(J - 1) * dlogistic(Xg)) / 
-                 ( (p1 / (J + 2)) + (1 - p1) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J ),
+                 ( (p1 / (J + 2)) + (1 - p1) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J ), 
                
                ifelse(treated & Y %in% 1:J, 
-                      ((1 - p1) * (logistic(Xb) * binomial_deriv(Y - 1) - (1 - logistic(Xb)) * binomial_deriv(Y))) / 
+                      ((1 - p1) * (logistic(Xb) * binomial_deriv(Y - 1) + (1 - logistic(Xb)) * binomial_deriv(Y))) / 
                         ( (p1 / (J + 2)) + (1 - p1) * ( logistic(Xb) * binomial(Y - 1) + (1 - logistic(Xb)) * binomial(Y)) ),
                       
                       ifelse(treated & Y == J + 1, 
@@ -3220,12 +3219,12 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                )
         ) * X
       
-      # treatment group wrt p0 (N vector)
-      gradient_treatment_p0 <- 
+      # treatment group wrt p1 (N vector)
+      gradient_treatment_p1 <- 
         ifelse(treated & Y == 0, 
                ( 1/(J + 2) - (1 - logistic(Xb)) * (1 - logistic(Xg))^J) / 
                  ( p1/(J + 2) + (1 - p1) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J ),
-               ifelse(treated & Y %in% 0:J, 
+               ifelse(treated & Y %in% 1:J, 
                       ( 1/(J + 2) - ( logistic(Xb) * binomial(Y - 1) + (1 - logistic(Xb)) * binomial(Y) ) ) / 
                         ( p1/(J + 2) + (1 - p1) * ( logistic(Xb) * binomial(Y - 1) + (1 - logistic(Xb)) * binomial(Y) ) ), 
                       ifelse(treated & Y == J + 1, 
@@ -3234,20 +3233,22 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                              0
                       )
                )
-        ) 
+        )
       
       # control group wrt gamma (NxK matrix)
       gradient_control_gamma <- 
-        (( p0 * binomial_deriv(Y) ) / 
-           ( p0/(J + 1) + p0 * binomial(Y) )) * X
+        ifelse(not_treated, 
+               -(( p0 * binomial_deriv(Y) ) / 
+                   ( p0/(J + 1) + (1 - p0) * binomial(Y) )), 0) * X
       
       # control group wrt p0 (N vector)
       gradient_control_p0 <- 
-        (( p0 * binomial_deriv(Y) ) / 
-           ( p0 / (J + 1) + p0 * binomial(Y)) ) * X
-      
+        ifelse(not_treated, 
+               (( 1/(J + 1) - binomial(Y) ) / 
+                  ( p0 / (J + 1) + (1 - p0) * binomial(Y))), 0)
+
       # K row vector
-      c(colSums(gradient_treatment_beta) + gradient_cauchy_beta, colSums(gradient_treatment_gamma + gradient_control_gamma), sum(gradient_treatment_p0 + gradient_control_p0))
+      c(colSums(gradient_treatment_beta) + gradient_cauchy_beta, colSums(gradient_treatment_gamma + gradient_control_gamma), sum(gradient_control_p0), sum(gradient_treatment_p1))
       
     }
     
