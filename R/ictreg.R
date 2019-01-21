@@ -2940,23 +2940,12 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         } else {
           stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
         }
-        
-        # beta.fit <- glm(cbind(betaY, 1 - betaY) ~ 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
-        #   family = binomial("logit"), control = list(maxit = 5000))
 
         gammaX <- rbind(X, X)
         gammaY <- rep(0:1, each = n)
 
-        # if(fit.sensitive == "glm"){
           gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
                            family = binomial("logit"), control = list(maxit = 5000))
-        # } else if (fit.sensitive == "bayesglm"){
-        #   gamma.fit <- bayesglm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
-        #                         family = binomial(logit), 
-        #                         control = glm.control(maxit = 5000), scaled = FALSE)
-        # } else {
-        #   stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
-        # }
         
       } else {
 
@@ -2974,23 +2963,11 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
           stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
         }
         
-        # beta.fit <- glm(cbind(betaY, 1 - betaY) ~ betaX - 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
-        #   family = binomial("logit"), control = list(maxit = 5000))
-
         gammaX <- rbind(X, X)
         gammaY <- rep(0:1, each = n)
         
-        # if(fit.sensitive == "glm"){
-          gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
-                           family = binomial("logit"), control = list(maxit = 5000))
-        # } else if (fit.sensitive == "bayesglm"){
-        #   gamma.fit <- bayesglm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
-        #                         family = binomial(logit), 
-        #                         control = glm.control(maxit = 5000), scaled = FALSE)
-        # } else {
-        #   stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
-        # }
-
+        gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
+                         family = binomial("logit"), control = list(maxit = 5000))
         
       }
 
@@ -3344,8 +3321,6 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
     }
 
-
-
     uniformM <- function(formula, data, treat, J, xi, eta, yzeta, fit.sensitive) {
 
       mf <- model.frame(formula, data)
@@ -3373,22 +3348,11 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
           stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
         }
         
-        # beta.fit <- glm(cbind(betaY, 1 - betaY) ~ 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
-        #   family = binomial("logit"), control = list(maxit = 100))
-
         gammaX <- rbind(X, X)
         gammaY <- rep(0:1, each = n)
 
-        # if(fit.sensitive == "glm"){
-          gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
-                           family = binomial("logit"), control = list(maxit = 5000))
-        # } else if (fit.sensitive == "bayesglm"){
-        #   gamma.fit <- bayesglm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
-        #                         family = binomial(logit), 
-        #                         control = glm.control(maxit = 5000), scaled = FALSE)
-        # } else {
-        #   stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
-        # }
+        gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
+                         family = binomial("logit"), control = list(maxit = 5000))
 
       # models with covariates
       } else {
@@ -3407,29 +3371,17 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
           stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
         }
         
-        # beta.fit <- glm(cbind(betaY, 1 - betaY) ~ betaX - 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
-        #   family = binomial("logit"), control = list(maxit = 100))
-
         gammaX <- rbind(X, X)
         gammaY <- rep(0:1, each = n)
 
-        # if(fit.sensitive == "glm"){
           gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
                            family = binomial("logit"), control = list(maxit = 5000))
-        # } else if (fit.sensitive == "bayesglm"){
-        #   gamma.fit <- bayesglm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
-        #                         family = binomial(logit), 
-        #                         control = glm.control(maxit = 5000), scaled = FALSE)
-        # } else {
-        #   stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
-        # }
       }
 
       return(list(beta.fit = beta.fit, gamma.fit = gamma.fit, 
         pars = c(coef(beta.fit), coef(gamma.fit)), p0 = mean(xi[Tr==0]), p1 = mean(xi[Tr==1])))
 
     }
-
 
     uniformEM <- function(formula, data, treat, J, p0 = 0.05, p1 = 0.05, params = NULL, eps = 1e-08, 
       maxIter, fit.sensitive) {
