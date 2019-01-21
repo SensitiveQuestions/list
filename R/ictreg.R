@@ -3032,11 +3032,21 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       if (iteration == maxIter) warning("Maximum number of iterations reached.")
 
-      optim.out <- optim(fn = obs.llik.top, hessian = TRUE, method = "BFGS", gr = gr.top,
-        par = c(Mstep$pars, log(Mstep$p0/(1 - Mstep$p0))), 
-        formula = formula, data = data, treat = treat, J = J, 
-        fit.sensitive = fit.sensitive,
-        control = list(fnscale = -1, maxit = 0))
+      if(fit.sensitive == "bayesglm") {
+        optim.out <- optim(fn = obs.llik.top, hessian = TRUE, method = "BFGS", gr = gr.top,
+                           par = c(Mstep$pars, log(Mstep$p0/(1 - Mstep$p0))), 
+                           formula = formula, data = data, treat = treat, J = J, 
+                           fit.sensitive = fit.sensitive,
+                           control = list(fnscale = -1, maxit = 0))
+      } else if (fit.sensitive == "glm") {
+        optim.out <- optim(fn = obs.llik.top, hessian = TRUE, 
+                           par = c(Mstep$pars, log(Mstep$p0/(1 - Mstep$p0))), 
+                           formula = formula, data = data, treat = treat, J = J, 
+                           fit.sensitive = fit.sensitive,
+                           control = list(fnscale = -1, maxit = 0))
+      } else {
+        stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
+      }
 
       vcov <- vcov.flip <- solve(-optim.out$hessian, tol = 1e-20)
       std.errors <- sqrt(diag(vcov))
@@ -3444,11 +3454,21 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       if (iteration == maxIter) warning("Maximum number of iterations reached.")
 
-      optim.out <- optim(fn = obs.llik.uniform, hessian = TRUE, method = "BFGS", gr = gr.uniform,
-        par = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0)), log(Mstep$p1/(1-Mstep$p1))), 
-        formula = formula, data = data, treat = treat, J = J, 
-        fit.sensitive = fit.sensitive,
-        control = list(fnscale = -1, maxit = 0))
+      if (fit.sensitive == "bayesglm") {
+        optim.out <- optim(fn = obs.llik.uniform, hessian = TRUE, method = "BFGS", gr = gr.uniform,
+                           par = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0)), log(Mstep$p1/(1-Mstep$p1))), 
+                           formula = formula, data = data, treat = treat, J = J, 
+                           fit.sensitive = fit.sensitive,
+                           control = list(fnscale = -1, maxit = 0))
+      } else if (fit.sensitive == "glm") {
+        optim.out <- optim(fn = obs.llik.uniform, hessian = TRUE, 
+                           par = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0)), log(Mstep$p1/(1-Mstep$p1))), 
+                           formula = formula, data = data, treat = treat, J = J, 
+                           fit.sensitive = fit.sensitive,
+                           control = list(fnscale = -1, maxit = 0))
+      } else {
+        stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
+      }
 
       vcov <- vcov.flip <- solve(-optim.out$hessian, tol = 1e-20)
       std.errors <- sqrt(diag(vcov))
