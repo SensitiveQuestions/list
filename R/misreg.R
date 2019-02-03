@@ -43,6 +43,7 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
   logistic  <- function(x) exp(x)/(1+exp(x))
   dlogistic <- function(x) exp(x)/(1+exp(x))^2
 
+  # data <- data[, c(y, dir, treat, all.vars(rhs))]
   Y  <- data[, y]
   D  <- data[, dir]
   Tr <- data[, treat]
@@ -321,7 +322,7 @@ misreg <- function(data, rhs = NULL, y, dir, treat, J, sensitive.treatment = TRU
     z.hat <- logistic(X %*% fit.treat$par)
 
     fit.lying <- optim(fn = ss2, par = beta.start, delta = fit.treat$par, 
-      d = D[Tr == 0], J = J, X = X[Tr == 0, ])
+      d = D, J = J, X = X)
 
     return.obj <- list()
     class(return.obj) <- c("misreg", "nls")
