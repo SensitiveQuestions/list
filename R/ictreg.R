@@ -3060,11 +3060,6 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       }
 
       vcov <- vcov.flip <- solve(-optim.out$hessian, tol = 1e-20)
-
-      if (sum(diag(vcov) < 0) > 0) {
-        stop(paste0("optim convergence code: ", optim.out$message))
-      }
-
       std.errors <- sqrt(diag(vcov))
       vcov.flip[(1:k), (1:k)] <- vcov[(k+1):(2*k), (k+1):(2*k)] 
       vcov.flip[(k+1):(2*k), (k+1):(2*k)] <- vcov[(1:k), (1:k)]
