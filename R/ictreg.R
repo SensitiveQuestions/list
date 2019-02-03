@@ -1056,7 +1056,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
             } else if (fit.sensitive == "bayesglm"){
               fit <- bayesglm(cbind(yrep, 1-yrep) ~ xrep - 1,
                                         weights = wrep * wtrep, family = binomial(logit),
-                                        start = par, control = glm.control(maxit = maxIter), scaled = F)
+                                        start = par, control = glm.control(maxit = maxIter), scaled = F,
+                                prior.scale = 2.5, prior.scale.for.intercept = 10)
             } else {
               stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
             }
@@ -2148,13 +2149,15 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                                                    paste(x.vars.ceiling, collapse=" + "))),
                                   weights = dtmpC$w, family = binomial(logit),
                                   start = coef.qufit.start, data = dtmpC,
-                                  control = glm.control(maxit = maxIter), scaled = F)
+                                  control = glm.control(maxit = maxIter), scaled = F,
+                                prior.scale = 2.5, prior.scale.for.intercept = 10)
                 
               } else {
                 qufit <- bayesglm(as.formula(paste("cbind(", y.var, ", 1-", y.var, ") ~ 1")),
                                   weights = dtmpC$w, family = binomial(logit),
                                   start = coef.qufit.start, data = dtmpC,
-                                  control = glm.control(maxit = maxIter), scaled = F)
+                                  control = glm.control(maxit = maxIter), scaled = F,
+                                prior.scale = 2.5, prior.scale.for.intercept = 10)
                 
               }
             }
@@ -2179,12 +2182,14 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                                                    paste(x.vars.floor, collapse=" + "))),
                                   weights = dtmpF$w, family = binomial(logit),
                                   start = coef.qlfit.start, data = dtmpF,
-                                  control = glm.control(maxit = maxIter), scaled = F)
+                                  control = glm.control(maxit = maxIter), scaled = F,
+                                prior.scale = 2.5, prior.scale.for.intercept = 10)
               } else {
                 qlfit <- bayesglm(as.formula(paste("cbind(", y.var, ", 1-", y.var, ") ~ 1")),
                                   weights = dtmpF$w, family = binomial(logit),
                                   start = coef.qlfit.start, data = dtmpF,
-                                  control = glm.control(maxit = maxIter), scaled = F)
+                                  control = glm.control(maxit = maxIter), scaled = F,
+                                prior.scale = 2.5, prior.scale.for.intercept = 10)
               }
             }
           }
@@ -2751,11 +2756,11 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       lliks <- ifelse(Y == J + 1, log(p0 + (1 - p0) * logistic(Xb) * logistic(Xg)^J), 
         ifelse(Y == J & Tr == 0, log(p0 + (1 - p0) * logistic(Xg)^J),  
-          ifelse(Y == 0 & Tr == 1, log((1 - p0) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J), 
-        ifelse(Y %in% 1:J & Tr == 1, log(
-          (1 - p0) * (logistic(Xb) * choose(J, Y-1) * logistic(Xg)^(Y-1) * (1 - logistic(Xg))^(J-Y+1) + 
-            (1 - logistic(Xb)) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J-Y))), 
-          log((1 - p0) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J-Y))))))
+          ifelse(Y == 0 & Tr == 1, log(1 - p0) + log(1 - logistic(Xb)) + J * log(1 - logistic(Xg)), 
+        ifelse(Y %in% 1:J & Tr == 1, log(1-p0) + 
+          log(logistic(Xb) * choose(J, Y-1) * logistic(Xg)^(Y-1) * (1 - logistic(Xg))^(J-Y+1) + 
+            (1 - logistic(Xb)) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J-Y)), 
+          log(1 - p0) + log(choose(J, Y)) + Y * log(logistic(Xg)) + (J-Y) * log(1 - logistic(Xg))))))
       
       if (fit.sensitive == "bayesglm") {
         p.prior.sensitive <- sum(dcauchy(x = beta, scale = bayesglm_priors(X), log = TRUE))
@@ -2763,7 +2768,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         p.prior.sensitive <- 0
       }
       
-      sum(lliks + p.prior.sensitive) 
+      sum(lliks) + p.prior.sensitive 
 
     }
     
@@ -2794,6 +2799,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
       
       binomial_deriv <- function(y) {
         choose(J, y) * dlogistic(Xg) * (1 - logistic(Xg))^(J - y - 1) * logistic(Xg)^(y - 1) * (y - J * logistic(Xg))
+
       }
       
       log_dcauchy_deriv <- function(coef, scale) {
@@ -2936,7 +2942,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         } else if (fit.sensitive == "bayesglm"){
           beta.fit <- bayesglm(cbind(betaY, 1 - betaY) ~ 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
                                 family = binomial(logit), 
-                                control = glm.control(maxit = 5000), scaled = FALSE)
+                                control = glm.control(maxit = 5000), scaled = FALSE,
+                                prior.scale = 2.5, prior.scale.for.intercept = 10)
         } else {
           stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
         }
@@ -2958,7 +2965,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         } else if (fit.sensitive == "bayesglm"){
           beta.fit <- bayesglm(cbind(betaY, 1 - betaY) ~ betaX - 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
                                 family = binomial(logit), 
-                                control = glm.control(maxit = 5000), scaled = FALSE)
+                                control = glm.control(maxit = 5000), scaled = FALSE,
+                                prior.scale = 2.5, prior.scale.for.intercept = 10)
         } else {
           stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
         }
@@ -3037,13 +3045,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                            par = c(Mstep$pars, log(Mstep$p0/(1 - Mstep$p0))), 
                            formula = formula, data = data, treat = treat, J = J, 
                            fit.sensitive = fit.sensitive,
-                           control = list(fnscale = -1, maxit = 0))
+                           control = list(fnscale = -1, maxit = 1))
       } else if (fit.sensitive == "glm") {
-        optim.out <- optim(fn = obs.llik.top, hessian = TRUE, 
+        optim.out <- optim(fn = obs.llik.top, hessian = TRUE, method = "BFGS", gr = gr.top,
                            par = c(Mstep$pars, log(Mstep$p0/(1 - Mstep$p0))), 
                            formula = formula, data = data, treat = treat, J = J, 
                            fit.sensitive = fit.sensitive,
-                           control = list(fnscale = -1, maxit = 0))
+                           control = list(fnscale = -1, maxit = 1))
       } else {
         stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
       }
@@ -3127,7 +3135,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         p.prior.sensitive <- 0
       }
       
-      sum(lliks + p.prior.sensitive) 
+      sum(lliks) + p.prior.sensitive 
 
     }
     
@@ -3356,7 +3364,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         } else if (fit.sensitive == "bayesglm"){
           beta.fit <- bayesglm(cbind(betaY, 1 - betaY) ~ 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
                                 family = binomial(logit), 
-                                control = glm.control(maxit = 5000), scaled = FALSE)
+                                control = glm.control(maxit = 5000), scaled = FALSE,
+                                prior.scale = 2.5, prior.scale.for.intercept = 10)
         } else {
           stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
         }
@@ -3379,7 +3388,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         } else if (fit.sensitive == "bayesglm"){
           beta.fit <- bayesglm(cbind(betaY, 1 - betaY) ~ betaX - 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
                                 family = binomial(logit), 
-                                control = glm.control(maxit = 5000), scaled = FALSE)
+                                control = glm.control(maxit = 5000), scaled = FALSE,
+                                prior.scale = 2.5, prior.scale.for.intercept = 10)
         } else {
           stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
         }
@@ -3462,13 +3472,13 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                            par = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0)), log(Mstep$p1/(1-Mstep$p1))), 
                            formula = formula, data = data, treat = treat, J = J, 
                            fit.sensitive = fit.sensitive,
-                           control = list(fnscale = -1, maxit = 0))
+                           control = list(fnscale = -1, maxit = 1))
       } else if (fit.sensitive == "glm") {
-        optim.out <- optim(fn = obs.llik.uniform, hessian = TRUE, 
+        optim.out <- optim(fn = obs.llik.uniform, hessian = TRUE, method = "BFGS", gr = gr.uniform,
                            par = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0)), log(Mstep$p1/(1-Mstep$p1))), 
                            formula = formula, data = data, treat = treat, J = J, 
                            fit.sensitive = fit.sensitive,
-                           control = list(fnscale = -1, maxit = 0))
+                           control = list(fnscale = -1, maxit = 1))
       } else {
         stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
       }
