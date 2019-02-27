@@ -1056,7 +1056,8 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
             } else if (fit.sensitive == "bayesglm"){
               fit <- bayesglm(cbind(yrep, 1-yrep) ~ xrep - 1,
                                         weights = wrep * wtrep, family = binomial(logit),
-                                        start = par, control = glm.control(maxit = maxIter), scaled = F)
+                                        start = par, control = glm.control(maxit = maxIter), scaled = F,
+                                prior.scale = 2.5, prior.scale.for.intercept = 10)
             } else {
               stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
             }
@@ -2148,13 +2149,15 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                                                    paste(x.vars.ceiling, collapse=" + "))),
                                   weights = dtmpC$w, family = binomial(logit),
                                   start = coef.qufit.start, data = dtmpC,
-                                  control = glm.control(maxit = maxIter), scaled = F)
+                                  control = glm.control(maxit = maxIter), scaled = F,
+                                prior.scale = 2.5, prior.scale.for.intercept = 10)
                 
               } else {
                 qufit <- bayesglm(as.formula(paste("cbind(", y.var, ", 1-", y.var, ") ~ 1")),
                                   weights = dtmpC$w, family = binomial(logit),
                                   start = coef.qufit.start, data = dtmpC,
-                                  control = glm.control(maxit = maxIter), scaled = F)
+                                  control = glm.control(maxit = maxIter), scaled = F,
+                                prior.scale = 2.5, prior.scale.for.intercept = 10)
                 
               }
             }
@@ -2179,12 +2182,14 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
                                                    paste(x.vars.floor, collapse=" + "))),
                                   weights = dtmpF$w, family = binomial(logit),
                                   start = coef.qlfit.start, data = dtmpF,
-                                  control = glm.control(maxit = maxIter), scaled = F)
+                                  control = glm.control(maxit = maxIter), scaled = F,
+                                prior.scale = 2.5, prior.scale.for.intercept = 10)
               } else {
                 qlfit <- bayesglm(as.formula(paste("cbind(", y.var, ", 1-", y.var, ") ~ 1")),
                                   weights = dtmpF$w, family = binomial(logit),
                                   start = coef.qlfit.start, data = dtmpF,
-                                  control = glm.control(maxit = maxIter), scaled = F)
+                                  control = glm.control(maxit = maxIter), scaled = F,
+                                prior.scale = 2.5, prior.scale.for.intercept = 10)
               }
             }
           }
@@ -2751,20 +2756,91 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       lliks <- ifelse(Y == J + 1, log(p0 + (1 - p0) * logistic(Xb) * logistic(Xg)^J), 
         ifelse(Y == J & Tr == 0, log(p0 + (1 - p0) * logistic(Xg)^J),  
-          ifelse(Y == 0 & Tr == 1, log((1 - p0) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J), 
-        ifelse(Y %in% 1:J & Tr == 1, log(
-          (1 - p0) * (logistic(Xb) * choose(J, Y-1) * logistic(Xg)^(Y-1) * (1 - logistic(Xg))^(J-Y+1) + 
-            (1 - logistic(Xb)) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J-Y))), 
-          log((1 - p0) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J-Y))))))
+          ifelse(Y == 0 & Tr == 1, log(1 - p0) + log(1 - logistic(Xb)) + J * log(1 - logistic(Xg)), 
+        ifelse(Y %in% 1:J & Tr == 1, log(1-p0) + 
+          log(logistic(Xb) * choose(J, Y-1) * logistic(Xg)^(Y-1) * (1 - logistic(Xg))^(J-Y+1) + 
+            (1 - logistic(Xb)) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J-Y)), 
+          log(1 - p0) + log(choose(J, Y)) + Y * log(logistic(Xg)) + (J-Y) * log(1 - logistic(Xg))))))
       
       if (fit.sensitive == "bayesglm") {
-        p.prior.sensitive <- sum(dcauchy(x = gamma, scale = bayesglm_priors(X), log = TRUE))
+        p.prior.sensitive <- sum(dcauchy(x = beta, scale = bayesglm_priors(X), log = TRUE))
       } else {
         p.prior.sensitive <- 0
       }
       
-      sum(lliks + p.prior.sensitive) 
+      sum(lliks) + p.prior.sensitive 
 
+    }
+    
+    gr.top <- function(all.pars, formula, data, treat, J, fit.sensitive) {
+
+      mf <- model.frame(formula, data)
+      n  <- nrow(mf)
+      
+      Y  <- model.response(mf)
+      X  <- model.matrix(formula, data)
+      Tr <- data[row.names(mf), treat]
+      k  <- ncol(X)
+      beta <- all.pars[1:k]
+      gamma <- all.pars[(k+1):(2*k)]
+      
+      log.odds <- all.pars[2*k + 1]
+      p0 <- logistic(log.odds)
+      
+      Xb <- X %*% beta
+      Xg <- X %*% gamma
+      
+      logistic <- function(x) exp(x)/(1 + exp(x))
+      dlogistic <- function(x) exp(x)/(1 + exp(x))^2
+      
+      binomial <- function(y) {
+        dbinom(x = y, size = J, prob = logistic(Xg))
+      }
+      
+      binomial_deriv <- function(y) {
+        choose(J, y) * dlogistic(Xg) * (1 - logistic(Xg))^(J - y - 1) * logistic(Xg)^(y - 1) * (y - J * logistic(Xg))
+      }
+      
+      log_dcauchy_deriv <- function(coef, scale) {
+        -2 * coef/(scale^2 + coef^2)
+      }
+      
+      treated <- Tr == 1
+      not_treated <- Tr == 0
+      
+      # treatment group wrt beta (NxK matrix)
+      gradient_treatment_beta  <- ifelse(treated & Y == 0, -dlogistic(Xb)/(1-logistic(Xb)), 
+                                         ifelse(treated & Y %in% 1:J, (binomial(Y-1) - binomial(Y)) * dlogistic(Xb)/(logistic(Xb) * binomial(Y-1) + (1 - logistic(Xb)) * binomial(Y)),
+                                                ifelse(treated & Y == J + 1, (1-p0) * logistic(Xg)^J * dlogistic(Xb)/(p0 + (1-p0) * logistic(Xb) * logistic(Xg)^J), 0))) * X
+      
+      # cauchy wrt beta
+      if (fit.sensitive == "bayesglm") {
+        gradient_cauchy_beta <- log_dcauchy_deriv(beta, bayesglm_priors(X))
+      } else {
+        gradient_cauchy_beta <- 0
+      }
+
+      # treatment group wrt gamma (NxK matrix)
+      gradient_treatment_gamma <- ifelse(treated & Y == 0, - J * dlogistic(Xg)/(1 - logistic(Xg)), 
+                                         ifelse(treated & Y %in% 1:J, (logistic(Xb) * binomial_deriv(Y-1) + (1 - logistic(Xb)) * binomial_deriv(Y))/(logistic(Xb) * binomial(Y-1) + (1 - logistic(Xb)) * binomial(Y)), 
+                                                ifelse(treated & Y == (J + 1), (1-p0) * logistic(Xb) * J * logistic(Xg)^(J-1) * dlogistic(Xg)/(p0 + (1-p0) * logistic(Xb) * logistic(Xg)^J), 0))) * X
+      
+      # treatment group wrt p0 (N vector)
+      gradient_treatment_p0 <- ifelse(treated & Y %in% 0:J, -1/(1-p0) * dlogistic(log.odds), 
+                                      ifelse(treated & Y == (J + 1), (1 - logistic(Xb) * logistic(Xg)^J)/(p0 + (1-p0) * logistic(Xb) * logistic(Xg)^J) * dlogistic(log.odds), 0))
+      
+      
+      # control group wrt gamma (NxK matrix)
+      gradient_control_gamma <- ifelse(not_treated & Y %in% 0:(J-1), (Y/logistic(Xg) - (J-Y)/(1 - logistic(Xg))) * dlogistic(Xg),
+                                       ifelse(not_treated & Y == J, (1-p0) * J * logistic(Xg)^(J-1)/(p0 + (1-p0) * logistic(Xg)^J) * dlogistic(Xg), 0)) * X
+      
+      # control group wrt p0 (N vector)
+      gradient_control_p0 <- ifelse(not_treated & Y %in% 0:(J-1), -1/(1-p0) * dlogistic(log.odds), 
+                                    ifelse(not_treated & Y == J, (1 - logistic(Xg)^J)/(p0 + (1-p0) * logistic(Xg)^J) * dlogistic(log.odds), 0))
+      
+      # K row vector
+      c(colSums(gradient_treatment_beta) + gradient_cauchy_beta, colSums(gradient_treatment_gamma + gradient_control_gamma), sum(gradient_treatment_p0 + gradient_control_p0))
+      
     }
 
     topcodeE <- function(formula, data, treat, J, p0, params) {
@@ -2863,45 +2939,46 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         betaX <- rbind(X[Tr == 1, ], X[Tr == 1, ])
         betaY <- rep(0:1, each = sum(Tr))
 
-        beta.fit <- glm(cbind(betaY, 1 - betaY) ~ 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
-          family = binomial("logit"), control = list(maxit = 5000))
+        if(fit.sensitive == "glm"){
+          beta.fit <- glm(cbind(betaY, 1 - betaY) ~ 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
+                           family = binomial("logit"), control = list(maxit = 5000))
+        } else if (fit.sensitive == "bayesglm"){
+          beta.fit <- bayesglm(cbind(betaY, 1 - betaY) ~ 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
+                                family = binomial(logit), 
+                                control = glm.control(maxit = 5000), scaled = FALSE,
+                                prior.scale = 2.5, prior.scale.for.intercept = 10)
+        } else {
+          stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
+        }
 
         gammaX <- rbind(X, X)
         gammaY <- rep(0:1, each = n)
 
-        if(fit.sensitive == "glm"){
           gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
                            family = binomial("logit"), control = list(maxit = 5000))
-        } else if (fit.sensitive == "bayesglm"){
-          gamma.fit <- bayesglm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
-                                family = binomial(logit), 
-                                control = glm.control(maxit = 5000), scaled = FALSE)
-        } else {
-          stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
-        }
         
       } else {
 
         betaX <- rbind(X[Tr == 1, ], X[Tr == 1, ])
         betaY <- rep(0:1, each = sum(Tr))
 
-        beta.fit <- glm(cbind(betaY, 1 - betaY) ~ betaX - 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
-          family = binomial("logit"), control = list(maxit = 5000))
-
-        gammaX <- rbind(X, X)
-        gammaY <- rep(0:1, each = n)
-        
         if(fit.sensitive == "glm"){
-          gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
+          beta.fit <- glm(cbind(betaY, 1 - betaY) ~ betaX - 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
                            family = binomial("logit"), control = list(maxit = 5000))
         } else if (fit.sensitive == "bayesglm"){
-          gamma.fit <- bayesglm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
+          beta.fit <- bayesglm(cbind(betaY, 1 - betaY) ~ betaX - 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
                                 family = binomial(logit), 
-                                control = glm.control(maxit = 5000), scaled = FALSE)
+                                control = glm.control(maxit = 5000), scaled = FALSE,
+                                prior.scale = 2.5, prior.scale.for.intercept = 10)
         } else {
           stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
         }
-
+        
+        gammaX <- rbind(X, X)
+        gammaY <- rep(0:1, each = n)
+        
+        gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
+                         family = binomial("logit"), control = list(maxit = 5000))
         
       }
 
@@ -2966,13 +3043,23 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       if (iteration == maxIter) warning("Maximum number of iterations reached.")
 
-      optim.out <- optim(fn = obs.llik.top, hessian = TRUE, 
-        par = c(Mstep$pars, log(Mstep$p0/(1 - Mstep$p0))), 
-        formula = formula, data = data, treat = treat, J = J, 
-        fit.sensitive = fit.sensitive,
-        control = list(fnscale = -1))
+      if(fit.sensitive == "bayesglm") {
+        optim.out <- optim(fn = obs.llik.top, hessian = TRUE, method = "BFGS", gr = gr.top,
+                           par = c(Mstep$pars, log(Mstep$p0/(1 - Mstep$p0))), 
+                           formula = formula, data = data, treat = treat, J = J, 
+                           fit.sensitive = fit.sensitive,
+                           control = list(fnscale = -1, maxit = 0))
+      } else if (fit.sensitive == "glm") {
+        optim.out <- optim(fn = obs.llik.top, hessian = TRUE, method = "BFGS", gr = gr.top,
+                           par = c(Mstep$pars, log(Mstep$p0/(1 - Mstep$p0))), 
+                           formula = formula, data = data, treat = treat, J = J, 
+                           fit.sensitive = fit.sensitive,
+                           control = list(fnscale = -1, maxit = 0))
+      } else {
+        stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
+      }
 
-      vcov <- vcov.flip <- solve(-optim.out$hessian)
+      vcov <- vcov.flip <- solve(-optim.out$hessian, tol = 1e-20)
       std.errors <- sqrt(diag(vcov))
       vcov.flip[(1:k), (1:k)] <- vcov[(k+1):(2*k), (k+1):(2*k)] 
       vcov.flip[(k+1):(2*k), (k+1):(2*k)] <- vcov[(1:k), (1:k)]
@@ -3046,15 +3133,130 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         log((1 - p0) * choose(J, Y) * logistic(Xg)^Y * (1 - logistic(Xg))^(J-Y) + p0/(J+1)))))
 
       if (fit.sensitive == "bayesglm") {
-        p.prior.sensitive <- sum(dcauchy(x = gamma, scale = bayesglm_priors(X), log = TRUE))
+        p.prior.sensitive <- sum(dcauchy(x = beta, scale = bayesglm_priors(X), log = TRUE))
       } else {
         p.prior.sensitive <- 0
       }
       
-      sum(lliks + p.prior.sensitive) 
+      sum(lliks) + p.prior.sensitive 
 
     }
+    
+    gr.uniform <- function(all.pars, formula, data, treat, J, fit.sensitive) {
+      
+      mf <- model.frame(formula, data)
+      n  <- nrow(mf)
+      
+      Y  <- model.response(mf)
+      X  <- model.matrix(formula, data)
+      Tr <- data[row.names(mf), treat]
+      k  <- ncol(X)
+      
+      beta <- all.pars[1:k]
+      gamma <- all.pars[(k+1):(2*k)]
+      
+      Xb <- X %*% beta
+      Xg <- X %*% gamma
+      
+      log.odds.p0 <- all.pars[2*k + 1]
+      log.odds.p1 <- all.pars[2*k + 2]
+      
+      p0 <- logistic(log.odds.p0)
+      p1 <- logistic(log.odds.p1)
+      
+      logistic <- function(x) exp(x)/(1 + exp(x))
+      dlogistic <- function(x) exp(x)/(1 + exp(x))^2
+      
+      binomial <- function(y) {
+        dbinom(x = y, size = J, prob = logistic(Xg))
+      }
+      
+      binomial_deriv <- function(y) {
+        choose(J, y) * dlogistic(Xg) * (1 - logistic(Xg))^(J - y - 1) * logistic(Xg)^(y - 1) * (y - J * logistic(Xg))
+      }
+      
+      log_dcauchy_deriv <- function(coef, scale) {
+        -2 * coef/(scale^2 + coef^2)
+      }
+      
+      treated <- Tr == 1
+      not_treated <- Tr == 0
+      
+      # treatment group wrt beta (NxK matrix)
+      gradient_treatment_beta  <- 
+        ifelse(treated & Y == 0, 
+               - ((1-p1) * (1 - logistic(Xg))^J * dlogistic(Xb)) / 
+                 ( p1/(J+2) + (1-p1) * (1-logistic(Xb)) * (1-logistic(Xg))^J ),
+               ifelse(treated & Y %in% 1:J, 
+                      ((1 - p1) * ( binomial(Y - 1) - binomial(Y)) * dlogistic(Xb)) / 
+                        ( p1/(J + 2) + (1 - p1) * (logistic(Xb) * binomial(Y - 1) + (1 - logistic(Xb)) * binomial(Y)) ),
+                      
+                      ifelse(treated & Y == J + 1, 
+                             ((1 - p1) * logistic(Xg)^J * dlogistic(Xb))/
+                               ( p1 / (J + 2) + (1 - p1) * logistic(Xb) * logistic(Xg)^J ),
+                             0
+                      )
+               )
+        ) * X
+      
+      # cauchy wrt beta
+      if (fit.sensitive == "bayesglm") {
+        gradient_cauchy_beta <- log_dcauchy_deriv(beta, bayesglm_priors(X))
+      } else {
+        gradient_cauchy_beta <- 0
+      }
 
+      # treatment group wrt gamma (NxK matrix)
+      gradient_treatment_gamma <- 
+        ifelse(treated & Y == 0, 
+               - ((1 - p1) * (1 - logistic(Xb)) * J * (1 - logistic(Xg))^(J - 1) * dlogistic(Xg)) / 
+                 ( (p1 / (J + 2)) + (1 - p1) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J ), 
+               
+               ifelse(treated & Y %in% 1:J, 
+                      ((1 - p1) * (logistic(Xb) * binomial_deriv(Y - 1) + (1 - logistic(Xb)) * binomial_deriv(Y))) / 
+                        ( (p1 / (J + 2)) + (1 - p1) * ( logistic(Xb) * binomial(Y - 1) + (1 - logistic(Xb)) * binomial(Y)) ),
+                      
+                      ifelse(treated & Y == J + 1, 
+                             ((1-p1) * logistic(Xb) * J * logistic(Xg)^(J-1) * dlogistic(Xg)) /
+                               (p1 / (J + 2) + (1 - p1) * logistic(Xb) * logistic(Xg)^J), 
+                             0
+                      )
+               )
+        ) * X
+      
+      # treatment group wrt p1 (N vector)
+      gradient_treatment_p1 <- 
+        ifelse(treated & Y == 0, 
+               (( 1/(J + 2) - (1 - logistic(Xb)) * (1 - logistic(Xg))^J) / 
+                 ( p1/(J + 2) + (1 - p1) * (1 - logistic(Xb)) * (1 - logistic(Xg))^J )) * dlogistic(log.odds.p1),
+               ifelse(treated & Y %in% 1:J, 
+                      (( 1/(J + 2) - ( logistic(Xb) * binomial(Y - 1) + (1 - logistic(Xb)) * binomial(Y) ) ) / 
+                        ( p1/(J + 2) + (1 - p1) * ( logistic(Xb) * binomial(Y - 1) + (1 - logistic(Xb)) * binomial(Y) ) )) * dlogistic(log.odds.p1), 
+                      ifelse(treated & Y == J + 1, 
+                             (( 1/(J + 2) - logistic(Xb) * logistic(Xg)^J ) / 
+                               ( p1 / (J + 2) + (1 - p1) * logistic(Xb) * logistic(Xg)^J )) * dlogistic(log.odds.p1), 
+                             0
+                      )
+               )
+        )
+      
+      # control group wrt gamma (NxK matrix)
+      gradient_control_gamma <- 
+        ifelse(not_treated, 
+               (( (1-p0) * binomial_deriv(Y) ) / 
+                   ( p0/(J + 1) + (1 - p0) * binomial(Y) )), 0) * X
+      
+      # control group wrt p0 (N vector)
+      gradient_control_p0 <- 
+        ifelse(not_treated, 
+               ((( 1/(J + 1) - binomial(Y) ) / 
+                  ( p0 / (J + 1) + (1 - p0) * binomial(Y)))) * dlogistic(log.odds.p0), 0)
+
+      # K row vector
+      c(colSums(gradient_treatment_beta) + gradient_cauchy_beta, colSums(gradient_treatment_gamma + gradient_control_gamma), sum(gradient_control_p0), sum(gradient_treatment_p1))
+      
+    }
+    
     uniformE <- function(formula, data, treat, J, p0, p1, params) {
 
       mf <- model.frame(formula, data)
@@ -3147,8 +3349,6 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
     }
 
-
-
     uniformM <- function(formula, data, treat, J, xi, eta, yzeta, fit.sensitive) {
 
       mf <- model.frame(formula, data)
@@ -3165,22 +3365,23 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         betaX <- rbind(X[Tr == 1, ], X[Tr == 1, ])
         betaY <- rep(0:1, each = sum(Tr))
 
-        beta.fit <- glm(cbind(betaY, 1 - betaY) ~ 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
-          family = binomial("logit"), control = list(maxit = 100))
-
-        gammaX <- rbind(X, X)
-        gammaY <- rep(0:1, each = n)
-
         if(fit.sensitive == "glm"){
-          gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
+          beta.fit <- glm(cbind(betaY, 1 - betaY) ~ 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
                            family = binomial("logit"), control = list(maxit = 5000))
         } else if (fit.sensitive == "bayesglm"){
-          gamma.fit <- bayesglm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
+          beta.fit <- bayesglm(cbind(betaY, 1 - betaY) ~ 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
                                 family = binomial(logit), 
-                                control = glm.control(maxit = 5000), scaled = FALSE)
+                                control = glm.control(maxit = 5000), scaled = FALSE,
+                                prior.scale = 2.5, prior.scale.for.intercept = 10)
         } else {
           stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
         }
+        
+        gammaX <- rbind(X, X)
+        gammaY <- rep(0:1, each = n)
+
+        gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ 1, weights = c(J - yzeta, yzeta), 
+                         family = binomial("logit"), control = list(maxit = 5000))
 
       # models with covariates
       } else {
@@ -3188,29 +3389,29 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
         betaX <- rbind(X[Tr == 1, ], X[Tr == 1, ])
         betaY <- rep(0:1, each = sum(Tr))
 
-        beta.fit <- glm(cbind(betaY, 1 - betaY) ~ betaX - 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
-          family = binomial("logit"), control = list(maxit = 100))
-
-        gammaX <- rbind(X, X)
-        gammaY <- rep(0:1, each = n)
-
         if(fit.sensitive == "glm"){
-          gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
+          beta.fit <- glm(cbind(betaY, 1 - betaY) ~ betaX - 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
                            family = binomial("logit"), control = list(maxit = 5000))
         } else if (fit.sensitive == "bayesglm"){
-          gamma.fit <- bayesglm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
+          beta.fit <- bayesglm(cbind(betaY, 1 - betaY) ~ betaX - 1, weights = c(1 - eta[Tr == 1], eta[Tr == 1]), 
                                 family = binomial(logit), 
-                                control = glm.control(maxit = 5000), scaled = FALSE)
+                                control = glm.control(maxit = 5000), scaled = FALSE,
+                                prior.scale = 2.5, prior.scale.for.intercept = 10)
         } else {
           stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
         }
+        
+        gammaX <- rbind(X, X)
+        gammaY <- rep(0:1, each = n)
+
+          gamma.fit <- glm(cbind(gammaY, 1 - gammaY) ~ gammaX - 1, weights = c(J - yzeta, yzeta), 
+                           family = binomial("logit"), control = list(maxit = 5000))
       }
 
       return(list(beta.fit = beta.fit, gamma.fit = gamma.fit, 
         pars = c(coef(beta.fit), coef(gamma.fit)), p0 = mean(xi[Tr==0]), p1 = mean(xi[Tr==1])))
 
     }
-
 
     uniformEM <- function(formula, data, treat, J, p0 = 0.05, p1 = 0.05, params = NULL, eps = 1e-08, 
       maxIter, fit.sensitive) {
@@ -3273,13 +3474,23 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
 
       if (iteration == maxIter) warning("Maximum number of iterations reached.")
 
-      optim.out <- optim(fn = obs.llik.uniform, hessian = TRUE, 
-        par = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0)), log(Mstep$p1/(1-Mstep$p1))), 
-        formula = formula, data = data, treat = treat, J = J, 
-        fit.sensitive = fit.sensitive,
-        control = list(fnscale = -1))
+      if (fit.sensitive == "bayesglm") {
+        optim.out <- optim(fn = obs.llik.uniform, hessian = TRUE, method = "BFGS", gr = gr.uniform,
+                           par = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0)), log(Mstep$p1/(1-Mstep$p1))), 
+                           formula = formula, data = data, treat = treat, J = J, 
+                           fit.sensitive = fit.sensitive,
+                           control = list(fnscale = -1, maxit = 0))
+      } else if (fit.sensitive == "glm") {
+        optim.out <- optim(fn = obs.llik.uniform, hessian = TRUE, method = "BFGS", gr = gr.uniform,
+                           par = c(Mstep$pars, log(Mstep$p0/(1-Mstep$p0)), log(Mstep$p1/(1-Mstep$p1))), 
+                           formula = formula, data = data, treat = treat, J = J, 
+                           fit.sensitive = fit.sensitive,
+                           control = list(fnscale = -1, maxit = 0))
+      } else {
+        stop("Please choose 'glm' or 'bayesglm' for fit.sensitive.")
+      }
 
-      vcov <- vcov.flip <- solve(-optim.out$hessian)
+      vcov <- vcov.flip <- solve(-optim.out$hessian, tol = 1e-20)
       std.errors <- sqrt(diag(vcov))
       vcov.flip[(1:k), (1:k)] <- vcov[(k+1):(2*k), (k+1):(2*k)] 
       vcov.flip[(k+1):(2*k), (k+1):(2*k)] <- vcov[(1:k), (1:k)]
