@@ -4,8 +4,7 @@
 \alias{summary.ictreg}
 \title{Summary Method for the Item Count Technique}
 \usage{
-\method{summary}{ictreg}(object, boundary.proportions = FALSE,
-  n.draws = 10000, ...)
+\method{summary}{ictreg}(object, boundary.proportions = FALSE, n.draws = 10000, ...)
 }
 \arguments{
 \item{object}{Object of class inheriting from "ictreg"}
