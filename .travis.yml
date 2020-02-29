@@ -9,6 +9,7 @@ r_packages:
   - testthat
   - roxygen2
   - rmarkdown
+  - devtools
 
 warnings_are_errors: true
 
