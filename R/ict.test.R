@@ -49,7 +49,7 @@
 #' @export ict.test
 ict.test <- function(y, treat, J = NA, alpha = 0.05, n.draws = 250000, gms = TRUE, pi.table = TRUE){
 
-  if(class(y)=="matrix") design <- "modified"
+  if(inherits(y, "matrix")) design <- "modified"
   else design = "standard"
   
   if (design == "modified") {

@@ -453,7 +453,7 @@ ictregBayes <- function(formula, data = parent.frame(), treat = "treat", J, cons
   ## treatment indicator for subsetting the dataframe
   t <- data[na.cond == TRUE, paste(treat)]
 
-  if(class(t) == "factor") {
+  if(inherits(t, "factor")) {
     
     levels(t) <- tolower(levels(t))
     
@@ -1355,7 +1355,7 @@ predict.ictregBayes <- function(object, newdata, newdata.diff, direct.glm, se.fi
     xvar <- model.matrix(as.formula(paste("~", c(object$call$formula[[3]]))), newdata)
   }
 
-  if (class(object$delta) != "list")
+  if (!inherits(object$delta, "list"))
     draws.list <- object$delta
   else
     draws.list <- object$delta[[sensitive.item]]

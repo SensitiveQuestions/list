@@ -373,7 +373,7 @@ ictregBayesHier <- function(formula, data = parent.frame(), group.level.2, group
   ## treatment indicator for subsetting the dataframe
   t <- data[na.cond == TRUE, paste(treat)]
 
-  if(class(t) == "factor") {
+  if(inherits(t, "factor")) {
     
     levels(t) <- tolower(levels(t))
     

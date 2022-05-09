@@ -371,7 +371,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
   x.all <- model.matrix.default(attr(mf, "terms"), mf)
   y.all <- model.response(mf)
   
-  if(class(y.all)=="matrix") {
+  if(inherits(y.all, "matrix")) {
     design <- "modified"
   } else {
     design <- "standard"
@@ -410,7 +410,7 @@ ictreg <- function(formula, data = parent.frame(), treat = "treat", J, method = 
   if(design=="standard") t <- data[na.x==0 & na.y==0 & na.w==0, paste(treat)]
   if(design=="modified") t <- as.numeric(is.na(y.all[na.x == 0 & na.y == 0 & na.w==0, J+1]) == FALSE)
 
-  if(class(t) == "factor") {
+  if(inherits(t, "factor")) {
 
     levels(t) <- tolower(levels(t))
     
@@ -4822,7 +4822,7 @@ print.predict.ictreg <- function(x, ...){
   
   cat("\nProportion of affirmative responses to the sensitive item\n")
 
-  if (class(x$fit) == "data.frame")
+  if (inherits(x$fit, "data.frame"))
     n <- nrow(x$fit)
   else
     n <- length(x$fit)
@@ -4833,7 +4833,7 @@ print.predict.ictreg <- function(x, ...){
     if (is.null(x$se.fit) == FALSE) {
         cat(paste(" (s.e. = ", round(as.matrix(x$se.fit)[i], 4), ")", sep = ""))
     }
-    if (class(x$fit) == "data.frame") {
+    if (inherits(x$fit, "data.frame")) {
       cat(paste("\n95% confidence interval: (", round(as.matrix(x$fit)[i,2], 4), ", ",
                 round(as.matrix(x$fit)[i,3], 4), ")", sep = ""))
     }
@@ -5044,7 +5044,7 @@ predict.ictreg <- function(object, newdata, newdata.diff, direct.glm, se.fit = F
       warning("Using the first sensitive item for predictions. Change with the sensitive.item option.")
   }
 
-  if (class(object$par.treat) != "list") {
+  if (inherits(object$par.treat, "list")) {
     ## extract only treatment coef's, var/covar
     beta <- object$par.treat ## was coef(object)[1:nPar]
     var.beta <- vcov(object)[1:nPar, 1:nPar]
