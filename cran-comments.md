@@ -1,14 +1,15 @@
 ## Submission
 
-This is a minor release with new functionality. Thank you for your time in reviewing this submission.
+We are submitting this patch to address the USE_FC_LEN_T issue identified in Ripley's April 5 email. We apologize for the delay in submission and realize it resulted in the package getting pulled.
 
-We have addressed the notes and warnings in the CRAN checks.
+In addition, the email address for the maintainer has been updated. 
+
+Thank you!
 
 ## Test environments
 * local OS X install, R 3.5.1
 * ubuntu 12.04 (on travis-ci), R 3.5.1
 * win-builder (devel and release)
-* ubuntu AWS with valgrind
 
 ## R CMD check results
 
