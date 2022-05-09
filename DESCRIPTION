@@ -1,7 +1,7 @@
 Package: list
 Version: 9.2
 Title: Statistical Methods for the Item Count Technique and List Experiment
-Authors@R: c(person("Graeme", "Blair", email = "graeme.blair@ucla.edu", role = c("aut", "cre")),
+Authors@R: c(person("Graeme", "Blair", email = "graeme.blair@gmail.com", role = c("aut", "cre")),
              person("Winston", "Chou", email = "wchou@princeton.edu", role = c("aut")),
              person("Kosuke", "Imai", email = "imai@harvard.edu", role = c("aut")),
              person("Bethany", "Park", email = "bapark@princeton.edu", role = c("ctb")),
