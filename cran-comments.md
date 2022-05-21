@@ -1,14 +1,14 @@
 ## Submission
 
-This is a minor release with new functionality. Thank you for your time in reviewing this submission.
+We are submitting this patch in response to emails from CRAN last month. We sincerely apologize for not responding to the warnings in time. We were unable to replicate the issues on any of our machines or on Travis. We have now replicated and fixed the problems and are resubmitting. Thank you for your understanding; we will make sure not to miss deadlines in the future.
 
-We have addressed the notes and warnings in the CRAN checks.
+This version passes travis, rhub, and winbuilder checks per below. 
 
 ## Test environments
 * local OS X install, R 3.5.1
 * ubuntu 12.04 (on travis-ci), R 3.5.1
 * win-builder (devel and release)
-* ubuntu AWS with valgrind
+* rhub via devtools::check_rhub()
 
 ## R CMD check results
 

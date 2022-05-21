@@ -5,9 +5,15 @@
 \title{Predict Method for the Item Count Technique with Bayesian Hierarchical
 Regression}
 \usage{
-\method{predict}{ictregBayesHier}(object, newdata, se.fit = FALSE,
-  interval = c("none", "confidence"), level = 0.95, sensitive.item,
-  ...)
+\method{predict}{ictregBayesHier}(
+  object,
+  newdata,
+  se.fit = FALSE,
+  interval = c("none", "confidence"),
+  level = 0.95,
+  sensitive.item,
+  ...
+)
 }
 \arguments{
 \item{object}{Object of class inheriting from "ictregBayes" or
