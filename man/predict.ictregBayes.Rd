@@ -4,17 +4,9 @@
 \alias{predict.ictregBayes}
 \title{Predict Method for the Item Count Technique with Bayesian MCMC}
 \usage{
-\method{predict}{ictregBayes}(
-  object,
-  newdata,
-  newdata.diff,
-  direct.glm,
-  se.fit = FALSE,
-  interval = c("none", "confidence"),
-  level = 0.95,
-  sensitive.item,
-  ...
-)
+\method{predict}{ictregBayes}(object, newdata, newdata.diff, direct.glm,
+  se.fit = FALSE, interval = c("none", "confidence"), level = 0.95,
+  sensitive.item, ...)
 }
 \arguments{
 \item{object}{Object of class inheriting from "ictregBayes" or

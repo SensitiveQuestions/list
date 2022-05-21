@@ -7,7 +7,7 @@ Check these declarations against the C/Fortran source code.
 
 /* .C calls */
 extern void CombineEndorseListProbit(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
-extern void dpoisbinom(void *, void *, void *, void *, void *);
+extern void dpoisbinom(void *, void *, void *, void *);
 extern void ictregBinom(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
 extern void ictregBinomMixed(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
 extern void ictregBinomMulti(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
@@ -20,7 +20,7 @@ extern void ictregBinomMultiRobit(void *, void *, void *, void *, void *, void *
 /* extern void R2Robit(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *); */
 extern void RpoisbinomEff(void *, void *, void *, void *);
 extern void RpoisbinomEffMatrix(void *, void *, void *, void *, void *, void *);
-extern void RpoisbinomReturn(void *, void *, void *, void *, void *);
+extern void RpoisbinomReturn(void *, void *, void *, void *);
 
 static const R_CMethodDef CEntries[] = {
   {"CombineEndorseListProbit", (DL_FUNC) &CombineEndorseListProbit, 54},

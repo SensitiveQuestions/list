@@ -4,12 +4,8 @@
 \alias{combinedListDirect}
 \title{Combined List Estimator}
 \usage{
-combinedListDirect(
-  formula,
-  data = parent.frame(),
-  treat = "treat",
-  direct = "direct"
-)
+combinedListDirect(formula, data = parent.frame(), treat = "treat",
+  direct = "direct")
 }
 \arguments{
 \item{formula}{an object of class "formula" (or one that can be coerced to

@@ -6,34 +6,14 @@
 \alias{list}
 \title{Item Count Technique}
 \usage{
-ictreg(
-  formula,
-  data = parent.frame(),
-  treat = "treat",
-  J,
-  method = "ml",
-  weights,
-  h = NULL,
-  group = NULL,
-  matrixMethod = "efficient",
-  robust = FALSE,
-  error = "none",
-  overdispersed = FALSE,
-  constrained = TRUE,
-  floor = FALSE,
-  ceiling = FALSE,
-  ceiling.fit = "glm",
-  floor.fit = "glm",
-  ceiling.formula = ~1,
-  floor.formula = ~1,
-  fit.start = "lm",
-  fit.sensitive = "glm",
-  fit.nonsensitive = "nls",
-  multi.condition = "none",
-  maxIter = 5000,
-  verbose = FALSE,
-  ...
-)
+ictreg(formula, data = parent.frame(), treat = "treat", J,
+  method = "ml", weights, h = NULL, group = NULL,
+  matrixMethod = "efficient", robust = FALSE, error = "none",
+  overdispersed = FALSE, constrained = TRUE, floor = FALSE,
+  ceiling = FALSE, ceiling.fit = "glm", floor.fit = "glm",
+  ceiling.formula = ~1, floor.formula = ~1, fit.start = "lm",
+  fit.sensitive = "glm", fit.nonsensitive = "nls",
+  multi.condition = "none", maxIter = 5000, verbose = FALSE, ...)
 }
 \arguments{
 \item{formula}{An object of class "formula": a symbolic description of the

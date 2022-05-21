@@ -125,7 +125,7 @@ ictreg.joint <- function(formula, data = parent.frame(), treat = "treat", J, out
 
     t <- data[na.x == 0 & na.y == 0 & na.o == 0, paste(treat)]
     o <- data[na.x == 0 & na.y == 0 & na.o == 0, paste(outcome)] 
-    if(class(t) == "factor") {
+    if(inherits(t, "factor")) {
         
         levels(t) <- tolower(levels(t))
         

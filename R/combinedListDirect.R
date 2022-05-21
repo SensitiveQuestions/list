@@ -86,7 +86,7 @@ combinedListDirect <- function(formula, data = parent.frame(), treat="treat", di
   if(length(unique(t.nona))!=2){stop("The treatment variable must only contain two unique values.")}
   if(!all(d.nona %in% c(0,1))){stop("The direct response variable must be a numeric variable whose values are 0 or 1.")}
 
-  if(class(t.nona) == "factor") {
+  if(inherits(t.nona, "factor")) {
 
     levels(t.nona) <- tolower(levels(t.nona))
 

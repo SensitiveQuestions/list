@@ -4,16 +4,9 @@
 \alias{ictreg.joint}
 \title{Item Count Technique: Outcome Models}
 \usage{
-ictreg.joint(
-  formula,
-  data = parent.frame(),
-  treat = "treat",
-  J,
-  outcome = "outcome",
-  outcome.reg = "logistic",
-  constrained = FALSE,
-  maxIter = 1000
-)
+ictreg.joint(formula, data = parent.frame(), treat = "treat", J,
+  outcome = "outcome", outcome.reg = "logistic", constrained = FALSE,
+  maxIter = 1000)
 }
 \arguments{
 \item{formula}{An object of class "formula": a symbolic description of the
