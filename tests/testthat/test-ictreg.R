@@ -1,5 +1,4 @@
 context("Tests regression code (ictreg)")
-rm(list=ls())
 
 set.seed(1)
 
@@ -31,8 +30,8 @@ test_that("diff in means works", {
   
   diff.in.means.results.wU <- ictreg(y ~ 1, data = race, treat = "treat", J=3, method = "lm", weights = "weight.uniform")
   
-  expect_that(coef(diff.in.means.results), not(equals(coef(diff.in.means.results.wU))))
-  expect_that(vcov(diff.in.means.results), not(equals(vcov(diff.in.means.results.wU))))
+  expect_failure(expect_equal(coef(diff.in.means.results), coef(diff.in.means.results.wU)))
+  expect_failure(expect_equal(vcov(diff.in.means.results), vcov(diff.in.means.results.wU)))
   
 })
 
@@ -65,8 +64,8 @@ test_that("lm works", {
   lm.results.wU <- ictreg(y ~ south + age + male + college, data = race, 
                           treat = "treat", J=3, method = "lm", weights = "weight.uniform")
   
-  expect_that(coef(lm.results), not(equals(coef(lm.results.wU))))
-  expect_that(vcov(lm.results), not(equals(vcov(lm.results.wU))))
+  expect_failure(expect_equal(coef(lm.results), coef(lm.results.wU)))
+  expect_failure(expect_equal(vcov(lm.results), vcov(lm.results.wU)))
   
 })
 
@@ -99,8 +98,8 @@ test_that("nls works", {
   nls.results.wU <- ictreg(y ~ south + age + male + college, data = race, 
                            treat = "treat", J=3, method = "nls", weights = "weight.uniform")
   
-  expect_that(coef(nls.results), not(equals(coef(nls.results.wU))))
-  expect_that(vcov(nls.results), not(equals(vcov(nls.results.wU))))
+  expect_failure(expect_equal(coef(nls.results), coef(nls.results.wU)))
+  expect_failure(expect_equal(vcov(nls.results), vcov(nls.results.wU)))
   
 })
 
@@ -138,8 +137,8 @@ test_that("ml constrained works", {
                                       treat = "treat", J=3, method = "ml", 
                                       overdispersed = FALSE, constrained = TRUE, weights = "weight.uniform")
   
-  expect_that(coef(ml.constrained.results), not(equals(coef(ml.constrained.results.wU))))
-  expect_that(vcov(ml.constrained.results), not(equals(vcov(ml.constrained.results.wU))))
+  expect_failure(expect_equal(coef(ml.constrained.results), coef(ml.constrained.results.wU)))
+  expect_failure(expect_equal(vcov(ml.constrained.results), vcov(ml.constrained.results.wU)))
   
 })
 
@@ -181,8 +180,8 @@ test_that("ml unconstrained works", {
                                         treat = "treat", J=3, method = "ml", 
                                         overdispersed = FALSE, constrained = FALSE, weights = "weight.uniform")
   
-  expect_that(coef(ml.unconstrained.results), not(equals(coef(ml.unconstrained.results.wU))))
-  expect_that(vcov(ml.unconstrained.results), not(equals(vcov(ml.unconstrained.results.wU))))
+  expect_failure(expect_equal(coef(ml.unconstrained.results), coef(ml.unconstrained.results.wU)))
+  expect_failure(expect_equal(vcov(ml.unconstrained.results), vcov(ml.unconstrained.results.wU)))
   
 })
 

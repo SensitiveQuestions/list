@@ -1,6 +1,4 @@
 context("Tests hierarchical bayesian regression code (ictregBayesHier)")
-rm(list=ls())
-
 set.seed(1)
 
 data(race)
@@ -115,7 +113,7 @@ test_that("predict for ictregBayesHier works", {
                                J = 3, group.level.2 = "state",
                                n.draws = 100, burnin = 10, thin = 1)
   
-  bayes.predict <- predict(bayes.fit, interval = "confidence", se.fit = TRUE)
+  bayes.predict <- predict(bayes.fit, sensitive.item = 1, interval = "confidence", se.fit = TRUE)
   
   
 })

@@ -1,5 +1,4 @@
 context("Tests list-as-an-outcome ictreg.joint")
-rm(list=ls())
 
 set.seed(1)
 data(mexico)
