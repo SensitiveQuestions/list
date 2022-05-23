@@ -1,6 +1,6 @@
 ## Submission
 
-Submitting this small patch per Ripley email about warning about * in a binary context in C. Changed to &&. 
+Submitting this small patch per Ripley email about warning about * in a binary context in C. Changed to &&. Also addresses further warnings in LTO. Minor test changes to follow CRAN rules.
 
 ## Test environments
 * local OS X install, R 3.5.1
