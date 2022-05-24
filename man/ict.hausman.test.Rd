@@ -7,7 +7,7 @@
 ict.hausman.test(ml, nls, abs = FALSE, psd = FALSE)
 }
 \arguments{
-\item{ml}{Maximum likelihood model fit, for example from ictreg(method = "nls")}
+\item{ml}{Maximum likelihood model fit, for example from ictreg(method = "ml")}
 
 \item{nls}{NLS model fit, for example from ictreg(method = "nls")}
 

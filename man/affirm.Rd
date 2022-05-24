@@ -4,7 +4,8 @@
 \name{affirm}
 \alias{affirm}
 \title{The 1991 National Race and Politics Survey}
-\format{A data frame containing the following 6 variables for 1171
+\format{
+A data frame containing the following 6 variables for 1171
 observations.
 
 \tabular{llll}{ y \tab numeric \tab the number of items that make
@@ -13,7 +14,8 @@ respondents live in a southern state \tab 0 - 1 \cr male \tab numeric \tab
 whether or not a respondent is male \tab 0 - 1 \cr college \tab numeric \tab
 whether or not a respondent attended some college \tab 0 - 1 \cr age \tab
 numeric \tab age of a respondent divided by 10 \cr treat \tab numeric \tab
-treatment status \tab 0 - 1 }}
+treatment status \tab 0 - 1 }
+}
 \source{
 The full data set is available at SDA (Survey Documentation and
 Analysis; \url{http://sda.berkeley.edu/D3/Natlrace/Doc/nrac.htm})

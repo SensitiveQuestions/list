@@ -4889,6 +4889,8 @@ print.predict.ictreg <- function(x, ...){
 #' predicting responses to a direct survey item regarding the sensitive item.
 #' The predictions from the ictreg object are compared to the predictions based
 #' on this glm object.
+#' @param newdata.direct An optional data frame used for predictions from 
+#' the direct.glm logistic regression fit. 
 #' @param se.fit A switch indicating if standard errors are required.
 #' @param interval Type of interval calculation.
 #' @param level Significance level for confidence intervals.
@@ -5023,11 +5025,13 @@ print.predict.ictreg <- function(x, ...){
 #' }
 #' 
 #' 
-predict.ictreg <- function(object, newdata, newdata.diff, direct.glm, se.fit = FALSE,
+predict.ictreg <- function(object, newdata, newdata.diff, direct.glm, newdata.direct, se.fit = FALSE,
                            interval = c("none","confidence"), level = .95, avg = FALSE, sensitive.item, ...){
 
   ##if(object$design != "standard")
   ##  stop("The predict function only currently works for standard design, single sensitive item experiments without ceiling or floor effects.")
+  
+  if(missing(newdata.direct)) newdata.direct <- direct.glm$data
   
   if(missing(interval)) interval <- "none"
   
@@ -5203,7 +5207,7 @@ predict.ictreg <- function(object, newdata, newdata.diff, direct.glm, se.fit = F
     n.draws <- 10000
         
     xvar.direct <- model.matrix(as.formula(paste("~", c(object$call$formula[[3]]))),
-                                direct.glm$data)
+                                newdata.direct)
     
     if (ncol(xvar.direct) != nPar)
       stop("Different number of covariates in direct and list regressions.")

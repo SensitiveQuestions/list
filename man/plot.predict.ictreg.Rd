@@ -4,10 +4,19 @@
 \alias{plot.predict.ictreg}
 \title{Plot Method for the Item Count Technique}
 \usage{
-\method{plot}{predict.ictreg}(x, labels = NA, axes.ict = TRUE,
-  xlim = NULL, ylim = NULL, xlab = NULL,
-  ylab = "Estimated Proportion", axes = F, pch = 19, xvec = NULL,
-  ...)
+\method{plot}{predict.ictreg}(
+  x,
+  labels = NA,
+  axes.ict = TRUE,
+  xlim = NULL,
+  ylim = NULL,
+  xlab = NULL,
+  ylab = "Estimated Proportion",
+  axes = F,
+  pch = 19,
+  xvec = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{object or set of objects of class inheriting from "predict.ictreg".

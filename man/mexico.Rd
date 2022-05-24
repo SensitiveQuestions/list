@@ -4,7 +4,8 @@
 \name{mexico}
 \alias{mexico}
 \title{The 2012 Mexico Elections Panel Study}
-\format{A data frame containing the following variables for 1004
+\format{
+A data frame containing the following variables for 1004
 observations.  \tabular{llll}{ y \tab numeric \tab the number of items that
 make respondents angry \tab 0 - 4 \cr
 
@@ -40,7 +41,8 @@ respondent lives in state with concurrent elections \tab 0-1 \cr mex.loyal
 \tab numeric \tab indicator for whether respondent strongly identifies with
 the PAN, PRI, or PRD party \tab 0-1 \cr mex.direct \tab numeric \tab
 indicator for whether respondent directly reports an attempt to buy their
-vote \tab 0-1 }}
+vote \tab 0-1 }
+}
 \source{
 The full data set is available at the Mexico Panel Study website
 (\url{http://mexicopanelstudy.mit.edu/})

@@ -4,8 +4,15 @@
 \alias{ict.test}
 \title{Item Count Technique}
 \usage{
-ict.test(y, treat, J = NA, alpha = 0.05, n.draws = 250000,
-  gms = TRUE, pi.table = TRUE)
+ict.test(
+  y,
+  treat,
+  J = NA,
+  alpha = 0.05,
+  n.draws = 250000,
+  gms = TRUE,
+  pi.table = TRUE
+)
 }
 \arguments{
 \item{y}{A numerical vector containing the response data for a list

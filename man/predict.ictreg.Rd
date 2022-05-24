@@ -4,9 +4,19 @@
 \alias{predict.ictreg}
 \title{Predict Method for Item Count Technique}
 \usage{
-\method{predict}{ictreg}(object, newdata, newdata.diff, direct.glm,
-  se.fit = FALSE, interval = c("none", "confidence"), level = 0.95,
-  avg = FALSE, sensitive.item, ...)
+\method{predict}{ictreg}(
+  object,
+  newdata,
+  newdata.diff,
+  direct.glm,
+  newdata.direct,
+  se.fit = FALSE,
+  interval = c("none", "confidence"),
+  level = 0.95,
+  avg = FALSE,
+  sensitive.item,
+  ...
+)
 }
 \arguments{
 \item{object}{Object of class inheriting from "ictreg"}
@@ -22,6 +32,9 @@ predictions from the data in the provided newdata data frame.}
 predicting responses to a direct survey item regarding the sensitive item.
 The predictions from the ictreg object are compared to the predictions based
 on this glm object.}
+
+\item{newdata.direct}{An optional data frame used for predictions from 
+the direct.glm logistic regression fit.}
 
 \item{se.fit}{A switch indicating if standard errors are required.}
 
