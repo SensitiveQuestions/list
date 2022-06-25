@@ -1,5 +1,5 @@
 Package: list
-Version: 9.1.1
+Version: 9.2.2
 Title: Statistical Methods for the Item Count Technique and List Experiment
 Authors@R: c(person("Graeme", "Blair", email = "graeme.blair@gmail.com", role = c("aut", "cre")),
              person("Winston", "Chou", email = "wchou@princeton.edu", role = c("aut")),
@@ -53,4 +53,4 @@ LazyLoad: yes
 LazyData: yes
 License: GPL (>= 2)
 Encoding: UTF-8
-RoxygenNote: 7.0.2
+RoxygenNote: 7.2.0

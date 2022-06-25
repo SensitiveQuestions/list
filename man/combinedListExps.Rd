@@ -4,7 +4,11 @@
 \name{combinedListExps}
 \alias{combinedListExps}
 \title{Five List Experiments with Direct Questions}
-\format{A data frame with 1023 observations and 23 variables}
+\format{
+A data frame with 1023 observations and 23 variables
+
+A data frame with 1023 observations and 23 variables
+}
 \usage{
 data(combinedListExps)
 }

@@ -1,5 +1,4 @@
 context("Tests combined estimator")
-rm(list=ls())
 
 test_that("combinedListDirect works", {
   data("combinedListExps")

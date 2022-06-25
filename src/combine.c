@@ -364,7 +364,7 @@ void CombineEndorseListProbit(/* Starging the endorsement code stuff */
       }
 
       /** print acceptance ratios  **/
-      if (*mh * *verbose) {
+      if (*mh && *verbose) {
 	if (main_loop == itempP) {
 	  Rprintf("%6d / %6d\n", main_loop, *n_gen);
 	  Rprintf("      Cutpoints of question %1d: %4g\n",

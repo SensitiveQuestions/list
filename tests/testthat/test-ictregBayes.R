@@ -1,5 +1,4 @@
 context("Tests bayesian regression code (ictregBayes)")
-rm(list=ls())
 
 set.seed(1)
 
@@ -210,7 +209,7 @@ test_that("predict for bayes works", {
                            delta.tune = diag(.002, 5), psi.tune = diag(.00025, 5),
                            n.draws = 500, burnin = 100, thin = 0)
   
-  bayes.predict <- predict(bayes.fit, interval = "confidence", se.fit = TRUE)
+  bayes.predict <- predict(bayes.fit, sensitive.item = 1, interval = "confidence", se.fit = TRUE)
   
   
 })

@@ -1,5 +1,4 @@
 context("Tests list experiment design effect test function")
-rm(list=ls())
 
 set.seed(1)
 

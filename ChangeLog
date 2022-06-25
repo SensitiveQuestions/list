@@ -21,4 +21,5 @@ version      date  description
 8.3  10/25/16  Added functionality for including auxiliary information by generalized method of moments
 9.0  11/4/18   Added functionality for addressing response error in list experiments from Blair, Chou, and Imai (2018) including new models and a Hausman test for model misspecification in maximum likelihood models
 9.1  02/26/19  Added option to fit sensitive item in measurement error models using Bayesian model with weakly informative priors.
-9.1.1 05/08/22 Bug fix
+9.2.1 05/08/22 Bug fix
+9.2.2 05/23/22 Warnings removed; ability to use new data for predictions from a direct question

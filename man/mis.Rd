@@ -4,7 +4,8 @@
 \name{mis}
 \alias{mis}
 \title{The 1994 Multi-Investigator Survey}
-\format{A data frame containing the following 6 variables for 1171
+\format{
+A data frame containing the following 6 variables for 1171
 observations.
 
 \tabular{llll}{ y \tab numeric \tab the number of items that make
@@ -23,7 +24,8 @@ independent \tab 0 - 1 \cr treat \tab numeric \tab treatment status \tab 0 -
 (treatment and control groups) \tab 0 - 1 \cr sens.data \tab numeric \tab
 indicator for direct sensitive item subset \tab 0 - 1 \cr
 
-}}
+}
+}
 \source{
 The full data set is available at SDA (Survey Documentation and
 Analysis; \url{http://sda.berkeley.edu/D3/Multi/Doc/mult.htm})
