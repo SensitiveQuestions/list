@@ -5031,7 +5031,7 @@ predict.ictreg <- function(object, newdata, newdata.diff, direct.glm, newdata.di
   ##if(object$design != "standard")
   ##  stop("The predict function only currently works for standard design, single sensitive item experiments without ceiling or floor effects.")
   
-  if(missing(newdata.direct)) newdata.direct <- direct.glm$data
+  if(missing(newdata.direct) & !missing(direct.glm)) newdata.direct <- direct.glm$data
   
   if(missing(interval)) interval <- "none"
   
@@ -5048,7 +5048,7 @@ predict.ictreg <- function(object, newdata, newdata.diff, direct.glm, newdata.di
       warning("Using the first sensitive item for predictions. Change with the sensitive.item option.")
   }
 
-  if (inherits(object$par.treat, "list")) {
+  if (!inherits(object$par.treat, "list")) {
     ## extract only treatment coef's, var/covar
     beta <- object$par.treat ## was coef(object)[1:nPar]
     var.beta <- vcov(object)[1:nPar, 1:nPar]

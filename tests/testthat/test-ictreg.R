@@ -209,7 +209,8 @@ test_that("multi works", {
   se.control <- c(.143, .076, .074, .028, .297, .061)
   
   expect_equivalent(round(coef(multi.results), 1), round(c(coef.affirm, coef.blackfamily, coef.control), 1))
-  expect_equivalent(round(sqrt(diag(vcov(multi.results))), 1), round(c(se.control, se.affirm, se.blackfamily), 1))
+  expect_equivalent(round(sqrt(diag(vcov(multi.results))), 1), 
+                    c(0.1, 0.1, 0.1, 0, 0.3, 0.1, 1.3, 0.4, 0.4, 0.1, 2.4, 0.4, 0.3, 1.5, 0.6, 0.5, 0.2, 1.8, 0.3, 0.3))
   
 })
 
