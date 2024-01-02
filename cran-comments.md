@@ -1,6 +1,6 @@
 ## Submission
 
-Addressing warnings noted in email from Kurt on 11/26/2023.
+Addressing warnings in r-devel noted in email from Kurt on 11/26/2023.
 
 ## Test environments
 * local OS X install, R devel
