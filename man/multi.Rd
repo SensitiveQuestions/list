@@ -18,7 +18,7 @@ treatment status \tab 0 - 2 }
 }
 \source{
 The full data set is available at SDA (Survey Documentation and
-Analysis; \url{https://sda.berkeley.edu/D3/Natlrace/Doc/nrac.htm})
+Analysis; \url{http://sda.berkeley.edu/D3/Natlrace/Doc/nrac.htm})
 }
 \description{
 This dataset is a subset of the 1991 National Race and Politics Survey and

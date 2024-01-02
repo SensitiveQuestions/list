@@ -1,6 +1,6 @@
 citHeader("To cite list in publications use:")
 
-bibentry(entry = "misc",
+bibentry(bibtype = "Manual",
   title        = "{list}: Statistical Methods for the Item Count Technique and List Experiment",
   author     = c(person("Graeme", "Blair"),
                  person("Kosuke", "Imai")),
