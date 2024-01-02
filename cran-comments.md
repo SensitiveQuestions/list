@@ -1,6 +1,6 @@
 ## Submission
 
-Thank you for reviewing this minor bug fix patch.
+In 
 
 ## Test environments
 * local OS X install, R 3.5.1

@@ -25,3 +25,4 @@ version      date  description
 9.2.1 05/09/22 Bug fix
 9.2.2 05/05/25 Warnings removed; ability to use new data for predictions from a direct question
 9.2.4 06/27/22 Bug fix
+9.2.6 01/02/24 Remove C++ warnings

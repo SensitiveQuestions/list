@@ -28,7 +28,7 @@ indicator for direct sensitive item subset \tab 0 - 1 \cr
 }
 \source{
 The full data set is available at SDA (Survey Documentation and
-Analysis; \url{http://sda.berkeley.edu/D3/Multi/Doc/mult.htm})
+Analysis; \url{https://sda.berkeley.edu/D3/Multi/Doc/mult.htm})
 }
 \description{
 This dataset is a subset of the 1994 Multi-Investigator Survey and contains
