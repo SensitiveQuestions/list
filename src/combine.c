@@ -661,7 +661,7 @@ void CombineEndorseListProbit(/* Starging the endorsement code stuff */
 
     /* printing */
     if (main_loop % 100 == 0) {
-      Rprintf("Acceptance rate for psi: %4g\n", (j + 1), fprec((double) *psiCounter / (double) main_loop, 3));
+      Rprintf("Acceptance rate for psi: %d, %4g\n", (j + 1), fprec((double) *psiCounter / (double) main_loop, 3));
     }
 
     R_FlushConsole();

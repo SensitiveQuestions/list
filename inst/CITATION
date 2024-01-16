@@ -1,9 +1,9 @@
 citHeader("To cite list in publications use:")
 
-citEntry(entry = "misc",
+bibentry(bibtype = "Manual",
   title        = "{list}: Statistical Methods for the Item Count Technique and List Experiment",
-  author       = personList(as.person("Graeme Blair"),
-                   as.person("Kosuke Imai")),
+  author     = c(person("Graeme", "Blair"),
+                 person("Kosuke", "Imai")),
   howpublished = "Available at The Comprehensive R Archive Network (CRAN)",
   year         = "2010",
   url          = "https://CRAN.R-project.org/package=list",

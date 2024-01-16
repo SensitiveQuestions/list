@@ -1,11 +1,10 @@
 ## Submission
 
-Thank you for reviewing this minor bug fix patch.
+Addressing warnings in r-devel noted in email from Kurt on 11/26/2023.
 
 ## Test environments
-* local OS X install, R 3.5.1
-* ubuntu 12.04 (on travis-ci), R 3.5.1
-* win-builder (devel and release)
+* local OS X install, R devel
+* win-builder (devel, oldrel, release)
 
 ## R CMD check results
 

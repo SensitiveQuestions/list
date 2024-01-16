@@ -54,7 +54,7 @@ void dinv(double **X,
   if (!errorM) {
     F77_CALL(dpptri)("U", &size, pdInv, &errorM FCONE);
     if (errorM) {
-      Rprintf("LAPACK dpptri failed, %d\n", errorM FCONE);
+      Rprintf("LAPACK dpptri failed, %d\n", errorM);
       error("Exiting from dinv().\n");
     }
   }

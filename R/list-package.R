@@ -29,7 +29,7 @@
 #' numeric \tab age of a respondent divided by 10 \cr treat \tab numeric \tab
 #' treatment status \tab 0 - 1 }
 #' @source The full data set is available at SDA (Survey Documentation and
-#' Analysis; \url{http://sda.berkeley.edu/D3/Natlrace/Doc/nrac.htm})
+#' Analysis; \url{https://sda.berkeley.edu/D3/Natlrace/Doc/nrac.htm})
 #' @keywords datasets
 NULL
 
@@ -162,7 +162,7 @@ NULL
 #' 
 #' }
 #' @source The full data set is available at SDA (Survey Documentation and
-#' Analysis; \url{http://sda.berkeley.edu/D3/Multi/Doc/mult.htm})
+#' Analysis; \url{https://sda.berkeley.edu/D3/Multi/Doc/mult.htm})
 #' @keywords datasets
 NULL
 
@@ -205,7 +205,7 @@ NULL
 #' numeric \tab age of a respondent divided by 10 \cr treat \tab numeric \tab
 #' treatment status \tab 0 - 2 }
 #' @source The full data set is available at SDA (Survey Documentation and
-#' Analysis; \url{http://sda.berkeley.edu/D3/Natlrace/Doc/nrac.htm})
+#' Analysis; \url{https://sda.berkeley.edu/D3/Natlrace/Doc/nrac.htm})
 #' @keywords datasets
 NULL
 
@@ -242,7 +242,7 @@ NULL
 #' numeric \tab age of a respondent divided by 10 \cr treat \tab numeric \tab
 #' treatment status \tab 0 - 1 }
 #' @source The full data set is available at SDA (Survey Documentation and
-#' Analysis; \url{http://sda.berkeley.edu/D3/Natlrace/Doc/nrac.htm})
+#' Analysis; \url{https://sda.berkeley.edu/D3/Natlrace/Doc/nrac.htm})
 #' @keywords datasets
 NULL
 
